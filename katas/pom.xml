@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- This is the build file for the KATAS project. A "kata" is a small, -->
+<!-- self-contained practice exercise; here, one tiny project per design -->
+<!-- pattern. Maven reads THIS file to know how to compile and test the code. -->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+    <!-- The POM format version. Always 4.0.0 for current Maven; it is not -->
+    <!-- your project's version, it is the version of the pom.xml language. -->
+    <modelVersion>4.0.0</modelVersion>
+
+    <!-- These three lines are the project's unique "address" (its coordinates). -->
+    <!-- groupId: who owns it (reverse-domain style name we chose for the course). -->
+    <groupId>com.katas</groupId>
+    <!-- artifactId: the name of this particular project. -->
+    <artifactId>design-pattern-katas</artifactId>
+    <!-- version: our own version number for the katas project. -->
+    <version>1.0.0</version>
+    <!-- packaging: build the output as a plain .jar (a zipped bundle of classes). -->
+    <packaging>jar</packaging>
+
+    <!-- Properties are reusable settings referenced elsewhere with ${...}. -->
+    <!-- Pinning them here means every lesson builds against the SAME versions. -->
+    <properties>
+        <!-- Compile against Java 21 and target the Java 21 runtime. "release" -->
+        <!-- tells the compiler both the language level and the bytecode level. -->
+        <maven.compiler.release>21</maven.compiler.release>
+        <!-- Read/write source files as UTF-8 so accented characters never corrupt. -->
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <!-- One pinned JUnit 5 version for the whole course (see curriculum.md). -->
+        <junit.version>5.14.4</junit.version>
+    </properties>
+
+    <!-- Dependencies are outside libraries Maven downloads for us automatically. -->
+    <dependencies>
+        <!-- JUnit 5 (the "Jupiter" flavour) is our testing library. The single -->
+        <!-- "junit-jupiter" artifact pulls in everything needed to write tests. -->
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <version>${junit.version}</version>
+            <!-- scope=test: this library is used only when running tests, and is -->
+            <!-- NOT bundled into the final application jar. -->
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <!-- Surefire is the plugin that actually RUNS our tests during -->
+            <!-- `mvn test`. A modern 3.x version is required for it to discover -->
+            <!-- and run JUnit 5 tests; older defaults only understand JUnit 4. -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.5.5</version>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>

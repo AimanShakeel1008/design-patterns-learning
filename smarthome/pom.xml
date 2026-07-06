@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- This is the build file for the SMART HOME HUB project: the one single, -->
+<!-- real, evolving application we grow across the whole course. Unlike the -->
+<!-- katas (frozen exhibits), this project is edited in place, lesson by lesson. -->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+    <!-- The POM language version (not our project's version). Always 4.0.0. -->
+    <modelVersion>4.0.0</modelVersion>
+
+    <!-- The project's unique coordinates (its "address"). -->
+    <groupId>com.smarthome</groupId>
+    <artifactId>smart-home-hub</artifactId>
+    <version>1.0.0</version>
+    <!-- Build output is a plain .jar bundle of compiled classes. -->
+    <packaging>jar</packaging>
+
+    <!-- Pinned settings, identical to the katas project for consistency. -->
+    <properties>
+        <!-- Compile and run on Java 21. -->
+        <maven.compiler.release>21</maven.compiler.release>
+        <!-- Treat source files as UTF-8. -->
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <!-- The same single JUnit 5 version pinned across the course. -->
+        <junit.version>5.14.4</junit.version>
+    </properties>
+
+    <dependencies>
+        <!-- JUnit 5 for the hub's regression tests. Deliberately the ONLY -->
+        <!-- dependency: no Spring, no framework, so every pattern is seen bare. -->
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <version>${junit.version}</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <!-- Surefire runs the JUnit 5 tests during `mvn test`. -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.5.5</version>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>
