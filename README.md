@@ -59,7 +59,9 @@ cd smarthome
 mvn compile exec:java -Dexec.mainClass=com.smarthome.Main
 ```
 
-*(Both projects are pinned to Java 21 and JUnit 5. Right now each contains a smoke test that confirms the toolchain works; real code arrives from Lesson 01 onward.)*
+*(Both projects are pinned to Java 21 and JUnit 5.)*
+
+**What the hub can do so far:** it defines a `Device` contract (`com.smarthome.devices.Device`) and two implementations — a `Light` and a `Thermostat` — and its `Main` turns them all on through a single loop that talks only to the `Device` interface. Adding new device types will not require changing that loop.
 
 ---
 

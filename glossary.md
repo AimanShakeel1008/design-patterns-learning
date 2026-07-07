@@ -23,3 +23,25 @@ Terms are grouped by first-appearance lesson so the list reads in learning order
 - **Repository (repo)** — the folder Git tracks, together with its full saved history. (Lesson 00)
 - **Commit** — one saved snapshot of your files in Git, with a message describing the change. (Lesson 00)
 - **Remote** — a copy of your repository hosted elsewhere (here, on GitHub) that you push your commits to. (Lesson 00)
+
+---
+
+## Lesson 01 — Objects, Encapsulation, and Interfaces
+
+- **Class** — the blueprint or template for a kind of object; it defines the data and behaviour objects of that kind will have. One class, many objects. (Lesson 01)
+- **Object (instance)** — one concrete thing built from a class, bundling data with the behaviour that guards it. `new BankAccount(100)` builds one object. (Lesson 01)
+- **Object (as a concept)** — a bundle of data plus the behaviour that acts on and protects that data, kept together in one place. (Lesson 01)
+- **Field** — a piece of data stored inside an object (e.g. `balance`). (Lesson 01)
+- **Method** — a named piece of behaviour an object can perform (e.g. `withdraw(...)`). (Lesson 01)
+- **Constructor** — the special method that runs once when an object is built; its job is to leave the new object in a valid starting state, guarding invariants from the first moment. (Lesson 01)
+- **Encapsulation** — hiding an object's data (making fields `private`) behind guarded `public` methods, so the data can only change through behaviour that enforces the rules. (Lesson 01)
+- **`private`** — an access keyword: a `private` field or method can be touched only by code inside the same class. The tool of encapsulation. (Lesson 01)
+- **`public`** — an access keyword: a `public` field or method can be touched by any code anywhere. The controlled door onto an object. (Lesson 01)
+- **Invariant** — a rule that must always be true about an object for its whole life (e.g. "the balance is never negative"). Encapsulation is how you protect it. (Lesson 01)
+- **Interface** — a pure contract: a named list of things a class promises it can do, with no code for how. Says *what*, never *how*. (Lesson 01)
+- **Contract** — a promise about *what* is provided, with the *how* left open; an interface is a contract written in Java. (Lesson 01)
+- **Implementation** — the actual working code that fulfils a contract; `Lamp` is one implementation of the `Switchable` contract. (Lesson 01)
+- **`implements`** — the Java keyword by which a class promises (compiler-checked) to fulfil every method an interface lists. (Lesson 01)
+- **Program to an interface, not an implementation** — the golden rule: depend on the contract, not on any one concrete class. The most load-bearing habit in the course. (Lesson 01)
+- **Polymorphism** — one call site behaving in many ways, decided at run time by which object is actually present. The reward for programming to an interface. (Lesson 01)
+- **Abstraction** — hiding *complexity* behind a simple set of operations (distinct from encapsulation, which hides *data*). Introduced briefly; sharpened in Lesson 04. (Lesson 01)
