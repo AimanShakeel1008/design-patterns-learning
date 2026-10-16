@@ -133,6 +133,22 @@ This page decodes the errors that actually come up while working through the cou
 
 ---
 
+## Composition (Lesson 03)
+
+### `java.lang.UnsupportedOperationException` when adding to a list
+
+**Why:** the list is unmodifiable — made by `List.of(...)` or `List.copyOf(...)` (e.g. `ActivityLog.entries()` returns one on purpose, so history cannot be rewritten).
+
+**Fix:** change data through the owning object's methods (`log.record(...)`). If you genuinely need your own editable copy, make one: `new ArrayList<>(log.entries())`.
+
+### `FragileBaseClassTest` fails with `expected: <6> but was: <3>`
+
+**Why:** `naive/Playlist.addAll` was edited back to `songs.add(song)` (the Try-it experiment in Lesson 03). The test pins the post-tidy-up bug on purpose.
+
+**Fix:** restore `add(song);` inside `naive/Playlist.addAll`. The flip itself is the lesson: the child's behaviour changed although only the parent was edited.
+
+---
+
 ## Lesson pages
 
 ### A lesson page opens with no colours or layout (plain black text)

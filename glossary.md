@@ -99,3 +99,21 @@ Terms are grouped by first-appearance lesson so the list reads in learning order
 - **Dynamic dispatch** — choosing which method body runs from the object's actual type at run time: search upward from the actual class. (Lesson 02)
 - **Refactoring** — improving code's internal structure while keeping its behaviour exactly the same, with tests as the safety net. (Lesson 02)
 - **Fragile base class (first look)** — a child breaking because its parent changed, even though the child was not touched. Shown in full in Lesson 03. (Lesson 02)
+
+---
+
+## Lesson 03 — Composition versus Inheritance
+
+- **Fragile base class problem** — a subclass broken by a change made only to its parent (base class), because it depended on the parent's internal self-use. (Lesson 03)
+- **Self-use** — a class's methods calling each other internally (e.g. `addAll` calling `add`); invisible from outside, but subclasses get pulled into it. (Lesson 03)
+- **White-box reuse** — reusing a class by extending it, and so depending on how it works inside. (Lesson 03)
+- **Black-box reuse** — reusing an object only through its public contract, without seeing or depending on its insides. (Lesson 03)
+- **Composition (has-a)** — building an object out of other objects held in its fields ("a CountingPlaylist has a playlist"). (Lesson 03)
+- **Delegation** — passing a request on to a held object so it does the real work. (Lesson 03)
+- **Wrapper** — an object that keeps the same interface as the object it holds and forwards calls to it, adding something along the way. (Lesson 03)
+- **Class explosion** — too many subclasses caused by multiplying independent choices (device kinds × feature combinations). (Lesson 03)
+- **Favor composition over inheritance** — the Gang of Four's second founding principle: prefer has-a to is-a when in doubt; "favor", not "always". (Lesson 03)
+- **Gang of Four (GoF)** — Gamma, Helm, Johnson and Vlissides, authors of the 1994 book *Design Patterns*. Full story in Lesson 12. (Lesson 03)
+- **`List<String>` / `ArrayList` / `List.of` / `List.copyOf`** — the JDK's ordered-list interface (holding text), its everyday implementation, a one-line fixed list, and an unmodifiable snapshot copy. (Lesson 03)
+- **`UnsupportedOperationException`** — Java's standard exception for "this object does not allow that operation" (e.g. adding to an unmodifiable list). (Lesson 03)
+- **`final` class** — a class that cannot be extended; one way for a class author to rule out fragile subclasses. (Lesson 03)

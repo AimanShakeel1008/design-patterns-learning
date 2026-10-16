@@ -1,0 +1,826 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lesson 03 — Composition versus Inheritance · Design Patterns in Java</title>
+<link rel="stylesheet" href="../../assets/lesson.css">
+</head>
+<body>
+<div class="page">
+
+<aside class="toc" aria-label="Table of contents">
+  <p class="toc-title">Lesson 03 · Contents</p>
+  <ol>
+    <li><a href="#s1">1 · The pain</a></li>
+    <li><a href="#s2">2 · Real-world analogy</a></li>
+    <li><a href="#s3">3 · The concepts explained</a></li>
+    <li><a href="#s4">4 · The kata</a></li>
+    <li><a href="#s5">5 · Applied to the hub</a></li>
+    <li><a href="#s6">6 · In the wild</a></li>
+    <li><a href="#s7">7 · When NOT to, and gotchas</a></li>
+    <li><a href="#s8">8 · Key takeaways</a></li>
+    <li><a href="#s9">9 · Challenge</a></li>
+    <li><a href="#s10">10 · Catalog update</a></li>
+  </ol>
+  <nav class="toc-nav" aria-label="Course navigation">
+    <a class="navcard" href="lesson-02-inheritance-polymorphism.html">
+      <span class="navkicker">← Prev · Lesson 02</span>
+      <span class="navtitle">Inheritance and Polymorphism</span>
+    </a>
+    <a class="navmap" href="../../index.html">↑ Course map</a>
+    <span class="navcard disabled">
+      <span class="navkicker">Next · Lesson 04 →</span>
+      <span class="navtitle">Coupling, Cohesion, and Reading UML</span>
+      <span class="navnote">not yet written</span>
+    </span>
+  </nav>
+</aside>
+
+<main>
+
+<header class="banner">
+  <p class="kicker">Phase 0 · Chapter 01 · Lesson 03</p>
+  <h1>Composition versus Inheritance</h1>
+  <p class="subtitle">A subclass can break when only its parent changes. The cure is to build objects out of other objects, "has-a" instead of "is-a," and pass the work along.</p>
+  <p class="meta">
+    <strong>Kata package:</strong> <code>com.katas.composition</code> (wrong way in <code>com.katas.composition.naive</code>).<br>
+    <strong>Smart Home Hub:</strong> created <code>activity/ActivityLog.java</code>, <code>activity/LoggedDevice.java</code>, and their tests; modified <code>Main.java</code>. Devices untouched.<br>
+    <strong>Prerequisites:</strong> <a href="lesson-01-objects-encapsulation-interfaces.html">Lesson 01</a>, <a href="lesson-02-inheritance-polymorphism.html">Lesson 02 — Inheritance and Polymorphism</a>.
+  </p>
+</header>
+
+<!-- ============================== SECTION 1 ============================== -->
+<section id="s1">
+  <h2><span class="sec-num">1</span>The pain</h2>
+
+  <p class="lead">Lesson 02 warned that a child depends on its parent's insides. Here is that warning coming true, in a class nobody touched.</p>
+
+  <p>A teammate owns a <code>Playlist</code> class. You need a playlist that also counts how many songs were ever added. Inheritance looks perfect: extend it, override the two adding methods, count, and call <code>super</code>.</p>
+
+  <pre class="code" data-title="naive/CountingPlaylist.java (key lines)"><code><span class="kw">public class</span> <span class="ty">CountingPlaylist</span> <span class="kw">extends</span> <span class="ty">Playlist</span> {
+    <span class="kw">private int</span> addedCount;
+    <span class="anno">@Override</span> <span class="kw">public void</span> <span class="fn">add</span>(<span class="ty">String</span> song) {
+        addedCount++;  <span class="kw">super</span>.<span class="fn">add</span>(song);
+    }
+    <span class="anno">@Override</span> <span class="kw">public void</span> <span class="fn">addAll</span>(<span class="ty">List</span>&lt;<span class="ty">String</span>&gt; newSongs) {
+        addedCount += newSongs.<span class="fn">size</span>();  <span class="kw">super</span>.<span class="fn">addAll</span>(newSongs);
+    }
+}</code></pre>
+
+  <p>You test it: add three songs with <code>addAll</code>, and the counter says 3. Shipped. A month later your teammate tidies <em>their</em> class. <code>Playlist.addAll</code> used to store each song directly; now it reuses its own <code>add</code> method, to avoid repeating itself:</p>
+
+  <pre class="code" data-title="Playlist.addAll — before and after the tidy-up"><code><span class="cmt">// before                          // after</span>
+<span class="kw">for</span> (<span class="ty">String</span> song : newSongs) {     <span class="kw">for</span> (<span class="ty">String</span> song : newSongs) {
+    songs.<span class="fn">add</span>(song);                    <span class="fn">add</span>(song);       <span class="cmt">// "cleaner"</span>
+}                                  }</code></pre>
+
+  <p>Playlist still behaves exactly as before, and its own tests stay green. You changed nothing. But:</p>
+
+  <p class="pred-label">Predicted symptom</p>
+  <pre class="output"><code><span class="err">Inheritance: 3 songs in the list, counter says 6</span></code></pre>
+
+  <p>The pain has a name: a subclass broken by a change made only to its parent is the <strong>fragile base class problem</strong> ("base class" is another word for superclass). It is not a careless-teammate problem. The tidy-up was a perfectly reasonable change to <code>Playlist</code>. The fault is the relationship: inheritance let a private detail of the parent ("does <code>addAll</code> call <code>add</code>?") become part of how the child behaves.</p>
+
+  <p class="filepath">Full wrong-way code: katas/src/main/java/com/katas/composition/naive/Playlist.java and CountingPlaylist.java</p>
+</section>
+
+<!-- ============================== SECTION 2 ============================== -->
+<section id="s2">
+  <h2><span class="sec-num">2</span>Real-world analogy</h2>
+
+  <p><strong>A hired driver versus a transplanted engine.</strong> To go faster, you could rebuild your car <em>around</em> a racing engine, welding your own parts to its insides. Now every change the engine maker makes inside the engine might break your welds. Or you could <em>hire</em> a driver with a fast car. You tell the driver where to go, the driver handles the rest, and you never look under their bonnet. If you want a different car tomorrow, you hire a different driver; nothing is welded.</p>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>In real life</th><th>In Java</th></tr></thead>
+      <tbody>
+        <tr><td>Welding your parts onto the engine's insides</td><td>Inheritance: the child is built into the parent's internals</td></tr>
+        <tr><td>Hiring a driver</td><td>Composition: holding another object in a field</td></tr>
+        <tr><td>Telling the driver where to go</td><td>Delegation: passing the call on to the held object</td></tr>
+        <tr><td>Never looking under their bonnet</td><td>Using only the held object's public contract</td></tr>
+        <tr><td>Hiring a different driver tomorrow</td><td>Swapping the held object while the program runs</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ============================== SECTION 3 ============================== -->
+<section id="s3">
+  <h2><span class="sec-num">3</span>The concepts explained</h2>
+
+  <h3>3.1 Why the subclass broke, step by step</h3>
+
+  <p>Trace <code>counting.addAll(["Intro", "Verse", "Outro"])</code> after the tidy-up. There is only <em>one</em> object here: a <code>CountingPlaylist</code>, which contains a <code>Playlist</code> part.</p>
+  <ol class="trace">
+    <li><code>CountingPlaylist.addAll</code> runs: <code>addedCount += 3</code> (counter: 3), then <code>super.addAll(…)</code>.</li>
+    <li><code>Playlist.addAll</code> runs, using the parent's code. Its loop calls <code>add("Intro")</code>.</li>
+    <li><code>add(...)</code> means <code>this.add(...)</code>, and <code>this</code> is the CountingPlaylist. <span class="term" tabindex="0" data-def="choosing which method body runs from the object's actual type at run time: search upward from the actual class.">Dynamic dispatch</span> searches from the actual class, so it finds <strong>CountingPlaylist's</strong> <code>add</code>: counter 4, then it stores the song.</li>
+    <li>The same happens for "Verse" (counter 5) and "Outro" (counter 6).</li>
+  </ol>
+  <p>When a class's methods call each other, that habit is called <strong>self-use</strong>. A parent's self-use is invisible from outside and can change at any time. Yet every subclass that <span class="term" tabindex="0" data-def="a subclass writing a method with the same signature as an inherited one, replacing it for its objects; chosen at run time.">overrides</span> one of those methods gets pulled into it. Reusing a class by extending it, and so depending on how it works inside, is called <strong>white-box reuse</strong>: you can see into the box, and you end up depending on what you see.</p>
+
+  <h3>3.2 The cure: hold an object, and pass the work along</h3>
+
+  <p>Instead of <em>being</em> a playlist, the counter can <em>have</em> one. It keeps a real playlist in a private field. When asked to add songs, it counts and then hands the request to that playlist. Building an object out of other objects held in its fields is called <strong>composition</strong>, and the relationship is <strong>has-a</strong> ("a CountingPlaylist has a playlist"), as opposed to <span class="term" tabindex="0" data-def="the plain-English test for inheritance: &quot;a Dog is an Animal&quot; sounds true, &quot;a Thermostat is a Light&quot; does not.">is-a</span>. Handing a request on to the held object, so it does the real work, is called <strong>delegation</strong>.</p>
+
+  <pre class="code" data-title="the core of composition + delegation"><code><span class="kw">public class</span> <span class="ty">CountingPlaylist</span> <span class="kw">implements</span> <span class="ty">SongList</span> {
+    <span class="kw">private final</span> <span class="ty">SongList</span> inner;                <span class="cmt">// HAS-A</span>
+    <span class="kw">public void</span> <span class="fn">addAll</span>(<span class="ty">List</span>&lt;<span class="ty">String</span>&gt; newSongs) {
+        addedCount += newSongs.<span class="fn">size</span>();
+        inner.<span class="fn">addAll</span>(newSongs);                    <span class="cmt">// DELEGATE</span>
+    }
+}</code></pre>
+
+  <p>Now trace the same call. There are <em>two</em> objects: the counter and the playlist inside it.</p>
+  <ol class="trace">
+    <li><code>counter.addAll</code>: counter 3, then <code>inner.addAll(…)</code>.</li>
+    <li><code>Playlist.addAll</code> runs on the <em>inner</em> object. Its loop calls <code>add("Intro")</code>, meaning <code>this.add</code>, and <code>this</code> is now the <strong>Playlist</strong>. The counter is a separate object that Playlist does not even know exists.</li>
+    <li>Playlist's own <code>add</code> runs three times. Nothing comes back to the counter, which still says 3.</li>
+  </ol>
+  <p>The playlist's self-use stays inside the playlist. The counter depends only on the public contract, not on how the playlist works inside. Reusing an object only through its public contract, without seeing inside, is called <strong>black-box reuse</strong>.</p>
+
+  <figure class="fig">
+    <svg viewBox="0 0 720 300" role="img" aria-label="Left, inheritance: one CountingPlaylist object; its addAll counts 3 and calls the inherited Playlist addAll, whose add calls are dispatched back to the child, counting 3 more: 6. Right, composition: a wrapper object counts 3 and calls addAll on a separate Playlist object, whose add calls stay inside it: 3.">
+      <defs>
+        <marker id="f1-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+          <path d="M0,0 L10,5 L0,10 z" class="fig-arrow-h"/>
+        </marker>
+        <marker id="f1-smell" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+          <path d="M0,0 L10,5 L0,10 z" class="fig-arrow-smell-h"/>
+        </marker>
+      </defs>
+      <text x="175" y="20" class="fig-heading fig-center fig-smell-text">extends: ONE object</text>
+      <rect x="20" y="32" width="310" height="222" rx="12" class="fig-smell"/>
+      <rect x="40" y="50" width="270" height="40" rx="6" class="fig-box"/>
+      <text x="175" y="75" class="fig-label fig-center fig-mono">CountingPlaylist.addAll  +3</text>
+      <rect x="40" y="120" width="270" height="40" rx="6" class="fig-box"/>
+      <text x="175" y="145" class="fig-label fig-center fig-mono">Playlist.addAll (inherited)</text>
+      <rect x="40" y="190" width="270" height="40" rx="6" class="fig-box"/>
+      <text x="175" y="215" class="fig-label fig-center fig-mono">CountingPlaylist.add  +1 ×3</text>
+      <line x1="175" y1="90" x2="175" y2="116" class="fig-arrow" marker-end="url(#f1-arrow)"/>
+      <text x="185" y="108" class="fig-small">super.addAll</text>
+      <line x1="175" y1="160" x2="175" y2="186" class="fig-arrow-smell" marker-end="url(#f1-smell)"/>
+      <text x="185" y="178" class="fig-small fig-smell-text">add() → the child!</text>
+      <text x="175" y="248" class="fig-small fig-center">(one object: the child IS the playlist)</text>
+      <text x="175" y="284" class="fig-heading fig-center fig-smell-text">counter = 3 + 3 = 6 ✗</text>
+
+      <text x="545" y="20" class="fig-heading fig-center fig-code-text">has-a: TWO objects</text>
+      <rect x="390" y="32" width="310" height="72" rx="12" class="fig-code"/>
+      <rect x="410" y="58" width="270" height="36" rx="6" class="fig-box"/>
+      <text x="545" y="50" class="fig-small fig-center">the wrapper (CountingPlaylist)</text>
+      <text x="545" y="81" class="fig-label fig-center fig-mono">addAll  +3</text>
+      <rect x="390" y="140" width="310" height="114" rx="12" class="fig-code"/>
+      <text x="545" y="158" class="fig-small fig-center">the inner object (Playlist)</text>
+      <rect x="410" y="166" width="270" height="34" rx="6" class="fig-box"/>
+      <text x="545" y="188" class="fig-label fig-center fig-mono">Playlist.addAll</text>
+      <rect x="410" y="212" width="270" height="34" rx="6" class="fig-box"/>
+      <text x="545" y="234" class="fig-label fig-center fig-mono">Playlist.add ×3 (its own)</text>
+      <line x1="545" y1="94" x2="545" y2="162" class="fig-arrow" marker-end="url(#f1-arrow)"/>
+      <text x="555" y="126" class="fig-small">inner.addAll (delegate)</text>
+      <text x="545" y="284" class="fig-heading fig-center fig-code-text">counter = 3 ✓</text>
+    </svg>
+    <figcaption>Left (red): with <code>extends</code> there is one object, so the parent's internal <code>add()</code> calls are dispatched back into the child's override. Right (blue): with composition there are two objects. The inner playlist's calls to itself stay inside it and never reach the counter.</figcaption>
+  </figure>
+
+  <div class="sim" id="sim1">
+    <h4>Change the parent, watch the child</h4>
+    <div class="sim-controls">
+      <div class="sim-group">
+        <span class="sim-group-label">Playlist.addAll is written as…</span>
+        <div class="sim-group-buttons">
+          <button type="button" class="sim-btn active" data-sim1-parent="direct">v1: songs.add(song)</button>
+          <button type="button" class="sim-btn" data-sim1-parent="self">v2: add(song)</button>
+        </div>
+      </div>
+      <div class="sim-group">
+        <span class="sim-group-label">The counter…</span>
+        <div class="sim-group-buttons">
+          <button type="button" class="sim-btn active" data-sim1-child="extends">extends Playlist</button>
+          <button type="button" class="sim-btn" data-sim1-child="wraps">wraps a Playlist</button>
+        </div>
+      </div>
+      <div class="sim-group">
+        <span class="sim-group-label">Run</span>
+        <div class="sim-group-buttons">
+          <button type="button" class="sim-btn action" data-sim1-run="go">addAll(3 songs)</button>
+        </div>
+      </div>
+    </div>
+    <div class="sim-console" id="sim1-out" aria-live="polite">Choose how the parent is written and how the counter is built, then run.</div>
+    <p class="sim-note">This is a MODEL of the call flow, not the real thing. The real authority is the kata: <code>FragileBaseClassTest</code> pins the 6, <code>CountingPlaylistTest</code> pins the 3. Run <code>mvn test</code> from <code>katas/</code>.</p>
+  </div>
+  <script>
+  (function () {
+    var state = { parent: "direct", child: "extends" };
+    var songs = ["Intro", "Verse", "Outro"];
+    var out = document.getElementById("sim1-out");
+    function esc(s) { return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
+    function line(cls, text) { return cls ? '<span class="' + cls + '">' + esc(text) + "</span>" : esc(text); }
+    function setActive(attr, value) {
+      var bs = document.querySelectorAll("[data-sim1-" + attr + "]");
+      for (var i = 0; i < bs.length; i++) { bs[i].classList.toggle("active", bs[i].getAttribute("data-sim1-" + attr) === value); }
+    }
+    function run() {
+      var count = 3;
+      var lines = [line("hi", "counter.addAll(Intro, Verse, Outro)"), "CountingPlaylist.addAll: counter += 3   -> counter = 3"];
+      if (state.child === "extends") {
+        lines.push("super.addAll(...)  (same object, Playlist's inherited code)");
+        if (state.parent === "direct") {
+          lines.push(line("skip", "Playlist.addAll stores each song directly: songs.add(...)"));
+        } else {
+          for (var i = 0; i < songs.length; i++) {
+            count++;
+            lines.push(line("bad", "Playlist.addAll calls add(\"" + songs[i] + "\") -> dispatched to CountingPlaylist.add -> counter = " + count));
+          }
+        }
+      } else {
+        lines.push("inner.addAll(...)  (a DIFFERENT object: the Playlist inside)");
+        if (state.parent === "direct") {
+          lines.push(line("skip", "Playlist.addAll stores each song directly: songs.add(...)"));
+        } else {
+          for (var j = 0; j < songs.length; j++) {
+            lines.push(line("skip", "Playlist.addAll calls add(\"" + songs[j] + "\") -> Playlist's OWN add (the wrapper is not involved)"));
+          }
+        }
+      }
+      lines.push(line(count === 3 ? "ok" : "bad", "songs in the list: 3   counter says: " + count + (count === 3 ? "   correct" : "   WRONG")));
+      out.innerHTML = lines.join("\n");
+    }
+    document.getElementById("sim1").addEventListener("click", function (e) {
+      var b = e.target.closest("button");
+      if (!b) { return; }
+      if (b.hasAttribute("data-sim1-parent")) { state.parent = b.getAttribute("data-sim1-parent"); setActive("parent", state.parent); }
+      else if (b.hasAttribute("data-sim1-child")) { state.child = b.getAttribute("data-sim1-child"); setActive("child", state.child); }
+      else if (b.hasAttribute("data-sim1-run")) { run(); }
+    });
+  })();
+  </script>
+
+  <h3>3.3 The contract makes the wrapper a stand-in</h3>
+
+  <p>A <code>CountingPlaylist</code> that only <em>has</em> a playlist is no longer <em>a</em> playlist. Any code expecting a playlist would refuse it. The fix is Lesson 01's tool: a shared interface, <code>SongList</code>. Both <code>Playlist</code> and <code>CountingPlaylist</code> implement it. The counter is a <code>SongList</code> (so clients accept it) and holds a <code>SongList</code> (so it can wrap any of them). An object that keeps the same contract as the object it holds, and forwards calls to it, is called a <strong>wrapper</strong>. This "implements X and holds an X" shape is so useful that it returns as a named pattern in Lesson 19.</p>
+
+  <p>That shape gives composition two powers inheritance lacks:</p>
+  <ul>
+    <li><strong>Chosen while the program runs.</strong> <code>new CountingPlaylist(new Playlist())</code> picks the inner object when the code runs. Tomorrow it can wrap a different <code>SongList</code>, with no new class.</li>
+    <li><strong>Stackable.</strong> A wrapper is itself a <code>SongList</code>, so wrappers can wrap wrappers: <code>new CountingPlaylist(new CountingPlaylist(new Playlist()))</code>. Features combine by stacking, not by writing a subclass for every combination.</li>
+  </ul>
+
+  <h3>3.4 The class explosion that composition avoids</h3>
+
+  <p>Suppose the hub has 3 device kinds (light, thermostat, lock) and 2 optional features (logging, scheduling). With inheritance, every combination you might need is its own subclass: <code>LoggingLight</code>, <code>ScheduledLight</code>, <code>LoggingScheduledLight</code>, then the same three again for thermostats and for locks. Too many classes, caused by multiplying independent choices, is called a <strong>class explosion</strong>.</p>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th></th><th>Inheritance (one subclass per combination)</th><th>Composition (one wrapper per feature)</th></tr></thead>
+      <tbody>
+        <tr><td>3 devices, 2 features</td><td>3 × 3 = <strong>9</strong> extra classes</td><td><strong>2</strong> wrappers</td></tr>
+        <tr><td>Add a 3rd feature</td><td>3 × 7 = <strong>21</strong> extra classes</td><td><strong>3</strong> wrappers</td></tr>
+        <tr><td>Add a 4th device</td><td>+7 more classes</td><td><strong>0</strong> new wrappers</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>(How the numbers come about: with 2 features there are 3 non-empty combinations, "just A," "just B," and "A and B." With 3 features there are 7. Multiply by the number of device kinds. Composition needs one wrapper per feature, whatever the number of devices.)</p>
+
+  <h3>3.5 The rule, and where it comes from</h3>
+
+  <p>In 1994 four authors (Erich Gamma, Richard Helm, Ralph Johnson and John Vlissides, soon nicknamed the "Gang of Four") wrote the book <em>Design Patterns</em>. Lesson 12 tells its story. Before their first pattern, they state two principles. The first you already know from Lesson 01: <span class="term" tabindex="0" data-def="have client code name only the contract, never a concrete class, so new implementations need no client changes.">program to an interface, not an implementation</span>. The second is this lesson: <strong>favor object composition over class inheritance</strong>. Note the word <em>favor</em>, not <em>always</em>. Inheritance still has its place (Section 7). But when in doubt, has-a is the safer default.</p>
+
+  <details class="check">
+    <summary>The composed <code>CountingPlaylist</code> wraps a Playlist whose <code>addAll</code> calls <code>add</code>. Why doesn't the counter double-count?</summary>
+    <p>Because there are two separate objects. Inside the Playlist, <code>add(song)</code> means <em>the Playlist's</em> <code>add</code>, since <code>this</code> is the Playlist. The wrapper is a different object that the Playlist has no reference to, so its internal calls cannot reach the wrapper's <code>add</code>. Only calls made <em>on the wrapper</em> are counted.</p>
+  </details>
+</section>
+
+<!-- ============================== SECTION 4 ============================== -->
+<section id="s4">
+  <h2><span class="sec-num">4</span>The kata</h2>
+
+  <p>A few JDK pieces appear here. <code>List&lt;String&gt;</code> is the JDK's ordered-list interface. The part in angle brackets says what the list holds, here text; that feature gets its own story later. <code>ArrayList</code> is its everyday implementation. <code>List.of("a", "b")</code> builds a small list that can never be changed.</p>
+
+  <p class="filepath">Saved: katas/src/main/java/com/katas/composition/SongList.java</p>
+  <pre class="code" data-title="SongList.java"><code><span class="cmt">// The contract that lets a wrapper stand in for the real thing.</span>
+<span class="kw">package</span> com.katas.composition;
+
+<span class="cmt">// The interface type for a batch of songs.</span>
+<span class="kw">import</span> java.util.<span class="ty">List</span>;
+
+<span class="cmt">// What any song list can do. Both the real Playlist and the CountingPlaylist</span>
+<span class="cmt">// that wraps it keep this contract, so clients cannot tell them apart.</span>
+<span class="kw">public interface</span> <span class="ty">SongList</span> {
+
+    <span class="cmt">// Add one song.</span>
+    <span class="kw">void</span> <span class="fn">add</span>(<span class="ty">String</span> song);
+
+    <span class="cmt">// Add several songs.</span>
+    <span class="kw">void</span> <span class="fn">addAll</span>(<span class="ty">List</span>&lt;<span class="ty">String</span>&gt; newSongs);
+
+    <span class="cmt">// How many songs are in the list.</span>
+    <span class="kw">int</span> <span class="fn">size</span>();
+}</code></pre>
+
+  <p class="filepath">Saved: katas/src/main/java/com/katas/composition/Playlist.java</p>
+  <p>The real list: <code>implements SongList</code>, a <code>private final List&lt;String&gt; songs = new ArrayList&lt;&gt;()</code>, and an <code>addAll</code> that deliberately reuses <code>add</code>. It is the same "tidy" style that broke the inheritance version, kept to prove composition does not care.</p>
+
+  <p class="filepath">Saved: katas/src/main/java/com/katas/composition/CountingPlaylist.java</p>
+  <pre class="code" data-title="CountingPlaylist.java"><code><span class="cmt">// The RIGHT WAY: add a feature by HOLDING a song list, not by extending one.</span>
+<span class="kw">package</span> com.katas.composition;
+
+<span class="cmt">// The interface type for a batch of songs.</span>
+<span class="kw">import</span> java.util.<span class="ty">List</span>;
+
+<span class="cmt">// A CountingPlaylist HAS A SongList inside it (composition) and passes each</span>
+<span class="cmt">// request on to it (delegation), counting along the way. It never extends</span>
+<span class="cmt">// Playlist, so Playlist's internal habits cannot reach back into it.</span>
+<span class="kw">public class</span> <span class="ty">CountingPlaylist</span> <span class="kw">implements</span> <span class="ty">SongList</span> {
+
+    <span class="cmt">// The object we wrap and forward to. Typed by the CONTRACT, so any</span>
+    <span class="cmt">// SongList works: a Playlist today, something else tomorrow.</span>
+    <span class="kw">private final</span> <span class="ty">SongList</span> inner;
+
+    <span class="cmt">// How many songs have been added, ever.</span>
+    <span class="kw">private int</span> addedCount;
+
+    <span class="cmt">// The wrapped list is handed in from outside, so the caller chooses it.</span>
+    <span class="kw">public</span> <span class="fn">CountingPlaylist</span>(<span class="ty">SongList</span> inner) {
+        <span class="cmt">// Keep a reference to the object we will delegate to.</span>
+        <span class="kw">this</span>.inner = inner;
+    }
+
+    <span class="cmt">// Count one, then forward.</span>
+    <span class="anno">@Override</span>
+    <span class="kw">public void</span> <span class="fn">add</span>(<span class="ty">String</span> song) {
+        <span class="cmt">// One more song added.</span>
+        addedCount++;
+        <span class="cmt">// Delegate the real work to the wrapped list.</span>
+        inner.<span class="fn">add</span>(song);
+    }
+
+    <span class="cmt">// Count the batch, then forward.</span>
+    <span class="anno">@Override</span>
+    <span class="kw">public void</span> <span class="fn">addAll</span>(<span class="ty">List</span>&lt;<span class="ty">String</span>&gt; newSongs) {
+        <span class="cmt">// The whole batch counted once.</span>
+        addedCount += newSongs.<span class="fn">size</span>();
+        <span class="cmt">// inner.addAll runs Playlist's code; when THAT code calls add(), it</span>
+        <span class="cmt">// means Playlist's own add, not ours. Nothing comes back here, so</span>
+        <span class="cmt">// nothing is counted twice.</span>
+        inner.<span class="fn">addAll</span>(newSongs);
+    }
+
+    <span class="cmt">// Forward the question: we store nothing ourselves.</span>
+    <span class="anno">@Override</span>
+    <span class="kw">public int</span> <span class="fn">size</span>() {
+        <span class="cmt">// The wrapped list knows its own size.</span>
+        <span class="kw">return</span> inner.<span class="fn">size</span>();
+    }
+
+    <span class="cmt">// The one thing this wrapper adds.</span>
+    <span class="kw">public int</span> <span class="fn">getAddedCount</span>() {
+        <span class="cmt">// After addAll of 3 songs this returns 3.</span>
+        <span class="kw">return</span> addedCount;
+    }
+}</code></pre>
+
+  <p class="filepath">Saved: katas/src/main/java/com/katas/composition/Main.java</p>
+  <pre class="code" data-title="Main.java (composition)"><code><span class="cmt">// The runnable demo for Lesson 03's kata.</span>
+<span class="kw">package</span> com.katas.composition;
+
+<span class="cmt">// List.of builds a small fixed list in one line.</span>
+<span class="kw">import</span> java.util.<span class="ty">List</span>;
+
+<span class="cmt">// Runs the same job (add three songs, then read the counter) through the</span>
+<span class="cmt">// inheritance version and the composition version, side by side.</span>
+<span class="kw">public class</span> <span class="ty">Main</span> {
+
+    <span class="cmt">// The JVM starts here when you run this class.</span>
+    <span class="kw">public static void</span> <span class="fn">main</span>(<span class="ty">String</span>[] args) {
+        <span class="cmt">// The same three songs for both versions.</span>
+        <span class="ty">List</span>&lt;<span class="ty">String</span>&gt; songs = <span class="ty">List</span>.<span class="fn">of</span>(<span class="str">"Intro"</span>, <span class="str">"Verse"</span>, <span class="str">"Outro"</span>);
+
+        <span class="cmt">// INHERITANCE: the subclass, broken by its parent's tidy-up. We write</span>
+        <span class="cmt">// the full package name because both packages have a CountingPlaylist.</span>
+        com.katas.composition.naive.<span class="ty">CountingPlaylist</span> inherited = <span class="kw">new</span> com.katas.composition.naive.<span class="ty">CountingPlaylist</span>();
+        <span class="cmt">// Add all three in one call.</span>
+        inherited.<span class="fn">addAll</span>(songs);
+        <span class="cmt">// The list holds 3 songs, but the counter says 6.</span>
+        <span class="ty">System</span>.out.<span class="fn">println</span>(<span class="str">"Inheritance: "</span> + inherited.<span class="fn">size</span>() + <span class="str">" songs in the list, counter says "</span>
+                + inherited.<span class="fn">getAddedCount</span>());
+
+        <span class="cmt">// COMPOSITION: a counter wrapped around a real Playlist.</span>
+        <span class="ty">CountingPlaylist</span> composed = <span class="kw">new</span> <span class="ty">CountingPlaylist</span>(<span class="kw">new</span> <span class="ty">Playlist</span>());
+        <span class="cmt">// The very same call.</span>
+        composed.<span class="fn">addAll</span>(songs);
+        <span class="cmt">// 3 songs, counter says 3.</span>
+        <span class="ty">System</span>.out.<span class="fn">println</span>(<span class="str">"Composition: "</span> + composed.<span class="fn">size</span>() + <span class="str">" songs in the list, counter says "</span>
+                + composed.<span class="fn">getAddedCount</span>());
+    }
+}</code></pre>
+
+  <p class="pred-label">Prediction — the program's own lines</p>
+  <pre class="output"><code><span class="err">Inheritance: 3 songs in the list, counter says 6</span>
+<span class="out">Composition: 3 songs in the list, counter says 3</span></code></pre>
+
+  <h4>The tests</h4>
+  <p class="filepath">Saved: katas/src/test/java/com/katas/composition/CountingPlaylistTest.java</p>
+  <p>Three tests on the composed version. <code>addAllCountsEachSongOnce</code> expects size 3 and count 3. <code>singleAndBatchAddsAddUp</code> does one <code>add</code> plus a batch of two and expects 3. <code>wrapperCanWrapAnyImplementationOfTheContract</code> stacks a counter around a counter around a Playlist, adds 2 songs, and expects <em>both</em> layers to report 2, which proves the request travelled through every layer exactly once.</p>
+
+  <p class="filepath">Saved: katas/src/test/java/com/katas/composition/FragileBaseClassTest.java</p>
+  <pre class="code" data-title="FragileBaseClassTest.java"><code><span class="cmt">// The test sits in the composition package; it reaches the naive classes by import.</span>
+<span class="kw">package</span> com.katas.composition;
+
+<span class="cmt">// The broken, inheritance-based counter.</span>
+<span class="kw">import</span> com.katas.composition.naive.<span class="ty">CountingPlaylist</span>;
+<span class="cmt">// The @Test marker.</span>
+<span class="kw">import</span> org.junit.jupiter.api.<span class="ty">Test</span>;
+
+<span class="cmt">// List.of for the test input.</span>
+<span class="kw">import</span> java.util.<span class="ty">List</span>;
+
+<span class="cmt">// Equality check.</span>
+<span class="kw">import static</span> org.junit.jupiter.api.<span class="ty">Assertions</span>.<span class="fn">assertEquals</span>;
+
+<span class="cmt">// PINS THE SYMPTOM on purpose. This test passes when the bug is present, so</span>
+<span class="cmt">// the lesson's claim ("the subclass counts 6") is checked by the machine,</span>
+<span class="cmt">// not just asserted in prose.</span>
+<span class="kw">class</span> <span class="ty">FragileBaseClassTest</span> {
+
+    <span class="cmt">// The parent's tidy-up makes the subclass count every song twice.</span>
+    <span class="anno">@Test</span>
+    <span class="kw">void</span> <span class="fn">inheritedCounterDoubleCountsAfterTheParentChanged</span>() {
+        <span class="cmt">// The subclass from the naive package.</span>
+        <span class="ty">CountingPlaylist</span> playlist = <span class="kw">new</span> <span class="ty">CountingPlaylist</span>();
+        <span class="cmt">// Three songs in one batch.</span>
+        playlist.<span class="fn">addAll</span>(<span class="ty">List</span>.<span class="fn">of</span>(<span class="str">"Intro"</span>, <span class="str">"Verse"</span>, <span class="str">"Outro"</span>));
+        <span class="cmt">// The list is right: three songs are stored...</span>
+        <span class="fn">assertEquals</span>(<span class="num">3</span>, playlist.<span class="fn">size</span>());
+        <span class="cmt">// ...but the counter is wrong: 3 from addAll + 3 from add = 6.</span>
+        <span class="fn">assertEquals</span>(<span class="num">6</span>, playlist.<span class="fn">getAddedCount</span>());
+    }
+}</code></pre>
+
+  <div class="callout forlearning">
+    <p>A test that passes <em>because</em> a bug is present is a teaching device, used here so the machine confirms the lesson's claim. In a real codebase you would fix the bug and test the correct behaviour instead.</p>
+  </div>
+
+  <h4>Run it, and compare</h4>
+  <pre class="terminal" data-title="terminal — from design-patterns-learning/"><code>cd katas
+mvn test
+mvn compile exec:java <span class="str">"-Dexec.mainClass=com.katas.composition.Main"</span></code></pre>
+
+  <p class="pred-label">Prediction — mvn test summary</p>
+  <pre class="output"><code><span class="out">[INFO] Tests run: 18, Failures: 0, Errors: 0, Skipped: 0</span>
+<span class="out">[INFO] BUILD SUCCESS</span></code></pre>
+
+  <div class="callout tryit">
+    <p>Expect <strong>18 tests</strong> (14 earlier + 4 new) and the two demo lines. If anything differs, the machine is right. Tell me what you saw. To see the fragility live, edit <code>naive/Playlist.addAll</code> back to <code>songs.add(song)</code> (the "before" version) and re-run <code>mvn test</code>. <code>FragileBaseClassTest</code> now <em>fails</em>, expecting 6 but getting 3. The child's behaviour flipped, and you only touched the parent. Undo the edit afterwards.</p>
+  </div>
+</section>
+
+<!-- ============================== SECTION 5 ============================== -->
+<section id="s5">
+  <h2><span class="sec-num">5</span>Applied to the Smart Home Hub</h2>
+
+  <p><strong>The new requirement:</strong> the hub must keep an <em>activity log</em>, a record of every time a device is switched on or off. And it must work for every device kind, present and future.</p>
+
+  <h4>The inheritance mess this invites</h4>
+  <p>The tempting first move uses Lesson 02's tool:</p>
+  <pre class="code" data-title="the tempting way (not written to disk)"><code><span class="kw">class</span> <span class="ty">LoggingLight</span> <span class="kw">extends</span> <span class="ty">Light</span> {
+    <span class="anno">@Override</span> <span class="kw">public void</span> <span class="fn">turnOn</span>()  { <span class="kw">super</span>.<span class="fn">turnOn</span>();  <span class="cmt">/* log it */</span> }
+    <span class="anno">@Override</span> <span class="kw">public void</span> <span class="fn">turnOff</span>() { <span class="kw">super</span>.<span class="fn">turnOff</span>(); <span class="cmt">/* log it */</span> }
+}
+<span class="kw">class</span> <span class="ty">LoggingThermostat</span> <span class="kw">extends</span> <span class="ty">Thermostat</span> { <span class="cmt">/* the same two overrides, copied */</span> }
+<span class="cmt">// ...and LoggingLock, LoggingCamera, then ScheduledLight, LoggingScheduledLight...</span></code></pre>
+  <p>Every smell from this lesson is there. The logging code is copied once per device kind. Section 3.4's class explosion begins with the second feature. Each <code>Logging*</code> class is welded to its parent's internals; if <code>AbstractDevice.turnOff</code> ever reused <code>turnOn</code>, logs would double up exactly like the playlist counter. And the choice of whether a device is logged is fixed when the code is written. The other temptation, putting logging inside <code>AbstractDevice.turnOn</code>, forces <em>every</em> device to log, always, into some shared place, with no way to opt out.</p>
+
+  <h4>The composition cure</h4>
+  <p>Two small classes in a new <code>activity</code> package, and no device class changes at all:</p>
+
+  <figure class="fig">
+    <svg viewBox="0 0 720 320" role="img" aria-label="Hub structure after Lesson 03. Main uses Device. AbstractDevice implements Device; Light and Thermostat extend AbstractDevice. LoggedDevice also implements Device, and has a Device inside it called inner and an ActivityLog called log.">
+      <defs>
+        <marker id="f2-open" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="10" markerHeight="10" orient="auto-start-reverse">
+          <path d="M0,0 L10,5 L0,10" class="uml-head-open"/>
+        </marker>
+        <marker id="f2-hollow" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="12" markerHeight="12" orient="auto-start-reverse">
+          <path d="M1,1 L11,6 L1,11 z" class="uml-head-hollow"/>
+        </marker>
+      </defs>
+      <rect x="20" y="15" width="130" height="50" rx="8" class="fig-code"/>
+      <text x="85" y="45" class="uml-name">Main</text>
+
+      <rect x="270" y="10" width="180" height="60" rx="8" class="fig-contract"/>
+      <text x="360" y="32" class="uml-stereo">«interface»</text>
+      <text x="360" y="52" class="uml-name">Device</text>
+      <line x1="150" y1="40" x2="266" y2="40" class="uml-dashed" marker-end="url(#f2-open)"/>
+      <text x="208" y="32" class="fig-small fig-center">uses</text>
+
+      <rect x="250" y="130" width="220" height="56" rx="8" class="fig-contract"/>
+      <text x="360" y="150" class="uml-stereo">«abstract»</text>
+      <text x="360" y="170" class="uml-name uml-abstract">AbstractDevice</text>
+      <line x1="360" y1="130" x2="360" y2="74" class="uml-dashed" marker-end="url(#f2-hollow)"/>
+
+      <rect x="150" y="250" width="150" height="46" rx="8" class="fig-code"/>
+      <text x="225" y="278" class="uml-name">Light</text>
+      <rect x="330" y="250" width="150" height="46" rx="8" class="fig-code"/>
+      <text x="405" y="278" class="uml-name">Thermostat</text>
+      <line x1="225" y1="250" x2="320" y2="190" class="uml-line" marker-end="url(#f2-hollow)"/>
+      <line x1="405" y1="250" x2="390" y2="190" class="uml-line" marker-end="url(#f2-hollow)"/>
+
+      <rect x="500" y="120" width="200" height="80" rx="8" class="fig-code"/>
+      <text x="600" y="142" class="uml-name">LoggedDevice</text>
+      <line x1="500" y1="152" x2="700" y2="152" class="uml-divider"/>
+      <text x="512" y="171" class="uml-member">- inner : Device</text>
+      <text x="512" y="189" class="uml-member">- log : ActivityLog</text>
+      <line x1="560" y1="120" x2="420" y2="74" class="uml-dashed" marker-end="url(#f2-hollow)"/>
+      <text x="478" y="70" class="fig-small">implements</text>
+      <path d="M680,120 L680,40 L454,40" class="uml-line" marker-end="url(#f2-open)"/>
+      <text x="566" y="32" class="fig-small fig-center">has-a (inner)</text>
+
+      <rect x="520" y="250" width="160" height="46" rx="8" class="fig-code"/>
+      <text x="600" y="278" class="uml-name">ActivityLog</text>
+      <line x1="600" y1="200" x2="600" y2="246" class="uml-line" marker-end="url(#f2-open)"/>
+      <text x="610" y="228" class="fig-small">has-a (log)</text>
+    </svg>
+    <figcaption>The hub after Lesson 03. <code>LoggedDevice</code> both <em>is</em> a <code>Device</code> (dashed line, hollow triangle) and <em>has</em> a <code>Device</code> (solid line, open arrowhead: "holds a reference to"). The inheritance on the left stays: it is a true is-a with a stable shared core. The optional feature on the right is composed.</figcaption>
+  </figure>
+
+  <p class="filepath">Saved: smarthome/src/main/java/com/smarthome/activity/ActivityLog.java</p>
+  <pre class="code" data-title="ActivityLog.java"><code><span class="cmt">// Activity tracking is its own responsibility, so it gets its own package.</span>
+<span class="kw">package</span> com.smarthome.activity;
+
+<span class="cmt">// The JDK's growable list, used for the private storage.</span>
+<span class="kw">import</span> java.util.<span class="ty">ArrayList</span>;
+<span class="cmt">// The JDK's list interface, used in the public method's return type.</span>
+<span class="kw">import</span> java.util.<span class="ty">List</span>;
+
+<span class="cmt">// The hub's activity history: an ordered record of what happened.</span>
+<span class="cmt">// It knows nothing about devices; it just stores lines of text.</span>
+<span class="kw">public class</span> <span class="ty">ActivityLog</span> {
+
+    <span class="cmt">// The entries, oldest first. private: the only way in is record().</span>
+    <span class="kw">private final</span> <span class="ty">List</span>&lt;<span class="ty">String</span>&gt; entries = <span class="kw">new</span> <span class="ty">ArrayList</span>&lt;&gt;();
+
+    <span class="cmt">// Add one line to the end of the history.</span>
+    <span class="kw">public void</span> <span class="fn">record</span>(<span class="ty">String</span> entry) {
+        <span class="cmt">// Append it to the internal list.</span>
+        entries.<span class="fn">add</span>(entry);
+    }
+
+    <span class="cmt">// Read the history. Returns a COPY that cannot be changed, so no caller</span>
+    <span class="cmt">// can quietly delete or rewrite history (encapsulation, Lesson 01).</span>
+    <span class="kw">public</span> <span class="ty">List</span>&lt;<span class="ty">String</span>&gt; <span class="fn">entries</span>() {
+        <span class="cmt">// List.copyOf makes an unmodifiable snapshot of the current entries.</span>
+        <span class="kw">return</span> <span class="ty">List</span>.<span class="fn">copyOf</span>(entries);
+    }
+}</code></pre>
+  <p>Why <code>List.copyOf</code>? Returning the private <code>entries</code> list itself would hand every caller a key to the vault: <code>log.entries().clear()</code> would erase history. <code>List.copyOf</code> returns a snapshot that refuses changes. Trying <code>add</code> on it throws <code>UnsupportedOperationException</code>, Java's standard "this object does not allow that" exception.</p>
+
+  <p class="filepath">Saved: smarthome/src/main/java/com/smarthome/activity/LoggedDevice.java</p>
+  <pre class="code" data-title="LoggedDevice.java"><code><span class="cmt">// Lives with ActivityLog: it is the logging feature, not a kind of device.</span>
+<span class="kw">package</span> com.smarthome.activity;
+
+<span class="cmt">// The contract this wrapper both keeps and holds.</span>
+<span class="kw">import</span> com.smarthome.devices.<span class="ty">Device</span>;
+
+<span class="cmt">// Adds activity logging to ANY device by composition. A LoggedDevice IS a</span>
+<span class="cmt">// Device (it keeps the contract, so the hub cannot tell the difference) and</span>
+<span class="cmt">// HAS a Device inside it (the real one), to which it delegates every call.</span>
+<span class="cmt">// One class covers lights, thermostats, and every device kind still to come.</span>
+<span class="kw">public class</span> <span class="ty">LoggedDevice</span> <span class="kw">implements</span> <span class="ty">Device</span> {
+
+    <span class="cmt">// The real device doing the real work. Typed by the contract, so any</span>
+    <span class="cmt">// device (even another wrapper) can be wrapped.</span>
+    <span class="kw">private final</span> <span class="ty">Device</span> inner;
+
+    <span class="cmt">// Where switch events are written. Shared, so many devices can log to</span>
+    <span class="cmt">// one history in the order things actually happened.</span>
+    <span class="kw">private final</span> <span class="ty">ActivityLog</span> log;
+
+    <span class="cmt">// Both parts are handed in from outside: the caller decides which</span>
+    <span class="cmt">// device gets logged, and to which log.</span>
+    <span class="kw">public</span> <span class="fn">LoggedDevice</span>(<span class="ty">Device</span> inner, <span class="ty">ActivityLog</span> log) {
+        <span class="cmt">// Remember the device to delegate to.</span>
+        <span class="kw">this</span>.inner = inner;
+        <span class="cmt">// Remember the log to write to.</span>
+        <span class="kw">this</span>.log = log;
+    }
+
+    <span class="cmt">// Pure delegation: the wrapper has no name of its own.</span>
+    <span class="anno">@Override</span>
+    <span class="kw">public</span> <span class="ty">String</span> <span class="fn">getName</span>() {
+        <span class="cmt">// Ask the real device.</span>
+        <span class="kw">return</span> inner.<span class="fn">getName</span>();
+    }
+
+    <span class="cmt">// Delegate, then record what the device now reports.</span>
+    <span class="anno">@Override</span>
+    <span class="kw">public void</span> <span class="fn">turnOn</span>() {
+        <span class="cmt">// The real device switches on, in its own way.</span>
+        inner.<span class="fn">turnOn</span>();
+        <span class="cmt">// Record its own status line, e.g. "Hall Thermostat: regulating to 21C".</span>
+        log.<span class="fn">record</span>(inner.<span class="fn">status</span>());
+    }
+
+    <span class="cmt">// Delegate, then record.</span>
+    <span class="anno">@Override</span>
+    <span class="kw">public void</span> <span class="fn">turnOff</span>() {
+        <span class="cmt">// The real device switches off.</span>
+        inner.<span class="fn">turnOff</span>();
+        <span class="cmt">// Record its status line, e.g. "Living Room Light: OFF".</span>
+        log.<span class="fn">record</span>(inner.<span class="fn">status</span>());
+    }
+
+    <span class="cmt">// Pure delegation.</span>
+    <span class="anno">@Override</span>
+    <span class="kw">public boolean</span> <span class="fn">isOn</span>() {
+        <span class="cmt">// The real device knows its own state.</span>
+        <span class="kw">return</span> inner.<span class="fn">isOn</span>();
+    }
+
+    <span class="cmt">// Pure delegation: logging must not change how a device describes itself.</span>
+    <span class="anno">@Override</span>
+    <span class="kw">public</span> <span class="ty">String</span> <span class="fn">status</span>() {
+        <span class="cmt">// Exactly the real device's status line.</span>
+        <span class="kw">return</span> inner.<span class="fn">status</span>();
+    }
+}</code></pre>
+
+  <p class="filepath">Saved: smarthome/src/main/java/com/smarthome/Main.java (modified)</p>
+  <pre class="code" data-title="Main.java (smarthome, the changed part)"><code>        <span class="cmt">// One shared history for the whole house.</span>
+        <span class="ty">ActivityLog</span> log = <span class="kw">new</span> <span class="ty">ActivityLog</span>();
+
+        <span class="cmt">// Build the devices, each wrapped so its switching is logged. The</span>
+        <span class="cmt">// wrapping is chosen HERE, per device, while the program runs; no</span>
+        <span class="cmt">// LoggingLight or LoggingThermostat class exists or is needed.</span>
+        <span class="ty">Device</span>[] devices = {
+                <span class="cmt">// A real Light inside a LoggedDevice.</span>
+                <span class="kw">new</span> <span class="ty">LoggedDevice</span>(<span class="kw">new</span> <span class="ty">Light</span>(<span class="str">"Living Room Light"</span>), log),
+                <span class="cmt">// A real Thermostat inside a LoggedDevice.</span>
+                <span class="kw">new</span> <span class="ty">LoggedDevice</span>(<span class="kw">new</span> <span class="ty">Thermostat</span>(<span class="str">"Hall Thermostat"</span>, <span class="num">21</span>), log)
+        };
+
+        <span class="cmt">// The loop is unchanged: it still knows only "these are Devices".</span>
+        <span class="kw">for</span> (<span class="ty">Device</span> device : devices) {
+            device.<span class="fn">turnOn</span>();
+            <span class="ty">System</span>.out.<span class="fn">println</span>(<span class="str">"  "</span> + device.<span class="fn">status</span>());
+        }
+
+        <span class="cmt">// Someone switches the living room light off later.</span>
+        devices[<span class="num">0</span>].<span class="fn">turnOff</span>();
+
+        <span class="cmt">// Read the history once, as an unmodifiable snapshot.</span>
+        <span class="ty">List</span>&lt;<span class="ty">String</span>&gt; entries = log.<span class="fn">entries</span>();
+        <span class="cmt">// A heading that says how many entries there are.</span>
+        <span class="ty">System</span>.out.<span class="fn">println</span>(<span class="str">"Activity log ("</span> + entries.<span class="fn">size</span>() + <span class="str">" entries):"</span>);
+        <span class="cmt">// Print each entry numbered from 1.</span>
+        <span class="kw">for</span> (<span class="kw">int</span> i = <span class="num">0</span>; i &lt; entries.<span class="fn">size</span>(); i++) {
+            <span class="ty">System</span>.out.<span class="fn">println</span>(<span class="str">"  "</span> + (i + <span class="num">1</span>) + <span class="str">". "</span> + entries.<span class="fn">get</span>(i));
+        }</code></pre>
+
+  <p class="filepath">Saved: smarthome/src/test/java/com/smarthome/activity/ActivityLogTest.java and LoggedDeviceTest.java</p>
+  <p>Five tests. <code>recordsEntriesInOrder</code> and <code>entriesCannotBeChangedFromOutside</code> (adding to the returned list must throw <code>UnsupportedOperationException</code>, and the log must be unchanged). <code>switchingIsDelegatedAndRecorded</code> expects <code>["Porch Light: ON", "Porch Light: OFF"]</code>. <code>wrapperIsInvisibleToClients</code> checks that name, state and status come straight from the real thermostat. <code>sharedLogKeepsTheOrderAcrossDevices</code> interleaves two devices and expects the true order. <code>DeviceTest</code> and <code>AbstractDeviceTest</code> are untouched, because no device class changed.</p>
+
+  <p><strong>What this adds:</strong> the hub now has a house-wide activity history. Any device, including kinds not yet written, gets logging by being wrapped where it is created. No device class knows logging exists, and the loop did not change.</p>
+
+  <ol class="trace">
+    <li><code>new ActivityLog()</code> makes one empty history.</li>
+    <li>Each array element is a <code>LoggedDevice</code> holding a real device and the shared log.</li>
+    <li>Pass one: <code>device.turnOn()</code> runs <code>LoggedDevice.turnOn</code>. It calls <code>inner.turnOn()</code> (the Light, which reaches AbstractDevice's code), then <code>log.record(inner.status())</code> records "Living Room Light: ON". <code>device.status()</code> delegates too, printing the same line.</li>
+    <li>Pass two: same steps for the thermostat, which records "Hall Thermostat: regulating to 21C".</li>
+    <li><code>devices[0].turnOff()</code>: the wrapper switches the light off and records "Living Room Light: OFF".</li>
+    <li><code>log.entries()</code> returns a 3-entry snapshot, printed with numbers 1–3.</li>
+  </ol>
+
+  <p class="pred-label">Prediction — the hub's own lines</p>
+  <pre class="output"><code>Smart Home Hub is starting up...
+  Living Room Light: ON
+  Hall Thermostat: regulating to 21C
+Activity log (3 entries):
+  1. Living Room Light: ON
+  2. Hall Thermostat: regulating to 21C
+  3. Living Room Light: OFF</code></pre>
+
+  <pre class="terminal" data-title="terminal — from design-patterns-learning/"><code>cd smarthome
+mvn test
+mvn compile exec:java</code></pre>
+  <p class="pred-label">Prediction — mvn test</p>
+  <pre class="output"><code><span class="out">[INFO] Tests run: 13, Failures: 0, Errors: 0, Skipped: 0</span>
+<span class="out">[INFO] BUILD SUCCESS</span></code></pre>
+
+  <div class="callout tryit">
+    <p>Expect <strong>13 tests</strong> (8 earlier + 5 new) and the seven lines above. If what you see differs, your machine is right. Tell me what you saw and we will work out why.</p>
+  </div>
+</section>
+
+<!-- ============================== SECTION 6 ============================== -->
+<section id="s6">
+  <h2><span class="sec-num">6</span>In the wild</h2>
+
+  <p><strong>The JDK's own fragile base class.</strong> This lesson's playlist is a small copy of a famous real case. In Joshua Bloch's book <em>Effective Java</em> (the item "Favor composition over inheritance"), a counting subclass of <code>java.util.HashSet</code> overrides <code>add</code> and <code>addAll</code>, adds three elements, and reports six. The reason is the same as ours: <code>HashSet</code> inherits <code>addAll</code> from <code>AbstractCollection</code>, which loops and calls <code>add</code>. <code>AbstractCollection</code>'s documentation describes that loop, but <code>HashSet</code> makes no promise to keep inheriting it. A future version could override <code>addAll</code> and silently "fix" the subclass's count, or break a different subclass. Depending on a parent's self-use is fragile in both directions. Bloch's fix is our fix: a wrapper class that holds a <code>Set</code> and forwards to it.</p>
+
+  <p><strong>The JDK's own wrappers.</strong> <code>Collections.unmodifiableList(list)</code> returns an object that is a <code>List</code>, holds your list, forwards every read to it, and refuses every write. <code>new BufferedReader(new FileReader("notes.txt"))</code> wraps one reader in another to add buffering. That is the same "implements X, holds an X" shape as <code>LoggedDevice</code>, used across the whole <code>java.io</code> package (Lesson 19 traces it).</p>
+</section>
+
+<!-- ============================== SECTION 7 ============================== -->
+<section id="s7">
+  <h2><span class="sec-num">7</span>When NOT to compose, and gotchas</h2>
+
+  <h3>Inheritance is still right sometimes</h3>
+  <p>"Favor" composition does not mean "never extend." Our hub kept <code>AbstractDevice</code> on purpose, because it passes every check: the is-a sentence is true, the shared core (name, on/off) is stable, we own both parent and children, and children are meant to be written against it. Inheritance is fine when all of these hold: <strong>a true is-a, a parent designed for extension, both sides under your control, and a core that rarely changes.</strong> Rewriting <code>AbstractDevice</code> as a component "because composition is better" would add forwarding code for no pain cured. That is exactly the over-application this course warns against.</p>
+
+  <h3>Gotchas</h3>
+  <ul>
+    <li><strong>Composition costs forwarding code.</strong> <code>LoggedDevice</code> must forward all five <code>Device</code> methods, even the three it does not change. Bigger interfaces mean more boilerplate. Implementing the interface at least makes the compiler check that you forgot none.</li>
+    <li><strong>The wrapper is a different object.</strong> <code>wrapper == inner</code> is false. Code that compares objects by identity, or that keeps a reference to the inner object and uses it directly, will skip the wrapper's behaviour. Hand out the wrapper, not the inner object.</li>
+    <li><strong>The wrapper does not see the inner object's self-calls.</strong> That is what saved the counter, but it cuts both ways. If you <em>wanted</em> to intercept a call the inner object makes to itself, a wrapper cannot.</li>
+    <li><strong>Leaking internals through a getter.</strong> Returning a private <code>List</code> directly lets callers change it; return a copy (<code>List.copyOf</code>) as <code>ActivityLog</code> does.</li>
+    <li><strong>If you write a class others may extend, decide deliberately.</strong> Either document which methods call which (so subclasses can rely on it), or forbid extension by marking the class <code>final</code>. <code>public final class Playlist</code> means "cannot be extended" and would have made the fragile subclass impossible to write.</li>
+  </ul>
+
+  <details class="check">
+    <summary>A teammate wants every device to be logged, always. Should logging move into <code>AbstractDevice.turnOn/turnOff</code> after all?</summary>
+    <p>Even then, the wrapper is usually better. Logging inside <code>AbstractDevice</code> ties every device to a log object (where would it come from?), makes tests of a plain light produce log noise, and leaves devices outside that parent unlogged. "Always logged" is a decision about how the hub is <em>assembled</em>, so it belongs where devices are created: wrap every device in <code>Main</code>. The device classes stay simple, and the decision stays in one visible place.</p>
+  </details>
+</section>
+
+<!-- ============================== SECTION 8 ============================== -->
+<section id="s8">
+  <h2><span class="sec-num">8</span>Key takeaways</h2>
+  <ul class="takeaways">
+    <li>The fragile base class problem is a subclass breaking when only its parent changes. It happens because inheritance makes the parent's self-use (which methods call which) part of the child's behaviour.</li>
+    <li>Composition means holding another object in a field (has-a), and delegation means passing calls on to it. Together they reuse an object only through its public contract, so its internal habits cannot reach you.</li>
+    <li>A wrapper keeps the same interface as the object it holds, so clients cannot tell it apart. Wrappers can be chosen while the program runs and stacked to combine features, which avoids the class explosion of one subclass per combination.</li>
+    <li>The Gang of Four's two founding principles are "program to an interface, not an implementation" and "favor object composition over class inheritance." Every pattern ahead builds on both.</li>
+    <li>"Favor" is not "always." Inheritance stays right for a true is-a with a stable core designed for extension, like <code>AbstractDevice</code>. Composition costs forwarding code and an extra object, so use it where a real pain asks for it.</li>
+  </ul>
+</section>
+
+<!-- ============================== SECTION 9 ============================== -->
+<section id="s9">
+  <h2><span class="sec-num">9</span>Challenge</h2>
+  <p>New requirement: maintenance wants to know how many times each device has been switched on, because bulbs wear out. Design a <code>SwitchCountingDevice</code> using composition. Then show how one light can be <strong>both</strong> logged and counted <em>without writing a class for that combination</em>. Predict what this prints:</p>
+  <pre class="code" data-title="predict the output"><code><span class="ty">ActivityLog</span> log = <span class="kw">new</span> <span class="ty">ActivityLog</span>();
+<span class="ty">SwitchCountingDevice</span> counted = <span class="kw">new</span> <span class="ty">SwitchCountingDevice</span>(<span class="kw">new</span> <span class="ty">LoggedDevice</span>(<span class="kw">new</span> <span class="ty">Light</span>(<span class="str">"Porch"</span>), log));
+counted.<span class="fn">turnOn</span>();
+counted.<span class="fn">turnOff</span>();
+counted.<span class="fn">turnOn</span>();
+<span class="ty">System</span>.out.<span class="fn">println</span>(counted.<span class="fn">getOnCount</span>() + <span class="str">" switch-ons, "</span> + log.<span class="fn">entries</span>().<span class="fn">size</span>() + <span class="str">" log entries"</span>);
+<span class="ty">System</span>.out.<span class="fn">println</span>(counted.<span class="fn">status</span>());</code></pre>
+
+  <details class="answer">
+    <summary>Click to reveal the answer</summary>
+    <pre class="code" data-title="SwitchCountingDevice.java (solution sketch)"><code><span class="kw">package</span> com.smarthome.activity;
+
+<span class="kw">import</span> com.smarthome.devices.<span class="ty">Device</span>;
+
+<span class="cmt">// IS a Device (keeps the contract) and HAS a Device (delegates to it).</span>
+<span class="kw">public class</span> <span class="ty">SwitchCountingDevice</span> <span class="kw">implements</span> <span class="ty">Device</span> {
+    <span class="cmt">// The wrapped device: any Device, including another wrapper.</span>
+    <span class="kw">private final</span> <span class="ty">Device</span> inner;
+    <span class="cmt">// How many times turnOn was called on THIS wrapper.</span>
+    <span class="kw">private int</span> onCount;
+
+    <span class="kw">public</span> <span class="fn">SwitchCountingDevice</span>(<span class="ty">Device</span> inner) { <span class="kw">this</span>.inner = inner; }
+
+    <span class="cmt">// The one method with extra behaviour: count, then delegate.</span>
+    <span class="anno">@Override</span> <span class="kw">public void</span> <span class="fn">turnOn</span>() { onCount++; inner.<span class="fn">turnOn</span>(); }
+
+    <span class="cmt">// Everything else is pure forwarding.</span>
+    <span class="anno">@Override</span> <span class="kw">public void</span> <span class="fn">turnOff</span>() { inner.<span class="fn">turnOff</span>(); }
+    <span class="anno">@Override</span> <span class="kw">public</span> <span class="ty">String</span> <span class="fn">getName</span>() { <span class="kw">return</span> inner.<span class="fn">getName</span>(); }
+    <span class="anno">@Override</span> <span class="kw">public boolean</span> <span class="fn">isOn</span>() { <span class="kw">return</span> inner.<span class="fn">isOn</span>(); }
+    <span class="anno">@Override</span> <span class="kw">public</span> <span class="ty">String</span> <span class="fn">status</span>() { <span class="kw">return</span> inner.<span class="fn">status</span>(); }
+
+    <span class="cmt">// The feature this wrapper adds.</span>
+    <span class="kw">public int</span> <span class="fn">getOnCount</span>() { <span class="kw">return</span> onCount; }
+}</code></pre>
+    <p><strong>Combining features:</strong> stack the wrappers, as in the snippet: counter → logger → light. Each call travels inward through every layer. No <code>LoggedCountedLight</code> class exists, and the same two wrappers combine with a thermostat, a lock, or anything else.</p>
+    <ol class="trace">
+      <li><code>turnOn()</code>: the counter's onCount becomes 1. It delegates to the logger, which delegates to the Light (on), then records "Porch: ON".</li>
+      <li><code>turnOff()</code>: the counter only forwards. The logger switches the light off and records "Porch: OFF".</li>
+      <li><code>turnOn()</code>: onCount becomes 2, and the logger records "Porch: ON".</li>
+      <li><code>status()</code> is forwarded through both layers to the Light: "Porch: ON".</li>
+    </ol>
+    <p class="pred-label">Prediction</p>
+    <pre class="output"><code>2 switch-ons, 3 log entries
+Porch: ON</code></pre>
+    <p>The order of stacking is a real design choice. Here the counter is outermost, so it counts every <code>turnOn</code> before the logger even sees it; for these two features the order does not change the results. Lesson 19 shows cases where it does. If you type this in (in <code>smarthome/</code>, under <code>activity/</code>), add a test such as "two turnOns and one turnOff give an onCount of 2," then run <code>mvn test</code>. The machine is the judge. You may delete it afterwards to stay in step with the lessons.</p>
+  </details>
+</section>
+
+<!-- ============================== SECTION 10 ============================== -->
+<section id="s10">
+  <h2><span class="sec-num">10</span>Catalog update</h2>
+  <p>No entry yet. "Favor composition over inheritance" gets its formal catalog entry in Lesson 11, alongside the other companion principles, once SOLID gives it a frame. The wrapper shape you built twice today (<code>CountingPlaylist</code>, <code>LoggedDevice</code>) gets its own entry as a named pattern in Lesson 19.</p>
+</section>
+
+<div class="nextup">
+  <p><strong>Lesson 04 — Coupling, Cohesion, and Reading UML.</strong> We name the two measures every design choice so far has been quietly improving, learn the vocabulary of code rot, and read UML diagrams properly: every box, every line, and every arrowhead you have glimpsed in these figures.</p>
+</div>
+<p class="position">Lesson 03 · the fourth of 45 lessons (00–44) · Phase 0, Chapter 01 · lesson 3 of 4 in this chapter</p>
+
+</main>
+</div>
+</body>
+</html>
