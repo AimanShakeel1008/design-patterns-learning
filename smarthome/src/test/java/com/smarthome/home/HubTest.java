@@ -5,6 +5,8 @@ package com.smarthome.home;
 import com.smarthome.devices.Device;
 import com.smarthome.devices.Light;
 import com.smarthome.devices.Thermostat;
+// The "everything on" routine, used to start the house in these tests.
+import com.smarthome.routines.AllOn;
 // The @Test marker.
 import org.junit.jupiter.api.Test;
 
@@ -21,16 +23,16 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 // Proves the hub's one job: operating the devices it is given.
 class HubTest {
 
-    // startUp switches every device on.
+    // run hands the devices to the routine (here: switch everything on).
     @Test
-    void startUpTurnsEveryDeviceOn() {
+    void runAppliesTheRoutineToEveryDevice() {
         // Two plain devices.
         Light light = new Light("Desk Lamp");
         Thermostat thermostat = new Thermostat("Office", 20);
         // A hub operating them.
         Hub hub = new Hub(List.of(light, thermostat));
-        // Start the house.
-        hub.startUp();
+        // Run the "everything on" routine.
+        hub.run(new AllOn());
         // Both are on.
         assertTrue(light.isOn());
         assertTrue(thermostat.isOn());
@@ -43,7 +45,7 @@ class HubTest {
         Device desk = new Light("Desk Lamp");
         Device porch = new Light("Porch Light");
         Hub hub = new Hub(List.of(desk, porch));
-        hub.startUp();
+        hub.run(new AllOn());
         // Switch one off by name.
         hub.turnOff("Porch Light");
         // Only the named one changed.

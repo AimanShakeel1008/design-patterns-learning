@@ -1,0 +1,651 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lesson 06 — O: Open/Closed Principle · Design Patterns in Java</title>
+<link rel="stylesheet" href="../../assets/lesson.css">
+</head>
+<body>
+<div class="page">
+
+<aside class="toc" aria-label="Table of contents">
+  <p class="toc-title">Lesson 06 · Contents</p>
+  <ol>
+    <li><a href="#s1">1 · The pain</a></li>
+    <li><a href="#s2">2 · Real-world analogy</a></li>
+    <li><a href="#s3">3 · The principle explained</a></li>
+    <li><a href="#s4">4 · The kata</a></li>
+    <li><a href="#s5">5 · Applied to the hub</a></li>
+    <li><a href="#s6">6 · In the wild</a></li>
+    <li><a href="#s7">7 · When NOT to use it</a></li>
+    <li><a href="#s8">8 · Key takeaways</a></li>
+    <li><a href="#s9">9 · Challenge</a></li>
+    <li><a href="#s10">10 · Catalog update</a></li>
+  </ol>
+  <nav class="toc-nav" aria-label="Course navigation">
+    <a class="navcard" href="lesson-05-single-responsibility.html">
+      <span class="navkicker">← Prev · Lesson 05</span>
+      <span class="navtitle">S — Single Responsibility Principle</span>
+    </a>
+    <a class="navmap" href="../../index.html">↑ Course map</a>
+    <a class="navcatalog" href="../../pattern-catalog.html">◆ Pattern catalog</a>
+    <span class="navcard disabled">
+      <span class="navkicker">Next · Lesson 07 →</span>
+      <span class="navtitle">L — Liskov Substitution Principle</span>
+      <span class="navnote">not yet written</span>
+    </span>
+  </nav>
+</aside>
+
+<main>
+
+<header class="banner">
+  <p class="kicker">Phase 1 · Chapter 02 · Lesson 06</p>
+  <h1>O — Open/Closed Principle</h1>
+  <p class="subtitle">Add new behaviour by adding new code, not by editing code that already works. The growing if-else chain is the classic violation, and an interface is the cure.</p>
+  <p class="meta">
+    <strong>Kata package:</strong> <code>com.katas.ocp</code> (wrong way in <code>com.katas.ocp.naive</code>).<br>
+    <strong>Smart Home Hub:</strong> created <code>routines/Routine.java</code>, <code>AllOn.java</code>, <code>AllOff.java</code>, <code>KeepOnly.java</code>, <code>RoutinesTest.java</code>; modified <code>home/Hub.java</code> (<code>startUp()</code> → <code>run(Routine)</code>), <code>HubTest.java</code>, <code>Main.java</code>.<br>
+    <strong>Prerequisites:</strong> <a href="lesson-05-single-responsibility.html">Lesson 05</a>; interfaces and polymorphism from <a href="../../phase-0-oop-foundations/chapter-01-oop/lesson-01-objects-encapsulation-interfaces.html">Lesson 01</a> and <a href="../../phase-0-oop-foundations/chapter-01-oop/lesson-02-inheritance-polymorphism.html">Lesson 02</a>.
+  </p>
+</header>
+
+<!-- ============================== SECTION 1 ============================== -->
+<section id="s1">
+  <h2><span class="sec-num">1</span>The pain</h2>
+
+  <p class="lead">The most common shape of rot in real code is not exotic. It is an if-else chain that grows one branch at a time.</p>
+
+  <p>A shop quotes shipping prices. Each method (Standard, Express, Overnight) has its own price formula and its own delivery time, so the quoter checks the method's name:</p>
+
+  <pre class="code" data-title="naive/ShippingQuoter.java (key lines)"><code><span class="kw">private int</span> <span class="fn">cost</span>(<span class="ty">String</span> method, <span class="kw">int</span> weightKg) {
+    <span class="kw">if</span> (method.<span class="fn">equals</span>(<span class="str">"Standard"</span>))       <span class="kw">return</span> <span class="num">5</span> + weightKg;
+    <span class="kw">else if</span> (method.<span class="fn">equals</span>(<span class="str">"Express"</span>))   <span class="kw">return</span> <span class="num">10</span> + weightKg * <span class="num">2</span>;
+    <span class="kw">else if</span> (method.<span class="fn">equals</span>(<span class="str">"Overnight"</span>)) <span class="kw">return</span> <span class="num">25</span> + weightKg * <span class="num">3</span>;
+    <span class="kw">throw new</span> <span class="ty">IllegalArgumentException</span>(<span class="str">"Unknown method: "</span> + method);
+}
+<span class="kw">private int</span> <span class="fn">days</span>(<span class="ty">String</span> method) {
+    <span class="kw">if</span> (method.<span class="fn">equals</span>(<span class="str">"Standard"</span>))       <span class="kw">return</span> <span class="num">5</span>;      <span class="cmt">// the SAME ladder, again</span>
+    <span class="kw">else if</span> (method.<span class="fn">equals</span>(<span class="str">"Express"</span>))   <span class="kw">return</span> <span class="num">2</span>;
+    <span class="kw">else if</span> (method.<span class="fn">equals</span>(<span class="str">"Overnight"</span>)) <span class="kw">return</span> <span class="num">1</span>;
+    <span class="kw">throw new</span> <span class="ty">IllegalArgumentException</span>(<span class="str">"Unknown method: "</span> + method);
+}</code></pre>
+
+  <p>Then marketing announces drone delivery. To support it, you must open a class that works, find <em>every</em> ladder that switches on the method's name (here two, in a real system often a dozen spread across files), add a branch to each, and re-test everything those ladders touch. Forget one ladder, and the quote fails halfway through. Next month it is "eco shipping," and the same surgery happens again. The class is never finished.</p>
+
+  <p class="pred-label">Predicted symptom, until both ladders are edited</p>
+  <pre class="output"><code>Naive: Express: 20 (2-day delivery)
+<span class="err">Naive refused: Unknown method: Drone</span></code></pre>
+
+  <p>The pain, named: <strong>a class that must be edited for every new variant</strong>. It is the "rigidity" smell from Lesson 04, and the repeated ladder is "needless repetition." Each edit to working code is a fresh chance to break the variants that already worked.</p>
+
+  <p class="filepath">Full wrong-way code: katas/src/main/java/com/katas/ocp/naive/ShippingQuoter.java</p>
+</section>
+
+<!-- ============================== SECTION 2 ============================== -->
+<section id="s2">
+  <h2><span class="sec-num">2</span>Real-world analogy</h2>
+
+  <p><strong>A wall socket.</strong> The electrician wires the socket once and closes up the wall. Since then you have plugged in a lamp, a phone charger, a vacuum cleaner, and appliances that had not been invented when the house was built. Nobody opened the wall for any of them. The socket is <em>closed</em>: its wiring is finished. The house is <em>open</em>: new appliances keep working. What makes that possible is the agreed plug shape.</p>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>At home</th><th>In code</th></tr></thead>
+      <tbody>
+        <tr><td>The wiring inside the wall, finished once</td><td>The closed code (<code>ShippingQuoter</code>, <code>Hub</code>)</td></tr>
+        <tr><td>The agreed plug shape</td><td>The interface (<code>ShippingMethod</code>, <code>Routine</code>)</td></tr>
+        <tr><td>A new appliance</td><td>A new class implementing the interface (<code>DroneShipping</code>)</td></tr>
+        <tr><td>Plugging it in</td><td>Creating the object where things are assembled (<code>Main</code>)</td></tr>
+        <tr><td>Rewiring the wall for each appliance</td><td>Adding an <code>else if</code> to every ladder</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ============================== SECTION 3 ============================== -->
+<section id="s3">
+  <h2><span class="sec-num">3</span>The principle explained</h2>
+
+  <h3>3.1 The paradox, untangled</h3>
+  <p>In 1988 Bertrand Meyer wrote that software modules should be "open for extension, but closed for modification." It sounds like a contradiction. How can something change without being changed? The trick is that the two words talk about different things:</p>
+  <ul>
+    <li><strong>Open for extension</strong>: the <em>behaviour</em> can grow. The system can learn to do new things.</li>
+    <li><strong>Closed for modification</strong>: the <em>source code</em> of the existing class does not have to be edited for that to happen. It is finished, tested, and left alone.</li>
+  </ul>
+  <p>So behaviour grows by <em>adding</em> new code, never by <em>editing</em> old code. That is the <strong>Open/Closed Principle (OCP)</strong>, the "O" in SOLID.</p>
+
+  <h3>3.2 How it is achieved: a variation point</h3>
+  <p>Look at what the naive ladders really encode: <em>the same three questions</em> (name, cost, delivery time), answered differently per method. Everything that varies sits behind those three questions. So we write them down as a contract, and each method answers them in its own class:</p>
+
+  <pre class="code" data-title="the variation point"><code><span class="kw">public interface</span> <span class="ty">ShippingMethod</span> {
+    <span class="ty">String</span> <span class="fn">name</span>();
+    <span class="kw">int</span> <span class="fn">cost</span>(<span class="kw">int</span> weightKg);
+    <span class="kw">int</span> <span class="fn">deliveryDays</span>();
+}</code></pre>
+
+  <p>The place in a design where you expect new variants to keep arriving, and where you put an interface so that they can, is called a <strong>variation point</strong>. The quoter now asks the method object instead of switching on its name: <code>method.cost(weightKg)</code>. <span class="term" tabindex="0" data-def="one call that runs different code depending on the actual object present at run time.">Polymorphism</span> picks the right formula at run time, which is the job the if-else chain used to do by hand.</p>
+
+  <figure class="fig">
+    <svg viewBox="0 0 720 300" role="img" aria-label="ShippingQuoter, above a dashed line marked closed, uses the ShippingMethod interface. Below the line, marked open, Standard, Express and Overnight implement the interface, and Drone, added later as one new file, implements it too.">
+      <defs>
+        <marker id="f1-open" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="10" markerHeight="10" orient="auto-start-reverse">
+          <path d="M0,0 L10,5 L0,10" class="uml-head-open"/>
+        </marker>
+        <marker id="f1-hollow" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="12" markerHeight="12" orient="auto-start-reverse">
+          <path d="M1,1 L11,6 L1,11 z" class="uml-head-hollow"/>
+        </marker>
+      </defs>
+      <rect x="60" y="30" width="200" height="60" rx="8" class="fig-code"/>
+      <text x="160" y="56" class="uml-name">ShippingQuoter</text>
+      <text x="160" y="76" class="fig-small fig-center fig-mono">quote(method, kg)</text>
+      <rect x="380" y="24" width="240" height="74" rx="8" class="fig-contract"/>
+      <text x="500" y="44" class="uml-stereo">«interface»</text>
+      <text x="500" y="64" class="uml-name">ShippingMethod</text>
+      <text x="500" y="85" class="fig-small fig-center fig-mono">name · cost · deliveryDays</text>
+      <line x1="260" y1="60" x2="376" y2="60" class="uml-dashed" marker-end="url(#f1-open)"/>
+      <text x="318" y="52" class="fig-small fig-center">uses</text>
+
+      <line x1="10" y1="140" x2="710" y2="140" class="fig-arrow fig-dashed"/>
+      <text x="14" y="132" class="fig-small fig-code-text">CLOSED: finished, never edited for new methods</text>
+      <text x="14" y="158" class="fig-small fig-contract-text">OPEN: new behaviour arrives as new classes</text>
+
+      <rect x="20" y="200" width="150" height="50" rx="8" class="fig-code"/>
+      <text x="95" y="222" class="uml-name">Standard</text>
+      <text x="95" y="240" class="fig-small fig-center">5 + kg · 5 days</text>
+      <rect x="190" y="200" width="150" height="50" rx="8" class="fig-code"/>
+      <text x="265" y="222" class="uml-name">Express</text>
+      <text x="265" y="240" class="fig-small fig-center">10 + 2kg · 2 days</text>
+      <rect x="360" y="200" width="150" height="50" rx="8" class="fig-code"/>
+      <text x="435" y="222" class="uml-name">Overnight</text>
+      <text x="435" y="240" class="fig-small fig-center">25 + 3kg · 1 day</text>
+      <rect x="530" y="200" width="170" height="50" rx="8" class="fig-code fig-dashed"/>
+      <text x="615" y="222" class="uml-name">Drone</text>
+      <text x="615" y="240" class="fig-small fig-center">added later: 1 new file</text>
+
+      <line x1="95" y1="200" x2="440" y2="102" class="uml-dashed" marker-end="url(#f1-hollow)"/>
+      <line x1="265" y1="200" x2="470" y2="102" class="uml-dashed" marker-end="url(#f1-hollow)"/>
+      <line x1="435" y1="200" x2="500" y2="102" class="uml-dashed" marker-end="url(#f1-hollow)"/>
+      <line x1="615" y1="200" x2="530" y2="102" class="uml-dashed" marker-end="url(#f1-hollow)"/>
+      <text x="360" y="285" class="fig-small fig-center">Every arrow crosses the line upward, toward the contract. Nothing above the line points down at a concrete method.</text>
+    </svg>
+    <figcaption>The shape of OCP. The quoter and the contract sit above the line and are finished. New methods are added below it as new classes (dashed outline: added later). Because every dependency points <em>up</em>, at the interface, adding below never forces an edit above.</figcaption>
+  </figure>
+
+  <h3>3.3 One place still changes, and that is fine</h3>
+  <p>Something must still say "we offer drone delivery now." That happens where objects are created and wired together: <code>List.of(new StandardShipping(), …, new DroneShipping())</code> in <code>Main</code>. The place in a program where concrete objects are created and wired together is called the <strong>assembly point</strong> (in the hub, also <code>Main</code>). OCP does not promise that <em>nothing</em> changes. It promises that the <em>logic</em> (the quoting, the hub's operation) stays closed, and that new variants touch only the assembly point and their own new file. Later lessons show ways to shrink even that one line.</p>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Change request</th><th>Naive: files edited</th><th>OCP: files edited</th></tr></thead>
+      <tbody>
+        <tr><td>Add drone delivery</td><td><code>ShippingQuoter</code> (both ladders)</td><td><strong>New</strong> <code>DroneShipping</code> + one line in <code>Main</code></td></tr>
+        <tr><td>Change Express's price</td><td><code>ShippingQuoter</code> (and re-test every method in it)</td><td><code>ExpressShipping</code> only</td></tr>
+        <tr><td>Add a third question, e.g. "is it tracked?"</td><td>A third ladder in <code>ShippingQuoter</code></td><td>The interface <em>and</em> every implementation (see the note below)</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="callout note">
+    <p>The last row is the honest limit. OCP closes code against <em>one kind</em> of change: here, "new shipping methods." Against a different kind ("new questions about every method") the interface itself must change, and every implementation with it. No design is closed against everything. Choosing <em>which</em> changes to close against is the real skill (Section 7).</p>
+  </div>
+
+  <details class="check">
+    <summary>After the refactoring, a new requirement arrives: "Express gets 10% off on Mondays." Which classes change?</summary>
+    <p>Only <code>ExpressShipping</code>, because its price rule lives there and nowhere else. <code>ShippingQuoter</code> doesn't care how a cost is computed, just that <code>cost()</code> returns one. (If the discount had to apply to <em>every</em> method, that would be a new variation point worth thinking about. A wrapper like the ones from Lesson 03, around any <code>ShippingMethod</code>, is one way.)</p>
+  </details>
+
+  <h3>3.4 Why OCP is the engine behind most patterns</h3>
+  <p>Meyer's original idea achieved openness through inheritance: extend a finished class and override parts of it. Lessons 02–03 showed the costs of that. Robert C. Martin restated OCP around interfaces, which is the version used here. And once you see the shape (closed code above, a contract in the middle, new classes below), you will see it in most of the patterns ahead. Each one is a ready-made variation point for one particular kind of change:</p>
+  <ul>
+    <li>Swapping one algorithm for another, chosen at run time (Lesson 25).</li>
+    <li>Adding behaviour by wrapping, the <code>LoggedDevice</code> shape (Lesson 19).</li>
+    <li>Letting any number of listeners react to an event without the event's source knowing them (Lesson 27).</li>
+    <li>Turning requests into objects so they can be queued and undone (Lesson 28), which is where the hub's routines are heading.</li>
+    <li>Choosing which class to create without the caller naming it (Lessons 14–15), which shrinks the assembly-point line above.</li>
+  </ul>
+  <p>Each answers the same question: "where will new variants arrive, and how do we let them in without editing what works?"</p>
+</section>
+
+<!-- ============================== SECTION 4 ============================== -->
+<section id="s4">
+  <h2><span class="sec-num">4</span>The kata</h2>
+
+  <p>Package <code>com.katas.ocp</code>. <span class="filepath">Saved: katas/src/main/java/com/katas/ocp/ShippingMethod.java</span> is the contract shown in 3.2. <span class="filepath">Saved: StandardShipping.java, ExpressShipping.java, OvernightShipping.java</span> each answer the three questions for one method. Here are the closed quoter and the method added later:</p>
+
+  <p class="filepath">Saved: katas/src/main/java/com/katas/ocp/ShippingQuoter.java</p>
+  <pre class="code" data-title="ShippingQuoter.java"><code><span class="cmt">// The RIGHT WAY, part 2: the CLOSED code.</span>
+<span class="kw">package</span> com.katas.ocp;
+
+<span class="cmt">// The JDK's growable list.</span>
+<span class="kw">import</span> java.util.<span class="ty">ArrayList</span>;
+<span class="cmt">// The JDK's list interface.</span>
+<span class="kw">import</span> java.util.<span class="ty">List</span>;
+
+<span class="cmt">// Quotes any shipping method it is given. It names no concrete method and</span>
+<span class="cmt">// contains no if-else on method names, so new methods never require</span>
+<span class="cmt">// editing it. It is closed for modification, and open for extension</span>
+<span class="cmt">// through the ShippingMethod contract.</span>
+<span class="kw">public class</span> <span class="ty">ShippingQuoter</span> {
+
+    <span class="cmt">// One line of text for a customer, e.g. "Express: 20 (2-day delivery)".</span>
+    <span class="kw">public</span> <span class="ty">String</span> <span class="fn">quote</span>(<span class="ty">ShippingMethod</span> method, <span class="kw">int</span> weightKg) {
+        <span class="cmt">// Ask the method itself: no ladder, no knowledge of which method it is.</span>
+        <span class="kw">return</span> method.<span class="fn">name</span>() + <span class="str">": "</span> + method.<span class="fn">cost</span>(weightKg) + <span class="str">" ("</span> + method.<span class="fn">deliveryDays</span>() + <span class="str">"-day delivery)"</span>;
+    }
+
+    <span class="cmt">// Quote every method on offer, in the order given.</span>
+    <span class="kw">public</span> <span class="ty">List</span>&lt;<span class="ty">String</span>&gt; <span class="fn">quoteAll</span>(<span class="ty">List</span>&lt;<span class="ty">ShippingMethod</span>&gt; methods, <span class="kw">int</span> weightKg) {
+        <span class="cmt">// Collect one line per method.</span>
+        <span class="ty">List</span>&lt;<span class="ty">String</span>&gt; lines = <span class="kw">new</span> <span class="ty">ArrayList</span>&lt;&gt;();
+        <span class="cmt">// The same call for every method, whatever it is.</span>
+        <span class="kw">for</span> (<span class="ty">ShippingMethod</span> method : methods) {
+            <span class="cmt">// Reuse the single-quote rule.</span>
+            lines.<span class="fn">add</span>(<span class="fn">quote</span>(method, weightKg));
+        }
+        <span class="cmt">// An unmodifiable copy for the caller.</span>
+        <span class="kw">return</span> <span class="ty">List</span>.<span class="fn">copyOf</span>(lines);
+    }
+}</code></pre>
+
+  <p class="filepath">Saved: katas/src/main/java/com/katas/ocp/DroneShipping.java</p>
+  <pre class="code" data-title="DroneShipping.java"><code><span class="cmt">// ADDED LATER: the new requirement "offer drone delivery".</span>
+<span class="kw">package</span> com.katas.ocp;
+
+<span class="cmt">// This whole feature is ONE NEW FILE. ShippingQuoter, ShippingMethod and</span>
+<span class="cmt">// the other three methods were not opened, edited, or re-tested.</span>
+<span class="cmt">// That is "open for extension, closed for modification".</span>
+<span class="kw">public class</span> <span class="ty">DroneShipping</span> <span class="kw">implements</span> <span class="ty">ShippingMethod</span> {
+
+    <span class="cmt">// The customer-facing name.</span>
+    <span class="anno">@Override</span>
+    <span class="kw">public</span> <span class="ty">String</span> <span class="fn">name</span>() {
+        <span class="cmt">// Shown in the quote.</span>
+        <span class="kw">return</span> <span class="str">"Drone"</span>;
+    }
+
+    <span class="cmt">// 15 plus 4 per kilo: drones charge more for weight.</span>
+    <span class="anno">@Override</span>
+    <span class="kw">public int</span> <span class="fn">cost</span>(<span class="kw">int</span> weightKg) {
+        <span class="cmt">// The drone formula.</span>
+        <span class="kw">return</span> <span class="num">15</span> + weightKg * <span class="num">4</span>;
+    }
+
+    <span class="cmt">// One day.</span>
+    <span class="anno">@Override</span>
+    <span class="kw">public int</span> <span class="fn">deliveryDays</span>() {
+        <span class="cmt">// The drone delivery time.</span>
+        <span class="kw">return</span> <span class="num">1</span>;
+    }
+}</code></pre>
+
+  <p class="filepath">Saved: katas/src/main/java/com/katas/ocp/Main.java</p>
+  <pre class="code" data-title="Main.java (ocp)"><code><span class="cmt">// The runnable demo for Lesson 06's kata.</span>
+<span class="kw">package</span> com.katas.ocp;
+
+<span class="cmt">// List.of to build the list of methods on offer.</span>
+<span class="kw">import</span> java.util.<span class="ty">List</span>;
+
+<span class="cmt">// Shows the naive quoter refusing the new "Drone" method, then the</span>
+<span class="cmt">// open/closed quoter handling it without a single edit.</span>
+<span class="kw">public class</span> <span class="ty">Main</span> {
+
+    <span class="cmt">// The JVM starts here when you run this class.</span>
+    <span class="kw">public static void</span> <span class="fn">main</span>(<span class="ty">String</span>[] args) {
+        <span class="cmt">// NAIVE: it only knows the names written into its ladders.</span>
+        com.katas.ocp.naive.<span class="ty">ShippingQuoter</span> naive = <span class="kw">new</span> com.katas.ocp.naive.<span class="ty">ShippingQuoter</span>();
+        <span class="cmt">// A known method works.</span>
+        <span class="ty">System</span>.out.<span class="fn">println</span>(<span class="str">"Naive: "</span> + naive.<span class="fn">quote</span>(<span class="str">"Express"</span>, <span class="num">5</span>));
+        <span class="cmt">// try: the new method will be refused by throwing.</span>
+        <span class="kw">try</span> {
+            <span class="cmt">// "Drone" is in neither ladder.</span>
+            <span class="ty">System</span>.out.<span class="fn">println</span>(<span class="str">"Naive: "</span> + naive.<span class="fn">quote</span>(<span class="str">"Drone"</span>, <span class="num">5</span>));
+        } <span class="kw">catch</span> (<span class="ty">IllegalArgumentException</span> e) {
+            <span class="cmt">// Supporting it would mean editing BOTH ladders.</span>
+            <span class="ty">System</span>.out.<span class="fn">println</span>(<span class="str">"Naive refused: "</span> + e.<span class="fn">getMessage</span>());
+        }
+
+        <span class="cmt">// OPEN/CLOSED: the methods on offer are chosen HERE, as objects.</span>
+        <span class="ty">List</span>&lt;<span class="ty">ShippingMethod</span>&gt; offered = <span class="ty">List</span>.<span class="fn">of</span>(<span class="kw">new</span> <span class="ty">StandardShipping</span>(), <span class="kw">new</span> <span class="ty">ExpressShipping</span>(),
+                <span class="kw">new</span> <span class="ty">OvernightShipping</span>(), <span class="kw">new</span> <span class="ty">DroneShipping</span>());
+        <span class="cmt">// The quoter has never heard of Drone, and does not need to.</span>
+        <span class="kw">for</span> (<span class="ty">String</span> line : <span class="kw">new</span> <span class="ty">ShippingQuoter</span>().<span class="fn">quoteAll</span>(offered, <span class="num">5</span>)) {
+            <span class="cmt">// One line per method.</span>
+            <span class="ty">System</span>.out.<span class="fn">println</span>(<span class="str">"OCP: "</span> + line);
+        }
+    }
+}</code></pre>
+
+  <h4>What happens when it runs</h4>
+  <ol class="trace">
+    <li>The naive quote for "Express": <code>cost</code> walks its ladder to the second branch (10 + 5 × 2 = 20), and <code>days</code> walks its own ladder to 2.</li>
+    <li>The naive quote for "Drone": the string is built left to right, so <code>cost</code> runs first. It falls through every branch and throws. The <code>catch</code> prints the message.</li>
+    <li>The list <code>offered</code> holds four method objects. <code>quoteAll</code> loops over them, calling the <em>same</em> <code>quote</code> for each.</li>
+    <li>For each object, <code>method.cost(5)</code> is dispatched to that object's own class: 5 + 5 = 10, 10 + 10 = 20, 25 + 15 = 40, 15 + 20 = 35. Its <code>deliveryDays()</code> is dispatched the same way.</li>
+    <li>Drone is quoted exactly like the others. The quoter's code never mentions it.</li>
+  </ol>
+  <p class="pred-label">Prediction — the program's own lines</p>
+  <pre class="output"><code>Naive: Express: 20 (2-day delivery)
+<span class="err">Naive refused: Unknown method: Drone</span>
+OCP: Standard: 10 (5-day delivery)
+OCP: Express: 20 (2-day delivery)
+OCP: Overnight: 40 (1-day delivery)
+<span class="out">OCP: Drone: 35 (1-day delivery)</span></code></pre>
+
+  <h4>The tests</h4>
+  <p><span class="filepath">Saved: katas/src/test/java/com/katas/ocp/ShippingQuoterTest.java</span> has three tests: an original method (<code>"Express: 20 (2-day delivery)"</code>), the method added later (<code>"Drone: 35 (1-day delivery)"</code>), and one <em>invented inside the test folder</em>. <span class="filepath">Saved: katas/src/test/java/com/katas/ocp/PickupInStore.java</span> is a test-only <code>ShippingMethod</code> (free, 1 day), and the quoter handles it with no change at all. That is the strongest proof the quoter is open: code the quoter's author never saw extends it. <span class="filepath">Saved: katas/src/test/java/com/katas/ocp/IfElseChainTest.java</span> pins the naive quoter's refusal of "Drone".</p>
+
+  <pre class="terminal" data-title="terminal — from design-patterns-learning/"><code>cd katas
+mvn test
+mvn compile exec:java <span class="str">"-Dexec.mainClass=com.katas.ocp.Main"</span></code></pre>
+  <p class="pred-label">Prediction — mvn test summary</p>
+  <pre class="output"><code><span class="out">[INFO] Tests run: 31, Failures: 0, Errors: 0, Skipped: 0</span>
+<span class="out">[INFO] BUILD SUCCESS</span></code></pre>
+  <div class="callout tryit">
+    <p>Expect <strong>31 tests</strong> (27 earlier + 4 new) and the six demo lines. If anything differs, the machine is right. Tell me what you saw. Then prove the principle to yourself: add an <code>EcoShipping</code> class (say 3 + kg, 7 days) and one line in <code>Main</code>'s list. Run it, then check with <code>git status</code> that <code>ShippingQuoter.java</code> did not change. Delete your experiment afterwards, since katas stay frozen.</p>
+  </div>
+</section>
+
+<!-- ============================== SECTION 5 ============================== -->
+<section id="s5">
+  <h2><span class="sec-num">5</span>Applied to the Smart Home Hub</h2>
+
+  <h4>The pain, arriving in the hub</h4>
+  <p>The homeowner loves the hub, and wants <em>modes</em>: "everything on" in the morning, "away" when the house is empty, "goodnight" with only the thermostat running. Next month it will be "movie night," then "holiday." The tempting code is Section 1's ladder again, inside <code>Hub</code>:</p>
+  <pre class="code" data-title="the tempting way (not written to disk)"><code><span class="kw">public void</span> <span class="fn">applyMode</span>(<span class="ty">String</span> mode) {
+    <span class="kw">if</span> (mode.<span class="fn">equals</span>(<span class="str">"morning"</span>)) { <span class="cmt">/* all on */</span> }
+    <span class="kw">else if</span> (mode.<span class="fn">equals</span>(<span class="str">"away"</span>)) { <span class="cmt">/* all off */</span> }
+    <span class="kw">else if</span> (mode.<span class="fn">equals</span>(<span class="str">"goodnight"</span>)) { <span class="cmt">/* all off except the thermostat */</span> }
+    <span class="cmt">// ...one more branch, and one more edit to Hub, for every mode ever invented</span>
+}</code></pre>
+  <p>The modes are a clear variation point: new ones are <em>certain</em> to keep arriving, and the homeowner asks for them, not the hub's maintainer. So the hub gets a contract for "a mode," and closes.</p>
+
+  <figure class="fig">
+    <svg viewBox="0 0 720 330" role="img" aria-label="Hub after Lesson 06. Main uses Hub. Hub holds many Devices and uses the Routine interface. AllOn, AllOff and KeepOnly implement Routine. Routine uses Device.">
+      <defs>
+        <marker id="f2-open" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="10" markerHeight="10" orient="auto-start-reverse">
+          <path d="M0,0 L10,5 L0,10" class="uml-head-open"/>
+        </marker>
+        <marker id="f2-hollow" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="12" markerHeight="12" orient="auto-start-reverse">
+          <path d="M1,1 L11,6 L1,11 z" class="uml-head-hollow"/>
+        </marker>
+      </defs>
+      <rect x="20" y="20" width="130" height="46" rx="6" class="fig-code"/>
+      <text x="85" y="48" class="uml-name">Main</text>
+      <rect x="200" y="20" width="170" height="66" rx="6" class="fig-code"/>
+      <text x="285" y="40" class="uml-name">Hub</text>
+      <line x1="200" y1="48" x2="370" y2="48" class="uml-divider"/>
+      <text x="212" y="66" class="uml-member">+ run(Routine)</text>
+      <text x="212" y="81" class="uml-member">+ turnOff(name)</text>
+      <rect x="430" y="20" width="210" height="66" rx="6" class="fig-contract"/>
+      <text x="535" y="40" class="uml-stereo">«interface»</text>
+      <text x="535" y="58" class="uml-name">Routine</text>
+      <text x="535" y="77" class="fig-small fig-center fig-mono">applyTo(devices)</text>
+      <line x1="150" y1="43" x2="196" y2="43" class="uml-dashed" marker-end="url(#f2-open)"/>
+      <line x1="370" y1="53" x2="426" y2="53" class="uml-dashed" marker-end="url(#f2-open)"/>
+      <text x="398" y="45" class="uml-mult" text-anchor="middle">runs</text>
+
+      <rect x="330" y="160" width="110" height="46" rx="6" class="fig-code"/>
+      <text x="385" y="188" class="uml-name">AllOn</text>
+      <rect x="455" y="160" width="110" height="46" rx="6" class="fig-code"/>
+      <text x="510" y="188" class="uml-name">AllOff</text>
+      <rect x="580" y="160" width="130" height="62" rx="6" class="fig-code"/>
+      <text x="645" y="180" class="uml-name">KeepOnly</text>
+      <line x1="580" y1="188" x2="710" y2="188" class="uml-divider"/>
+      <text x="590" y="207" class="uml-member">- namesToKeepOn</text>
+      <line x1="385" y1="160" x2="500" y2="90" class="uml-dashed" marker-end="url(#f2-hollow)"/>
+      <line x1="510" y1="160" x2="530" y2="90" class="uml-dashed" marker-end="url(#f2-hollow)"/>
+      <line x1="645" y1="160" x2="570" y2="90" class="uml-dashed" marker-end="url(#f2-hollow)"/>
+
+      <rect x="170" y="262" width="180" height="50" rx="6" class="fig-contract"/>
+      <text x="260" y="282" class="uml-stereo">«interface»</text>
+      <text x="260" y="302" class="uml-name">Device</text>
+      <line x1="260" y1="86" x2="260" y2="258" class="uml-line" marker-end="url(#f2-open)"/>
+      <text x="268" y="250" class="uml-mult">*</text>
+      <path d="M470,86 L470,125 L300,125 L300,258" class="uml-dashed" marker-end="url(#f2-open)"/>
+      <text x="308" y="200" class="uml-mult">uses</text>
+      <text x="530" y="250" class="fig-small fig-center">new modes are added here,</text>
+      <text x="530" y="266" class="fig-small fig-center">as new classes</text>
+    </svg>
+    <figcaption>The hub after Lesson 06. <code>Hub</code> holds its devices (solid line) and runs any <code>Routine</code> (dashed: used briefly, during <code>run</code>). Routines know devices only through the <code>Device</code> contract. A new mode is a new class next to <code>AllOn</code>, <code>AllOff</code> and <code>KeepOnly</code>; nothing above it changes. <code>Main</code>'s creation of routines is omitted for clarity.</figcaption>
+  </figure>
+
+  <p class="filepath">Saved: smarthome/src/main/java/com/smarthome/routines/Routine.java</p>
+  <pre class="code" data-title="Routine.java"><code><span class="cmt">// House "modes" live in their own package: they are what keeps changing.</span>
+<span class="kw">package</span> com.smarthome.routines;
+
+<span class="cmt">// Routines work on devices through the contract only.</span>
+<span class="kw">import</span> com.smarthome.devices.<span class="ty">Device</span>;
+
+<span class="cmt">// The JDK's list interface.</span>
+<span class="kw">import</span> java.util.<span class="ty">List</span>;
+
+<span class="cmt">// THE VARIATION POINT: one thing a homeowner can ask the house to do. The</span>
+<span class="cmt">// hub runs any Routine without knowing which one it is, so a new mode is a</span>
+<span class="cmt">// new class, never an edit to the hub.</span>
+<span class="kw">public interface</span> <span class="ty">Routine</span> {
+
+    <span class="cmt">// Apply this routine to every device in the house.</span>
+    <span class="kw">void</span> <span class="fn">applyTo</span>(<span class="ty">List</span>&lt;<span class="ty">Device</span>&gt; devices);
+}</code></pre>
+
+  <p class="filepath">Saved: smarthome/src/main/java/com/smarthome/routines/KeepOnly.java</p>
+  <pre class="code" data-title="KeepOnly.java"><code><span class="cmt">// One routine: keep a chosen few devices on, everything else off.</span>
+<span class="kw">package</span> com.smarthome.routines;
+
+<span class="cmt">// The device contract.</span>
+<span class="kw">import</span> com.smarthome.devices.<span class="ty">Device</span>;
+
+<span class="cmt">// The JDK's list interface.</span>
+<span class="kw">import</span> java.util.<span class="ty">List</span>;
+
+<span class="cmt">// e.g. "Goodnight": keep only the thermostat running. Which devices to keep</span>
+<span class="cmt">// is chosen by whoever creates the routine, so one class covers many modes.</span>
+<span class="kw">public class</span> <span class="ty">KeepOnly</span> <span class="kw">implements</span> <span class="ty">Routine</span> {
+
+    <span class="cmt">// The names of the devices that should stay (or be switched) on.</span>
+    <span class="kw">private final</span> <span class="ty">List</span>&lt;<span class="ty">String</span>&gt; namesToKeepOn;
+
+    <span class="cmt">// The caller decides which devices stay on.</span>
+    <span class="kw">public</span> <span class="fn">KeepOnly</span>(<span class="ty">List</span>&lt;<span class="ty">String</span>&gt; namesToKeepOn) {
+        <span class="cmt">// An unmodifiable copy, so the routine cannot change after creation.</span>
+        <span class="kw">this</span>.namesToKeepOn = <span class="ty">List</span>.<span class="fn">copyOf</span>(namesToKeepOn);
+    }
+
+    <span class="cmt">// Kept devices on, all others off, switching only what must change.</span>
+    <span class="anno">@Override</span>
+    <span class="kw">public void</span> <span class="fn">applyTo</span>(<span class="ty">List</span>&lt;<span class="ty">Device</span>&gt; devices) {
+        <span class="cmt">// Visit every device.</span>
+        <span class="kw">for</span> (<span class="ty">Device</span> device : devices) {
+            <span class="cmt">// Is this one on the keep list?</span>
+            <span class="kw">boolean</span> keep = namesToKeepOn.<span class="fn">contains</span>(device.<span class="fn">getName</span>());
+            <span class="cmt">// Kept but off: switch it on.</span>
+            <span class="kw">if</span> (keep &amp;&amp; !device.<span class="fn">isOn</span>()) {
+                <span class="cmt">// On, in its own way.</span>
+                device.<span class="fn">turnOn</span>();
+            }
+            <span class="cmt">// Not kept but on: switch it off.</span>
+            <span class="kw">if</span> (!keep &amp;&amp; device.<span class="fn">isOn</span>()) {
+                <span class="cmt">// Off, in its own way.</span>
+                device.<span class="fn">turnOff</span>();
+            }
+        }
+    }
+}</code></pre>
+  <p>(<code>&amp;&amp;</code> means "and": both conditions must be true. <code>!</code> means "not.")</p>
+  <p><span class="filepath">Saved: routines/AllOn.java and routines/AllOff.java</span> are the same shape, without the keep-list. <code>AllOn</code> switches on every device that is off, and <code>AllOff</code> switches off every device that is on. All three switch <em>only what must change</em>, so the activity log never records a light being "switched on" when it was already on.</p>
+
+  <p class="filepath">Saved: smarthome/src/main/java/com/smarthome/home/Hub.java (modified)</p>
+  <pre class="code" data-title="Hub.java (the changed part)"><code>    <span class="cmt">// Run any routine on the whole house. No if-else on mode names: the</span>
+    <span class="cmt">// routine object itself knows what to do (polymorphism again).</span>
+    <span class="kw">public void</span> <span class="fn">run</span>(<span class="ty">Routine</span> routine) {
+        <span class="cmt">// Hand the routine the devices; it does the rest.</span>
+        routine.<span class="fn">applyTo</span>(devices);
+    }</code></pre>
+  <p>The old <code>startUp()</code> is gone. It was one hard-coded mode, and it is now the routine <code>AllOn</code>. This was the last edit <code>Hub</code> needs for modes. From now on it is closed against new ones.</p>
+
+  <p class="filepath">Saved: smarthome/src/main/java/com/smarthome/Main.java (modified)</p>
+  <pre class="code" data-title="Main.java (the changed part)"><code>        <span class="cmt">// Operate the house by running routines. Which modes exist is chosen</span>
+        <span class="cmt">// HERE, by creating routine objects; the hub never names them.</span>
+        <span class="cmt">// Morning: everything on.</span>
+        hub.<span class="fn">run</span>(<span class="kw">new</span> <span class="ty">AllOn</span>());
+        <span class="cmt">// Goodnight: keep only the thermostat running.</span>
+        hub.<span class="fn">run</span>(<span class="kw">new</span> <span class="ty">KeepOnly</span>(<span class="ty">List</span>.<span class="fn">of</span>(<span class="str">"Hall Thermostat"</span>)));</code></pre>
+
+  <h4>The tests</h4>
+  <p><span class="filepath">Saved: smarthome/src/test/java/com/smarthome/routines/RoutinesTest.java</span> has three tests: <code>allOffSwitchesEverythingOff</code>, <code>keepOnlyLeavesTheNamedDevicesOnAndTheRestOff</code>, and <code>routinesNeverSwitchADeviceThatIsAlreadyInTheRightState</code>. The last one runs <code>AllOn</code> twice and <code>KeepOnly</code> once on a logged lamp, and expects exactly one log entry. <span class="filepath">Modified: smarthome/src/test/java/com/smarthome/home/HubTest.java</span> now starts the house with <code>hub.run(new AllOn())</code>; its first test is renamed <code>runAppliesTheRoutineToEveryDevice</code>.</p>
+
+  <p><strong>What this adds:</strong> house modes. "Everything on", "away" and "keep only…" exist today, and every future mode is a new class in <code>routines</code>, with no change to <code>Hub</code>, the devices, or the report.</p>
+
+  <ol class="trace">
+    <li>The banner prints; the setup builds the two logged devices; the hub keeps them.</li>
+    <li><code>hub.run(new AllOn())</code> hands the devices to <code>AllOn.applyTo</code>. Both are off, so both are switched on, and the log records 2 entries.</li>
+    <li><code>hub.run(new KeepOnly(List.of("Hall Thermostat")))</code>: the light is not kept and is on, so it is switched off (entry 3). The thermostat is kept and already on, so it is left alone, with no duplicate entry.</li>
+    <li>The report renders exactly as in Lesson 05: 2 devices, 1 on, 3 entries.</li>
+  </ol>
+
+  <p class="pred-label">Prediction — the hub's own lines (identical to Lesson 05, now produced by routines)</p>
+  <pre class="output"><code>Smart Home Hub is starting up...
+=== House report ===
+Devices: 2 (1 on)
+  Living Room Light: OFF
+  Hall Thermostat: regulating to 21C
+Activity (3 entries):
+  1. Living Room Light: ON
+  2. Hall Thermostat: regulating to 21C
+  3. Living Room Light: OFF</code></pre>
+
+  <pre class="terminal" data-title="terminal — from design-patterns-learning/"><code>cd smarthome
+mvn test
+mvn compile exec:java</code></pre>
+  <p class="pred-label">Prediction — mvn test</p>
+  <pre class="output"><code><span class="out">[INFO] Tests run: 22, Failures: 0, Errors: 0, Skipped: 0</span>
+<span class="out">[INFO] BUILD SUCCESS</span></code></pre>
+  <div class="callout tryit">
+    <p>Expect <strong>22 tests</strong> (19 earlier + 3 new) and the same nine lines as Lesson 05. If what you see differs, your machine is right. Tell me what you saw. The unchanged output is the point: the behaviour is the same, but the hub's structure can now absorb new modes without being edited.</p>
+  </div>
+</section>
+
+<!-- ============================== SECTION 6 ============================== -->
+<section id="s6">
+  <h2><span class="sec-num">6</span>In the wild</h2>
+  <p><strong>Sorting in the JDK is closed; ordering is open.</strong> <code>List.sort</code> contains a finished, tuned sorting algorithm that nobody edits. What it does <em>not</em> know is what "before" means for your objects. That question sits behind a contract, <code>java.util.Comparator</code>. To sort a new way, you supply a new comparator and never touch the sort:</p>
+  <pre class="code" data-title="the JDK's variation point"><code><span class="ty">List</span>&lt;<span class="ty">String</span>&gt; names = <span class="kw">new</span> <span class="ty">ArrayList</span>&lt;&gt;(<span class="ty">List</span>.<span class="fn">of</span>(<span class="str">"Cara"</span>, <span class="str">"Ade"</span>, <span class="str">"Bo"</span>));
+names.<span class="fn">sort</span>(<span class="ty">Comparator</span>.<span class="fn">naturalOrder</span>());   <span class="cmt">// [Ade, Bo, Cara]</span>
+names.<span class="fn">sort</span>(<span class="ty">Comparator</span>.<span class="fn">reverseOrder</span>());   <span class="cmt">// [Cara, Bo, Ade]</span></code></pre>
+  <p>Same sort, new behaviour, zero edits to the JDK: <code>ShippingQuoter</code> and <code>ShippingMethod</code> at world scale. (Writing your <em>own</em> comparators uses a short syntax that the Strategy lesson, Lesson 25, explains properly.)</p>
+
+  <div class="callout realworld">
+    <p>Plugin systems are OCP made into products. Browser extensions, IDE plugins and payment-provider integrations all add behaviour to a host program that is closed: you cannot edit Chrome's source to add your extension. In code review, a pull request that adds "one more <code>else if</code>" to a ladder that already has ten branches is the moment to suggest a variation point.</p>
+  </div>
+</section>
+
+<!-- ============================== SECTION 7 ============================== -->
+<section id="s7">
+  <h2><span class="sec-num">7</span>When NOT to use it</h2>
+
+  <h3>The over-application trap</h3>
+  <p>Every interface is a bet that variants will arrive there. Bet everywhere "just in case," and the code fills with one-implementation interfaces, lookups through three layers to find the one real class, and abstractions shaped by guesses that turned out wrong. Building flexibility for a future that never comes is the needless-complexity smell from Lesson 04, sometimes called <em>speculative generality</em>. You cannot close code against every possible change, so choose which ones.</p>
+  <ul>
+    <li><strong>Wait for real evidence.</strong> A common rule: write the simple version first. When the <em>second</em> variant arrives and you feel the ladder starting, that is the moment to introduce the variation point, now that you know what actually varies. Martin calls this "taking the first bullet."</li>
+    <li><strong>A small, fixed set needs no interface.</strong> The days of the week, the four card suits, "on/off" will not grow. A plain <code>if</code> or <code>switch</code> over them is clearer than four classes. (Modern Java even lets the compiler check that such a switch covers every case; Lesson 40 shows how.)</li>
+    <li><strong>One local if-else is not a violation.</strong> The smell is the <em>repeated</em> ladder, the same branches in several places that grow every time a variant is added.</li>
+  </ul>
+
+  <h3>The cost it always charges</h3>
+  <p>More classes and files. Indirection: "what does Express cost?" means opening <code>ExpressShipping</code>, not reading one method. And a loss of overview: with a ladder, every variant's rule sits on one screen; with OCP, they are spread across files. That overview can be a genuine loss for small, stable sets, which is why the set must be growing to justify it.</p>
+
+  <h3>Relatives and look-alikes</h3>
+  <ul>
+    <li><strong>SRP</strong> (<a href="lesson-05-single-responsibility.html">Lesson 05</a>) decides <em>where</em> code lives (one actor per class). OCP decides <em>how it grows</em> (by adding, not editing). They pull together: each <code>ShippingMethod</code> class is also one responsibility.</li>
+    <li><strong>Liskov Substitution</strong> (Lesson 07) is OCP's safety rule. Adding <code>DroneShipping</code> is safe only if it truly keeps the contract the quoter relies on. A new class that breaks the contract breaks the "closed" code that trusted it.</li>
+    <li><strong>Dependency Inversion</strong> (Lesson 09) is the same arrow-direction idea seen from the architecture: the high-level code (quoter, hub) and the details (methods, routines) both depend on the contract.</li>
+  </ul>
+</section>
+
+<!-- ============================== SECTION 8 ============================== -->
+<section id="s8">
+  <h2><span class="sec-num">8</span>Key takeaways</h2>
+  <ul class="takeaways">
+    <li>The Open/Closed Principle says code should be open for extension but closed for modification: new behaviour arrives as new code, while the source of what already works is left alone.</li>
+    <li>The growing if-else (or switch) on a type name, repeated in several places, is the classic violation, because every new variant forces edits to working code.</li>
+    <li>The cure is a variation point: an interface capturing what varies, with one class per variant and polymorphism replacing the ladder. Only the assembly point and the new file change.</li>
+    <li>No design is closed against every change. OCP protects against one chosen kind, so choose it from real evidence (usually the second variant), not from guesses.</li>
+    <li>Most patterns ahead are ready-made variation points for particular kinds of change, which makes OCP the engine behind them. Like them, it always costs extra classes and indirection.</li>
+  </ul>
+</section>
+
+<!-- ============================== SECTION 9 ============================== -->
+<section id="s9">
+  <h2><span class="sec-num">9</span>Challenge</h2>
+  <p>A ticket system prices tickets with two ladders on the customer type:</p>
+  <pre class="code" data-title="TicketPricer.java (as written)"><code><span class="kw">public int</span> <span class="fn">price</span>(<span class="ty">String</span> customer, <span class="kw">int</span> basePrice) {
+    <span class="kw">if</span> (customer.<span class="fn">equals</span>(<span class="str">"Regular"</span>)) <span class="kw">return</span> basePrice;
+    <span class="kw">else if</span> (customer.<span class="fn">equals</span>(<span class="str">"Senior"</span>)) <span class="kw">return</span> basePrice / <span class="num">2</span>;
+    <span class="kw">throw new</span> <span class="ty">IllegalArgumentException</span>(customer);
+}
+<span class="kw">public</span> <span class="ty">String</span> <span class="fn">label</span>(<span class="ty">String</span> customer) {
+    <span class="kw">if</span> (customer.<span class="fn">equals</span>(<span class="str">"Regular"</span>)) <span class="kw">return</span> <span class="str">"Standard fare"</span>;
+    <span class="kw">else if</span> (customer.<span class="fn">equals</span>(<span class="str">"Senior"</span>)) <span class="kw">return</span> <span class="str">"Senior fare"</span>;
+    <span class="kw">throw new</span> <span class="ty">IllegalArgumentException</span>(customer);
+}</code></pre>
+  <p>(a) A <strong>Student</strong> type is coming (30% off, label "Student fare"), and the business says more types will follow. Redesign it with OCP, and list exactly which files change when Student is added. (b) Predict the output of quoting a base price of 20 for all three types. (c) Would you still do this if the business swore there would only ever be Regular and Senior?</p>
+
+  <details class="answer">
+    <summary>Click to reveal the answer</summary>
+    <p><strong>(a)</strong> The two ladders ask the same two questions (price and label), so those questions become the variation point:</p>
+    <pre class="code" data-title="redesign (sketch)"><code><span class="cmt">// The variation point: everything that differs per customer type.</span>
+<span class="kw">public interface</span> <span class="ty">Fare</span> { <span class="kw">int</span> <span class="fn">price</span>(<span class="kw">int</span> basePrice); <span class="ty">String</span> <span class="fn">label</span>(); }
+
+<span class="kw">public class</span> <span class="ty">RegularFare</span> <span class="kw">implements</span> <span class="ty">Fare</span> {
+    <span class="kw">public int</span> <span class="fn">price</span>(<span class="kw">int</span> basePrice) { <span class="kw">return</span> basePrice; }
+    <span class="kw">public</span> <span class="ty">String</span> <span class="fn">label</span>() { <span class="kw">return</span> <span class="str">"Standard fare"</span>; }
+}
+<span class="kw">public class</span> <span class="ty">SeniorFare</span> <span class="kw">implements</span> <span class="ty">Fare</span> {
+    <span class="kw">public int</span> <span class="fn">price</span>(<span class="kw">int</span> basePrice) { <span class="kw">return</span> basePrice / <span class="num">2</span>; }
+    <span class="kw">public</span> <span class="ty">String</span> <span class="fn">label</span>() { <span class="kw">return</span> <span class="str">"Senior fare"</span>; }
+}
+<span class="cmt">// ADDED LATER, as one new file:</span>
+<span class="kw">public class</span> <span class="ty">StudentFare</span> <span class="kw">implements</span> <span class="ty">Fare</span> {
+    <span class="kw">public int</span> <span class="fn">price</span>(<span class="kw">int</span> basePrice) { <span class="kw">return</span> basePrice * <span class="num">70</span> / <span class="num">100</span>; }
+    <span class="kw">public</span> <span class="ty">String</span> <span class="fn">label</span>() { <span class="kw">return</span> <span class="str">"Student fare"</span>; }
+}
+
+<span class="cmt">// The CLOSED code: no names, no ladder.</span>
+<span class="kw">public class</span> <span class="ty">TicketPricer</span> {
+    <span class="kw">public</span> <span class="ty">String</span> <span class="fn">quote</span>(<span class="ty">Fare</span> fare, <span class="kw">int</span> basePrice) { <span class="kw">return</span> fare.<span class="fn">label</span>() + <span class="str">": "</span> + fare.<span class="fn">price</span>(basePrice); }
+}</code></pre>
+    <p>Adding Student changes <strong>one new file</strong> (<code>StudentFare</code>) plus <strong>the assembly point</strong>, wherever fare objects are chosen, for example the screen where the customer picks their type. <code>TicketPricer</code>, <code>Fare</code>, <code>RegularFare</code> and <code>SeniorFare</code> are untouched. (Note <code>basePrice * 70 / 100</code>: multiplying first keeps whole-number maths exact for 20 → 14. Writing <code>basePrice * (70 / 100)</code> would give 0, because 70 / 100 is 0 in integer division.)</p>
+    <p><strong>(b)</strong></p>
+    <p class="pred-label">Prediction — quoting 20 for Regular, Senior, Student</p>
+    <pre class="output"><code>Standard fare: 20
+Senior fare: 10
+Student fare: 14</code></pre>
+    <p><strong>(c)</strong> Probably not. Two fixed variants, one small file, no growth expected: a single, readable <code>if</code>/<code>else</code> is the simpler design, and the interface would be speculative generality. The trigger to refactor is the moment a third type <em>actually</em> arrives. That is also the cheapest moment, because you will know what really varies. If you type the redesign in a scratch package, run it and compare with (b). The machine is the judge.</p>
+  </details>
+</section>
+
+<!-- ============================== SECTION 10 ============================== -->
+<section id="s10">
+  <h2><span class="sec-num">10</span>Catalog update</h2>
+  <p>Entry 2 added: <a href="../../pattern-catalog.html#ocp">Open/Closed Principle, in the pattern catalog</a>. In brief:</p>
+  <ul>
+    <li><strong>Intent:</strong> extend behaviour by adding code, not by editing working code.</li>
+    <li><strong>Pain:</strong> a class edited for every new variant; repeated if-else ladders on a type name.</li>
+    <li><strong>Use when:</strong> a second variant has arrived and more are clearly coming; the same ladder appears in several places.</li>
+    <li><strong>Do NOT use when:</strong> the set of variants is small and fixed; only one variant exists so far; one local if-else.</li>
+    <li><strong>Cost:</strong> more classes, indirection, variants spread across files.</li>
+    <li><strong>Seen in the wild:</strong> <code>List.sort</code> + <code>Comparator</code>.</li>
+    <li><strong>Where:</strong> kata <code>com.katas.ocp</code>; hub <code>routines.Routine</code> + <code>Hub.run</code>.</li>
+  </ul>
+</section>
+
+<div class="nextup">
+  <p><strong>Lesson 07 — L: the Liskov Substitution Principle.</strong> OCP trusts every new class to keep the contract. What happens when one looks like it does but doesn't? We work through the famous Square/Rectangle problem in full, and learn to spot a subclass that breaks its parent's promises.</p>
+</div>
+<p class="position">Lesson 06 · the seventh of 45 lessons (00–44) · Phase 1, Chapter 02 · lesson 2 of 7 in this chapter</p>
+
+</main>
+</div>
+</body>
+</html>

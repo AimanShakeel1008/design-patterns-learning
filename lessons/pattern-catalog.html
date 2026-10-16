@@ -15,12 +15,13 @@
     <li><a href="#how">How to read an entry</a></li>
     <li><a href="#index">Index</a></li>
     <li><a href="#srp">Single Responsibility</a></li>
+    <li><a href="#ocp">Open/Closed</a></li>
   </ol>
   <nav class="toc-nav" aria-label="Course navigation">
     <a class="navmap" href="index.html">↑ Course map</a>
-    <a class="navcard" href="phase-1-solid/chapter-02-solid/lesson-05-single-responsibility.html">
-      <span class="navkicker">Latest entry · Lesson 05</span>
-      <span class="navtitle">S — Single Responsibility Principle</span>
+    <a class="navcard" href="phase-1-solid/chapter-02-solid/lesson-06-open-closed.html">
+      <span class="navkicker">Latest entry · Lesson 06</span>
+      <span class="navtitle">O — Open/Closed Principle</span>
     </a>
   </nav>
 </aside>
@@ -57,6 +58,7 @@
       <thead><tr><th>#</th><th>Principle / pattern</th><th>Family</th><th>Lesson</th></tr></thead>
       <tbody>
         <tr><td>1</td><td><a href="#srp">Single Responsibility Principle</a></td><td><span class="family-badge principle">principle</span></td><td><a href="phase-1-solid/chapter-02-solid/lesson-05-single-responsibility.html">05</a></td></tr>
+        <tr><td>2</td><td><a href="#ocp">Open/Closed Principle</a></td><td><span class="family-badge principle">principle</span></td><td><a href="phase-1-solid/chapter-02-solid/lesson-06-open-closed.html">06</a></td></tr>
       </tbody>
     </table>
   </div>
@@ -99,7 +101,43 @@
   </dl>
 </article>
 
-<p class="position">Pattern catalog · 1 entry · updated by every principle and pattern lesson</p>
+<article class="catalog-entry" id="ocp">
+  <h2>Open/Closed Principle (OCP) <span class="family-badge principle">principle</span></h2>
+  <p class="catalog-intent">Code should be open for extension but closed for modification: add new behaviour by adding new code, not by editing code that already works.</p>
+  <dl class="catalog-fields">
+    <dt>The pain it cures</dt>
+    <dd>A class that must be opened and edited for every new variant, usually through an if-else (or switch) on a type name that is repeated in several places. Every edit risks breaking the variants that already worked, and forgetting one ladder breaks the new one.</dd>
+    <dt>Use it when…</dt>
+    <dd><ul>
+      <li>A second variant has arrived and more are clearly coming (shipping methods, house modes, payment providers).</li>
+      <li>The same ladder on a type name appears in more than one method or file.</li>
+      <li>New variants are requested by people other than the code's maintainers.</li>
+      <li>You want others (another team, a plugin, a test) to add behaviour without touching your code.</li>
+    </ul></dd>
+    <dt class="not">Do NOT use it when…</dt>
+    <dd><ul>
+      <li>The set of variants is small and genuinely fixed (days of the week, on/off). A plain switch is clearer.</li>
+      <li>Only one variant exists so far. Wait for the second ("take the first bullet") so you know what really varies.</li>
+      <li>It is one local if-else that is not repeated and not growing.</li>
+      <li>The interface would be a guess about future needs (speculative generality).</li>
+    </ul></dd>
+    <dt>The cost</dt>
+    <dd>More classes and files; indirection (the rule for one variant is in its own file, not on the screen with the others); loss of overview across variants; and it protects against only one chosen kind of change. A different kind, such as a new question every variant must answer, still edits the interface and every implementation.</dd>
+    <dt>Relatives</dt>
+    <dd><ul>
+      <li><strong>SRP</strong> (Lesson 05) decides where code lives; OCP decides how it grows. Each variant class is also one responsibility.</li>
+      <li><strong>Liskov Substitution</strong> (Lesson 07) is OCP's safety rule: new implementations must keep the contract the closed code trusts.</li>
+      <li><strong>Dependency Inversion</strong> (Lesson 09) is the same "point the arrows at the contract" move, seen at the scale of a whole architecture.</li>
+      <li>Most patterns ahead are ready-made OCP variation points for one particular kind of change.</li>
+    </ul></dd>
+    <dt>Seen in the wild</dt>
+    <dd><code>List.sort(Comparator)</code>: the JDK's sorting algorithm is closed; what "before" means is open, supplied as a <code>Comparator</code> (e.g. <code>Comparator.reverseOrder()</code>). Plugin systems (browser extensions, IDE plugins) are OCP turned into products.</dd>
+    <dt>Where it lives</dt>
+    <dd>Kata: <code>com.katas.ocp</code> (<code>ShippingMethod</code> + four methods, <code>ShippingQuoter</code>; ladders in <code>naive/ShippingQuoter</code>; test-only <code>PickupInStore</code>). Hub: <code>routines.Routine</code> (<code>AllOn</code>, <code>AllOff</code>, <code>KeepOnly</code>) run by <code>home.Hub.run</code>. Lesson: <a href="phase-1-solid/chapter-02-solid/lesson-06-open-closed.html">06</a>.</dd>
+  </dl>
+</article>
+
+<p class="position">Pattern catalog · 2 entries · updated by every principle and pattern lesson</p>
 
 </main>
 </div>

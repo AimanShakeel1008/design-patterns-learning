@@ -3,13 +3,17 @@ package com.smarthome.home;
 
 // The contract: the hub never names a concrete device class.
 import com.smarthome.devices.Device;
+// The contract for modes: the hub never names a concrete routine either.
+import com.smarthome.routines.Routine;
 
 // The JDK's list interface.
 import java.util.List;
 
-// ONE responsibility: operating the house (starting it up, switching
+// ONE responsibility: operating the house (running routines, switching
 // devices). It answers to whoever decides how the home behaves. It does not
-// know which devices exist (HomeSetup) or how anything is displayed (report).
+// know which devices exist (HomeSetup), which modes exist (routines), or how
+// anything is displayed (report). Since Lesson 06 it is CLOSED for new modes:
+// a new mode is a new Routine class, never an edit here.
 public class Hub {
 
     // The devices under control. Typed by the contract.
@@ -21,13 +25,11 @@ public class Hub {
         this.devices = List.copyOf(devices);
     }
 
-    // Switch every device on.
-    public void startUp() {
-        // Same call for every device; each does its own thing.
-        for (Device device : devices) {
-            // Polymorphism at work, through the Device contract.
-            device.turnOn();
-        }
+    // Run any routine on the whole house. No if-else on mode names: the
+    // routine object itself knows what to do (polymorphism again).
+    public void run(Routine routine) {
+        // Hand the routine the devices; it does the rest.
+        routine.applyTo(devices);
     }
 
     // Switch one device off, found by its name.

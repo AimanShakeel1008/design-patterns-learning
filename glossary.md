@@ -153,3 +153,17 @@ Terms are grouped by first-appearance lesson so the list reads in learning order
 - **Anemic class** — a class with almost no behaviour of its own that holds one sliver of a job; the result of over-splitting. (Lesson 05)
 - **`StringBuilder`** — the JDK's growable piece of text: `append(...)` adds to its end, `toString()` gives the finished `String`. (Lesson 05)
 - **Pattern catalog** — the course's cheat-sheet page (`lessons/pattern-catalog.html`), one entry per principle and pattern, linked from every lesson. (Lesson 05)
+
+---
+
+## Lesson 06 — O: Open/Closed Principle
+
+- **Open/Closed Principle (OCP)** — code should be open for extension but closed for modification: new behaviour arrives as new code, while working code is not edited. (Lesson 06)
+- **Open for extension** — the behaviour can grow; the system can learn new things. (Lesson 06)
+- **Closed for modification** — the existing class's source does not have to be edited for that growth. (Lesson 06)
+- **Variation point** — the place where new variants are expected to keep arriving, given an interface so they can be added as new classes. (Lesson 06)
+- **Assembly point** — the place where concrete objects are created and wired together (`Main`); the one place that still changes when a variant is added. (Lesson 06)
+- **Speculative generality** — flexibility built for a future that never comes; a form of needless complexity. (Lesson 06)
+- **Take the first bullet** — write the simple version first; introduce a variation point when the second real variant arrives. (Lesson 06)
+- **`Comparator`** — the JDK interface that says which of two objects comes first; `List.sort` uses it as its variation point. (Lesson 06)
+- **`&&` / `!`** — Java's "and" (both conditions true) and "not" (flips true/false). (Lesson 06)
