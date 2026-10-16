@@ -1,0 +1,806 @@
+/* ==========================================================================
+   lesson.css - the ONE shared stylesheet for every lesson page.
+   Course: Design Patterns and SOLID in Java.  Palette: "Blueprint".
+
+   House rules (see CLAUDE.md -> HTML Lesson Presentation System):
+   - literal colour values only (no CSS custom properties);
+   - a solid-colour fallback line immediately before every gradient;
+   - every colour has a dark-mode override, grouped at the foot of this file;
+   - all motion is killed by the single prefers-reduced-motion block;
+   - pages never use inline style="" - add a reusable class here instead.
+
+   Palette roles
+     primary   blueprint blue  #1d5fbf / dark #7fb0ff  (header, badges, our classes)
+     secondary teal            #0f766e / dark #4fd1c5  (h3, notes, tooling)
+     tertiary  violet          #7c3aed / dark #c4b5fd  (gradients, contracts, accents)
+     reserved  magenta         #a21caf / dark #e57bd6  (.forlearning ONLY)
+     reserved  brick red       #b42318 / dark #ff8a80  (.warning and .fig-smell ONLY)
+     page/ink  #f4f6f9 / #1b2430      dark #0f141b / #e4eaf2
+   ========================================================================== */
+
+/* ---------- 1. Base ---------- */
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html { font-size: 100%; -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
+
+body {
+  margin: 0;
+  background: #f4f6f9;
+  color: #1b2430;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-size: 1.0625rem;
+  line-height: 1.7;
+}
+
+a { color: #1d5fbf; text-decoration-thickness: 1px; text-underline-offset: 2px; }
+a:hover { color: #7c3aed; }
+a:focus-visible, button:focus-visible, summary:focus-visible, .term:focus-visible {
+  outline: 3px solid #7c3aed; outline-offset: 2px; border-radius: 4px;
+}
+
+h1, h2, h3, h4 { line-height: 1.25; margin: 0; }
+h3 { color: #0f766e; font-size: 1.2rem; margin: 2rem 0 0.6rem; }
+h4 { font-size: 1.02rem; margin: 1.4rem 0 0.4rem; }
+p { margin: 0 0 1rem; }
+ul, ol { margin: 0 0 1rem; padding-left: 1.5rem; }
+li { margin: 0.25rem 0; }
+li > ul, li > ol { margin: 0.25rem 0; }
+strong { font-weight: 700; }
+hr { border: 0; border-top: 1px solid #d5dce6; margin: 2rem 0; }
+
+/* Inline code: auto-tinted so commands and names stand out in prose. */
+code, kbd, samp {
+  font-family: ui-monospace, "Cascadia Code", "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  font-size: 0.9em;
+}
+:not(pre) > code {
+  background: #e3ebf7;
+  color: #163f7d;
+  padding: 0.1em 0.35em;
+  border-radius: 4px;
+  overflow-wrap: anywhere;
+}
+kbd {
+  background: #ffffff;
+  border: 1px solid #b8c2cf;
+  border-bottom-width: 2px;
+  border-radius: 4px;
+  padding: 0.05em 0.4em;
+}
+
+/* ---------- 2. Page grid and table of contents ---------- */
+
+.page {
+  display: grid;
+  grid-template-columns: 15.5rem minmax(0, 47rem);
+  gap: 2.75rem;
+  max-width: 68rem;
+  margin: 0 auto;
+  padding: 2rem 1.25rem 4rem;
+}
+
+aside.toc {
+  position: sticky;
+  top: 1.25rem;
+  align-self: start;
+  max-height: calc(100vh - 2.5rem);
+  overflow-y: auto;
+  font-size: 0.92rem;
+  line-height: 1.45;
+  padding-right: 0.25rem;
+}
+.toc-title {
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #5a6676;
+  font-weight: 700;
+  margin: 0 0 0.6rem;
+}
+aside.toc ol { list-style: none; padding: 0; margin: 0 0 1.25rem; }
+aside.toc li { margin: 0; }
+aside.toc ol a {
+  display: block;
+  padding: 0.3rem 0.6rem;
+  border-left: 3px solid #d5dce6;
+  color: #1b2430;
+  text-decoration: none;
+}
+aside.toc ol a:hover { border-left-color: #1d5fbf; color: #1d5fbf; background: #e9eff8; }
+
+/* Course navigation stack: prev card, course-map pill, next card. */
+.toc-nav { display: flex; flex-direction: column; gap: 0.6rem; border-top: 1px solid #d5dce6; padding-top: 1rem; }
+.navcard {
+  display: block;
+  background: #ffffff;
+  border: 1px solid #d5dce6;
+  border-radius: 10px;
+  padding: 0.6rem 0.75rem;
+  text-decoration: none;
+  color: #1b2430;
+}
+a.navcard:hover { border-color: #1d5fbf; color: #1b2430; box-shadow: 0 2px 8px rgba(29, 95, 191, 0.15); }
+.navcard.disabled { opacity: 0.6; border-style: dashed; cursor: default; }
+.navkicker { display: block; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em; color: #1d5fbf; font-weight: 700; }
+.navtitle { display: block; font-weight: 600; margin-top: 0.15rem; }
+.navnote { display: block; font-size: 0.75rem; color: #5a6676; font-style: italic; margin-top: 0.15rem; }
+.navmap {
+  display: block;
+  text-align: center;
+  background: #ddf3f0;
+  color: #0f766e;
+  border: 1px solid #0f766e;
+  border-radius: 999px;
+  padding: 0.35rem 0.75rem;
+  font-weight: 700;
+  font-size: 0.85rem;
+  text-decoration: none;
+}
+a.navmap:hover { background: #0f766e; color: #ffffff; }
+
+main { min-width: 0; }
+
+/* ---------- 3. Banner header ---------- */
+
+.banner {
+  background: #1d5fbf;
+  background: linear-gradient(135deg, #1d5fbf 0%, #4b48d6 55%, #7c3aed 100%);
+  color: #ffffff;
+  border-radius: 16px;
+  padding: 2rem 1.75rem 1.6rem;
+  margin-bottom: 2.25rem;
+}
+.banner h1 { font-size: 2rem; margin: 0.35rem 0 0.5rem; }
+.kicker { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.1em; font-weight: 700; color: #dce8ff; margin: 0; }
+.subtitle { font-size: 1.12rem; margin: 0 0 1rem; color: #eef3ff; }
+.meta { font-size: 0.88rem; line-height: 1.55; border-top: 1px solid rgba(255, 255, 255, 0.3); padding-top: 0.8rem; margin: 0; color: #eef3ff; }
+.meta a { color: #ffffff; }
+.banner :not(pre) > code { background: rgba(255, 255, 255, 0.18); color: #ffffff; }
+
+/* ---------- 4. Sections ---------- */
+
+main section { margin: 0 0 2.75rem; scroll-margin-top: 1rem; }
+main section > h2 {
+  font-size: 1.55rem;
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  margin: 0 0 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid #d5dce6;
+}
+.sec-num {
+  flex: none;
+  display: inline-grid;
+  place-items: center;
+  width: 2.1rem;
+  height: 2.1rem;
+  border-radius: 50%;
+  background: #1d5fbf;
+  color: #ffffff;
+  font-size: 1rem;
+  font-weight: 800;
+}
+.lead { font-size: 1.12rem; color: #2b3747; }
+
+/* "Saved: path" lines. */
+.filepath {
+  font-family: ui-monospace, "Cascadia Code", Consolas, Menlo, monospace;
+  font-size: 0.85rem;
+  color: #0f766e;
+  background: #e6f5f3;
+  border-left: 3px solid #0f766e;
+  padding: 0.35rem 0.7rem;
+  border-radius: 0 6px 6px 0;
+  margin: 0 0 0.6rem;
+  overflow-wrap: anywhere;
+}
+
+/* ---------- 5. Code blocks (dark in BOTH themes) ---------- */
+
+pre.code, pre.terminal, pre.ascii, pre.output {
+  position: relative;
+  background: #111827;
+  color: #e5e7eb;
+  border: 1px solid #0b1220;
+  border-radius: 10px;
+  padding: 0.9rem 1.1rem 1rem;
+  margin: 0 0 1.25rem;
+  overflow-x: auto;
+  font-size: 0.86rem;
+  line-height: 1.6;
+  tab-size: 4;
+}
+pre code { font-size: inherit; background: none; color: inherit; padding: 0; }
+
+/* macOS-style traffic-light dots on code and terminal blocks. */
+pre.code::before, pre.terminal::before {
+  content: "";
+  display: block;
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: #ff5f57;
+  box-shadow: 18px 0 0 #febc2e, 36px 0 0 #28c840;
+  margin-bottom: 0.75rem;
+}
+/* Optional file/terminal label: <pre class="code" data-title="Lamp.java">. */
+pre[data-title]::after {
+  content: attr(data-title);
+  position: absolute;
+  top: 0.62rem;
+  left: 4.4rem;
+  font-size: 0.74rem;
+  color: #8b98a9;
+  font-family: ui-monospace, Consolas, Menlo, monospace;
+}
+pre.terminal { background: #0b1020; }
+pre.ascii { line-height: 1.35; }
+
+/* PREDICTED output: a labelled block. */
+.pred-label {
+  display: inline-block;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #ffffff;
+  background: #0f766e;
+  border-radius: 6px 6px 0 0;
+  padding: 0.25rem 0.7rem;
+  margin: 0.25rem 0 0;
+}
+.pred-label + pre.output { border-top-left-radius: 0; }
+pre.output { background: #0e1a1a; border-color: #0f766e; }
+
+/* Manual syntax highlighting (blocks are dark in both themes: no dark override). */
+pre .kw { color: #c792ea; }
+pre .ty { color: #82aaff; }
+pre .str { color: #c3e88d; }
+pre .num { color: #f78c6c; }
+pre .anno { color: #ffcb6b; }
+pre .fn { color: #89ddff; }
+pre .cmt { color: #8392a7; font-style: italic; }
+pre .out { color: #a6e3a1; font-weight: 700; }
+pre .prompt { color: #7fb0ff; user-select: none; }
+pre .err { color: #ff8a80; font-weight: 700; }
+
+/* ---------- 6. Callouts ---------- */
+
+.callout {
+  border-radius: 10px;
+  border: 1px solid #d5dce6;
+  border-left-width: 5px;
+  background: #ffffff;
+  padding: 0.85rem 1.1rem 0.4rem;
+  margin: 0 0 1.4rem;
+}
+.callout::before {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 0.35rem;
+}
+.callout.tryit { border-left-color: #1d5fbf; background: #eef4fc; }
+.callout.tryit::before { content: "Try it"; color: #1d5fbf; }
+.callout.note { border-left-color: #0f766e; background: #ebf7f5; }
+.callout.note::before { content: "Note"; color: #0f766e; }
+.callout.warning { border-left-color: #b42318; background: #fdf0ee; }
+.callout.warning::before { content: "Watch out"; color: #b42318; }
+.callout.forlearning { border-left-color: #a21caf; background: #fbeefc; }
+.callout.forlearning::before { content: "For learning only"; color: #a21caf; }
+.callout.realworld { border-left-color: #7c3aed; background: #f3effd; }
+.callout.realworld::before { content: "In the real world"; color: #7c3aed; }
+
+/* ---------- 7. Tables, traces, lists ---------- */
+
+.table-wrap { overflow-x: auto; margin: 0 0 1.4rem; border: 1px solid #d5dce6; border-radius: 10px; background: #ffffff; }
+.table-wrap table { border-collapse: collapse; width: 100%; font-size: 0.93rem; }
+.table-wrap th, .table-wrap td { text-align: left; vertical-align: top; padding: 0.55rem 0.8rem; border-bottom: 1px solid #e3e8ef; }
+.table-wrap th { background: #e9eff8; color: #163f7d; font-weight: 700; }
+.table-wrap tr:last-child td { border-bottom: 0; }
+
+/* Numbered runtime traces: big round step numbers. */
+ol.trace { list-style: none; counter-reset: trace; padding-left: 0; }
+ol.trace > li {
+  counter-increment: trace;
+  position: relative;
+  padding-left: 2.6rem;
+  margin: 0 0 0.7rem;
+}
+ol.trace > li::before {
+  content: counter(trace);
+  position: absolute;
+  left: 0;
+  top: 0.1rem;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 50%;
+  background: #e3edfb;
+  color: #1d5fbf;
+  border: 1px solid #1d5fbf;
+  font-size: 0.85rem;
+  font-weight: 800;
+  display: grid;
+  place-items: center;
+}
+
+ul.takeaways { list-style: none; padding-left: 0; }
+ul.takeaways > li {
+  background: #ffffff;
+  border: 1px solid #d5dce6;
+  border-left: 5px solid #1d5fbf;
+  border-radius: 8px;
+  padding: 0.6rem 0.9rem;
+  margin: 0 0 0.6rem;
+}
+
+/* ---------- 8. Hidden answers and micro-checks ---------- */
+
+details.answer {
+  background: #ffffff;
+  border: 2px solid #1d5fbf;
+  border-radius: 12px;
+  margin: 0 0 1.4rem;
+  overflow: hidden;
+}
+details.answer > summary {
+  cursor: pointer;
+  list-style: none;
+  font-weight: 700;
+  color: #ffffff;
+  background: #1d5fbf;
+  padding: 0.7rem 1rem;
+}
+details.answer > summary::-webkit-details-marker { display: none; }
+details.answer > summary::before { content: "\25B6  "; font-size: 0.8em; }
+details.answer[open] > summary::before { content: "\25BC  "; }
+details.answer > :not(summary) { margin-left: 1.1rem; margin-right: 1.1rem; }
+details.answer > :nth-child(2) { margin-top: 1rem; }
+
+details.check {
+  background: #ebf7f5;
+  border: 1px dashed #0f766e;
+  border-radius: 10px;
+  padding: 0.6rem 1rem;
+  margin: 0 0 1.4rem;
+}
+details.check > summary { cursor: pointer; font-weight: 600; color: #0b4f4a; }
+details.check > summary::before {
+  content: "Quick check";
+  display: inline-block;
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #ffffff;
+  background: #0f766e;
+  border-radius: 4px;
+  padding: 0.05rem 0.45rem;
+  margin-right: 0.55rem;
+  vertical-align: 0.1em;
+}
+details.check[open] > summary { margin-bottom: 0.5rem; }
+
+/* ---------- 9. Hover-to-define glossary terms ---------- */
+
+.term {
+  position: relative;
+  border-bottom: 2px dotted #7c3aed;
+  cursor: help;
+}
+.term::after {
+  content: attr(data-def);
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 8px);
+  transform: translateX(-50%);
+  width: max-content;
+  max-width: 17rem;
+  background: #1b2430;
+  color: #f4f6f9;
+  font-size: 0.82rem;
+  font-weight: 400;
+  font-style: normal;
+  line-height: 1.45;
+  padding: 0.5rem 0.65rem;
+  border-radius: 8px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.15s ease;
+  z-index: 20;
+  pointer-events: none;
+}
+.term:hover::after, .term:focus::after { opacity: 1; visibility: visible; }
+
+/* ---------- 10. Next-up footer and position line ---------- */
+
+.nextup {
+  background: #4b48d6;
+  background: linear-gradient(135deg, #7c3aed 0%, #1d5fbf 100%);
+  color: #ffffff;
+  border-radius: 14px;
+  padding: 1.2rem 1.4rem 0.6rem;
+  margin: 3rem 0 1rem;
+}
+.nextup::before {
+  content: "Next up";
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #e6ddff;
+  margin-bottom: 0.3rem;
+}
+.nextup a { color: #ffffff; font-weight: 700; }
+.nextup :not(pre) > code { background: rgba(255, 255, 255, 0.18); color: #ffffff; }
+.position { text-align: center; font-size: 0.85rem; color: #5a6676; font-style: italic; margin: 0; }
+
+/* ---------- 11. Figures and inline SVG diagrams ---------- */
+
+figure.fig {
+  margin: 0 0 1.6rem;
+  background: #ffffff;
+  border: 1px solid #d5dce6;
+  border-radius: 12px;
+  padding: 1rem 1rem 0.75rem;
+}
+figure.fig svg, figure.roadmap svg { display: block; width: 100%; height: auto; }
+figure.fig figcaption, figure.roadmap figcaption {
+  font-size: 0.88rem;
+  color: #5a6676;
+  margin-top: 0.7rem;
+  line-height: 1.5;
+}
+
+/* Box variants - the colour language (see CLAUDE.md). */
+.fig-code     { fill: #e3edfb; stroke: #1d5fbf; stroke-width: 1.5; }
+.fig-contract { fill: #efe8fd; stroke: #7c3aed; stroke-width: 1.5; }
+.fig-infra    { fill: #ddf3f0; stroke: #0f766e; stroke-width: 1.5; }
+.fig-generic  { fill: #eceff3; stroke: #6b7686; stroke-width: 1.5; }
+.fig-smell    { fill: #fde7e5; stroke: #b42318; stroke-width: 1.5; }
+.fig-box      { fill: #ffffff; stroke: #b8c2cf; stroke-width: 1.5; }
+
+/* Text inside SVG. */
+.fig-heading { fill: #1b2430; font-size: 15px; font-weight: 700; font-family: system-ui, "Segoe UI", Roboto, Arial, sans-serif; }
+.fig-label   { fill: #1b2430; font-size: 13px; font-family: system-ui, "Segoe UI", Roboto, Arial, sans-serif; }
+.fig-small   { fill: #5a6676; font-size: 12px; font-family: system-ui, "Segoe UI", Roboto, Arial, sans-serif; }
+.fig-mono    { font-family: ui-monospace, "Cascadia Code", Consolas, Menlo, monospace; }
+.fig-center  { text-anchor: middle; }
+.fig-code-text     { fill: #1d5fbf; }
+.fig-contract-text { fill: #7c3aed; }
+.fig-infra-text    { fill: #0f766e; }
+.fig-smell-text    { fill: #b42318; }
+
+/* Arrows: a line class plus a matching marker-head class. */
+.fig-arrow          { stroke: #5a6676; stroke-width: 1.6; fill: none; }
+.fig-arrow-h        { fill: #5a6676; }
+.fig-arrow-accent   { stroke: #7c3aed; stroke-width: 1.8; fill: none; }
+.fig-arrow-accent-h { fill: #7c3aed; }
+.fig-dashed         { stroke-dasharray: 6 4; }
+
+/* Before/after badge. */
+.fig-vs      { fill: #1b2430; }
+.fig-vs-text { fill: #ffffff; font-size: 12px; font-weight: 800; font-family: system-ui, "Segoe UI", Arial, sans-serif; text-anchor: middle; }
+
+/* UML class diagrams. */
+.uml-name     { fill: #1b2430; font-size: 14px; font-weight: 700; text-anchor: middle; font-family: system-ui, "Segoe UI", Roboto, Arial, sans-serif; }
+.uml-abstract { font-style: italic; }
+.uml-stereo   { fill: #5a6676; font-size: 11px; text-anchor: middle; font-family: system-ui, "Segoe UI", Roboto, Arial, sans-serif; }
+.uml-member   { fill: #1b2430; font-size: 12px; font-family: ui-monospace, "Cascadia Code", Consolas, Menlo, monospace; }
+.uml-divider  { stroke: #b8c2cf; stroke-width: 1; }
+.uml-line     { stroke: #5a6676; stroke-width: 1.5; fill: none; }
+.uml-dashed   { stroke: #5a6676; stroke-width: 1.5; fill: none; stroke-dasharray: 6 4; }
+.uml-head-hollow          { fill: #ffffff; stroke: #5a6676; stroke-width: 1.3; }
+.uml-head-open            { fill: none; stroke: #5a6676; stroke-width: 1.3; }
+.uml-head-diamond-filled  { fill: #5a6676; stroke: #5a6676; stroke-width: 1.3; }
+.uml-head-diamond-hollow  { fill: #ffffff; stroke: #5a6676; stroke-width: 1.3; }
+.uml-mult     { fill: #5a6676; font-size: 11px; font-family: system-ui, "Segoe UI", Arial, sans-serif; }
+
+/* UML sequence diagrams. */
+.seq-life   { stroke: #8d99a9; stroke-width: 1.2; stroke-dasharray: 5 5; fill: none; }
+.seq-act    { fill: #e3edfb; stroke: #1d5fbf; stroke-width: 1.2; }
+.seq-msg    { stroke: #1b2430; stroke-width: 1.5; fill: none; }
+.seq-head   { fill: #1b2430; }
+.seq-return { stroke: #5a6676; stroke-width: 1.3; fill: none; stroke-dasharray: 5 4; }
+.seq-return-h { fill: none; stroke: #5a6676; stroke-width: 1.3; }
+.seq-label  { fill: #1b2430; font-size: 12px; font-family: ui-monospace, "Cascadia Code", Consolas, Menlo, monospace; }
+.seq-step   { fill: #1d5fbf; font-size: 11px; font-weight: 800; font-family: system-ui, "Segoe UI", Arial, sans-serif; }
+
+/* ---------- 12. Interactive simulations ---------- */
+
+.sim {
+  border: 2px dashed #1d5fbf;
+  border-radius: 14px;
+  background: #ffffff;
+  padding: 1rem 1.1rem 0.6rem;
+  margin: 0 0 1.6rem;
+}
+.sim::before {
+  content: "Interactive simulation";
+  display: inline-block;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #ffffff;
+  background: #1d5fbf;
+  border-radius: 6px;
+  padding: 0.15rem 0.55rem;
+  margin-bottom: 0.6rem;
+}
+.sim h4 { margin-top: 0.2rem; }
+.sim-controls { display: flex; flex-wrap: wrap; gap: 0.9rem 1.6rem; margin: 0.4rem 0 0.9rem; }
+.sim-group { display: flex; flex-direction: column; gap: 0.35rem; }
+.sim-group-label { font-size: 0.78rem; font-weight: 700; color: #5a6676; text-transform: uppercase; letter-spacing: 0.05em; }
+.sim-group-buttons { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+.sim-btn {
+  font: inherit;
+  font-size: 0.88rem;
+  background: #ffffff;
+  color: #1b2430;
+  border: 1px solid #b8c2cf;
+  border-radius: 8px;
+  padding: 0.35rem 0.75rem;
+  cursor: pointer;
+  transition: background 0.12s ease, border-color 0.12s ease;
+}
+.sim-btn:hover { border-color: #1d5fbf; }
+.sim-btn.active { background: #1d5fbf; border-color: #1d5fbf; color: #ffffff; font-weight: 700; }
+.sim-btn.action { background: #0f766e; border-color: #0f766e; color: #ffffff; font-weight: 700; }
+.sim-btn.action:hover { background: #0b5a54; }
+.sim-console {
+  background: #0b1020;
+  color: #e5e7eb;
+  border-radius: 10px;
+  padding: 0.8rem 1rem;
+  font-family: ui-monospace, "Cascadia Code", Consolas, Menlo, monospace;
+  font-size: 0.84rem;
+  line-height: 1.6;
+  min-height: 6rem;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  margin: 0 0 0.8rem;
+}
+.sim-console .ok { color: #a6e3a1; }
+.sim-console .skip { color: #8392a7; }
+.sim-console .bad { color: #ff8a80; font-weight: 700; }
+.sim-console .hi { color: #ffcb6b; font-weight: 700; }
+.sim-tree { font-family: ui-monospace, Consolas, Menlo, monospace; font-size: 0.85rem; margin: 0 0 0.8rem; }
+.sim-note { font-size: 0.84rem; color: #5a6676; font-style: italic; border-top: 1px solid #e3e8ef; padding-top: 0.55rem; }
+
+/* ---------- 13. Course hub (lessons/index.html) ---------- */
+
+.hub-intro { font-size: 1.08rem; }
+figure.roadmap {
+  margin: 0 0 2rem;
+  background: #ffffff;
+  border: 1px solid #d5dce6;
+  border-radius: 12px;
+  padding: 1rem;
+}
+.rm-track   { stroke: #d5dce6; stroke-width: 6; fill: none; stroke-linecap: round; }
+.rm-done    { fill: #1d5fbf; stroke: #1d5fbf; stroke-width: 2; }
+.rm-next    { fill: #ffffff; stroke: #1d5fbf; stroke-width: 3; }
+.rm-planned { fill: #ffffff; stroke: #b8c2cf; stroke-width: 2; }
+.rm-label   { fill: #1b2430; font-size: 12px; font-weight: 700; text-anchor: middle; font-family: system-ui, "Segoe UI", Arial, sans-serif; }
+.rm-sub     { fill: #5a6676; font-size: 11px; text-anchor: middle; font-family: system-ui, "Segoe UI", Arial, sans-serif; }
+.rm-here    { fill: #1d5fbf; }
+.rm-here-text { fill: #ffffff; font-size: 11px; font-weight: 800; text-anchor: middle; font-family: system-ui, "Segoe UI", Arial, sans-serif; }
+
+.hub-phase { margin: 0 0 2.4rem; }
+.hub-phase > h2 { font-size: 1.4rem; margin: 0 0 0.3rem; }
+.hub-chapter { font-size: 1rem; color: #0f766e; margin: 1.1rem 0 0.6rem; }
+.hub-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr)); gap: 0.75rem; }
+.hub-card {
+  display: block;
+  position: relative;
+  background: #ffffff;
+  border: 1px solid #d5dce6;
+  border-radius: 12px;
+  padding: 0.75rem 0.9rem 0.8rem;
+  color: #1b2430;
+  text-decoration: none;
+}
+a.hub-card:hover { border-color: #1d5fbf; color: #1b2430; box-shadow: 0 3px 10px rgba(29, 95, 191, 0.15); }
+.hub-card .hub-num { display: block; font-size: 0.72rem; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: #1d5fbf; }
+.hub-card .hub-title { display: block; font-weight: 700; line-height: 1.35; margin: 0.15rem 0 0.35rem; }
+.hub-card .hub-desc { display: block; font-size: 0.84rem; color: #5a6676; line-height: 1.45; }
+.status-badge {
+  position: absolute;
+  top: 0.65rem;
+  right: 0.7rem;
+  font-size: 0.66rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  border-radius: 999px;
+  padding: 0.1rem 0.5rem;
+}
+.status-badge.done    { background: #1d5fbf; color: #ffffff; }
+.status-badge.next    { background: #ffffff; color: #1d5fbf; border: 1px solid #1d5fbf; }
+.status-badge.planned { background: #eceff3; color: #5a6676; }
+.hub-card.is-planned { opacity: 0.8; }
+.hub-card.is-next { border: 2px solid #1d5fbf; }
+
+/* ---------- 14. Narrow screens ---------- */
+
+@media (max-width: 960px) {
+  .page { grid-template-columns: minmax(0, 1fr); gap: 1.5rem; padding: 1.25rem 1rem 3rem; }
+  aside.toc { position: static; max-height: none; overflow: visible; background: #ffffff; border: 1px solid #d5dce6; border-radius: 12px; padding: 1rem; }
+  .toc-nav { flex-direction: column; }
+  .banner { padding: 1.5rem 1.2rem 1.2rem; }
+  .banner h1 { font-size: 1.6rem; }
+  main section > h2 { font-size: 1.3rem; }
+}
+
+/* ---------- 15. Dark mode (all overrides grouped here) ---------- */
+
+@media (prefers-color-scheme: dark) {
+  body { background: #0f141b; color: #e4eaf2; }
+  a { color: #7fb0ff; }
+  a:hover { color: #c4b5fd; }
+  a:focus-visible, button:focus-visible, summary:focus-visible, .term:focus-visible { outline-color: #c4b5fd; }
+  h3 { color: #4fd1c5; }
+  hr { border-top-color: #2a3542; }
+  :not(pre) > code { background: #1c2a40; color: #b9d3ff; }
+  kbd { background: #161d26; border-color: #3a4756; color: #e4eaf2; }
+
+  .toc-title { color: #9aa7b8; }
+  aside.toc ol a { color: #e4eaf2; border-left-color: #2a3542; }
+  aside.toc ol a:hover { color: #7fb0ff; border-left-color: #7fb0ff; background: #161f2c; }
+  .toc-nav { border-top-color: #2a3542; }
+  .navcard { background: #161d26; border-color: #2a3542; color: #e4eaf2; }
+  a.navcard:hover { border-color: #7fb0ff; color: #e4eaf2; box-shadow: 0 2px 10px rgba(127, 176, 255, 0.15); }
+  .navkicker { color: #7fb0ff; }
+  .navnote { color: #9aa7b8; }
+  .navmap { background: #0f2e2c; color: #4fd1c5; border-color: #4fd1c5; }
+  a.navmap:hover { background: #4fd1c5; color: #0f141b; }
+
+  .banner { background: #173a73; background: linear-gradient(135deg, #173a73 0%, #2c2f7a 55%, #3b2470 100%); color: #e4eaf2; }
+  .kicker { color: #b9d3ff; }
+  .subtitle, .meta { color: #d6e0ee; }
+  .meta { border-top-color: rgba(228, 234, 242, 0.25); }
+  .meta a { color: #e4eaf2; }
+
+  main section > h2 { border-bottom-color: #2a3542; }
+  .sec-num { background: #7fb0ff; color: #0f141b; }
+  .lead { color: #cfd8e5; }
+  .filepath { color: #4fd1c5; background: #0f2624; border-left-color: #4fd1c5; }
+
+  .pred-label { background: #4fd1c5; color: #0f141b; }
+  pre.output { border-color: #4fd1c5; }
+
+  .callout { background: #161d26; border-color: #2a3542; }
+  .callout.tryit { border-left-color: #7fb0ff; background: #131f33; }
+  .callout.tryit::before { color: #7fb0ff; }
+  .callout.note { border-left-color: #4fd1c5; background: #0f2422; }
+  .callout.note::before { color: #4fd1c5; }
+  .callout.warning { border-left-color: #ff8a80; background: #2a1514; }
+  .callout.warning::before { color: #ff8a80; }
+  .callout.forlearning { border-left-color: #e57bd6; background: #2a1329; }
+  .callout.forlearning::before { color: #e57bd6; }
+  .callout.realworld { border-left-color: #c4b5fd; background: #1d1830; }
+  .callout.realworld::before { color: #c4b5fd; }
+
+  .table-wrap { background: #161d26; border-color: #2a3542; }
+  .table-wrap th { background: #1c2a40; color: #b9d3ff; }
+  .table-wrap th, .table-wrap td { border-bottom-color: #2a3542; }
+
+  ol.trace > li::before { background: #14274a; color: #7fb0ff; border-color: #7fb0ff; }
+  ul.takeaways > li { background: #161d26; border-color: #2a3542; border-left-color: #7fb0ff; }
+
+  details.answer { background: #161d26; border-color: #7fb0ff; }
+  details.answer > summary { background: #7fb0ff; color: #0f141b; }
+  details.check { background: #0f2422; border-color: #4fd1c5; }
+  details.check > summary { color: #a7ece4; }
+  details.check > summary::before { background: #4fd1c5; color: #0f141b; }
+
+  .term { border-bottom-color: #c4b5fd; }
+  .term::after { background: #e4eaf2; color: #0f141b; box-shadow: 0 4px 14px rgba(0, 0, 0, 0.6); }
+
+  .nextup { background: #2c2f7a; background: linear-gradient(135deg, #3b2470 0%, #173a73 100%); color: #e4eaf2; }
+  .nextup::before { color: #d8cdfc; }
+  .nextup a { color: #e4eaf2; }
+  .position { color: #9aa7b8; }
+
+  figure.fig, figure.roadmap { background: #161d26; border-color: #2a3542; }
+  figure.fig figcaption, figure.roadmap figcaption { color: #9aa7b8; }
+  .fig-code     { fill: #14274a; stroke: #7fb0ff; }
+  .fig-contract { fill: #261a45; stroke: #c4b5fd; }
+  .fig-infra    { fill: #0f2e2c; stroke: #4fd1c5; }
+  .fig-generic  { fill: #1d2530; stroke: #8d99a9; }
+  .fig-smell    { fill: #3a1614; stroke: #ff8a80; }
+  .fig-box      { fill: #161d26; stroke: #3a4756; }
+  .fig-heading, .fig-label { fill: #e4eaf2; }
+  .fig-small { fill: #9aa7b8; }
+  .fig-code-text { fill: #7fb0ff; }
+  .fig-contract-text { fill: #c4b5fd; }
+  .fig-infra-text { fill: #4fd1c5; }
+  .fig-smell-text { fill: #ff8a80; }
+  .fig-arrow { stroke: #9aa7b8; }
+  .fig-arrow-h { fill: #9aa7b8; }
+  .fig-arrow-accent { stroke: #c4b5fd; }
+  .fig-arrow-accent-h { fill: #c4b5fd; }
+  .fig-vs { fill: #e4eaf2; }
+  .fig-vs-text { fill: #0f141b; }
+
+  .uml-name, .uml-member { fill: #e4eaf2; }
+  .uml-stereo, .uml-mult { fill: #9aa7b8; }
+  .uml-divider { stroke: #3a4756; }
+  .uml-line, .uml-dashed { stroke: #9aa7b8; }
+  .uml-head-hollow, .uml-head-diamond-hollow { fill: #161d26; stroke: #9aa7b8; }
+  .uml-head-open { stroke: #9aa7b8; }
+  .uml-head-diamond-filled { fill: #9aa7b8; stroke: #9aa7b8; }
+
+  .seq-life { stroke: #5d6b7c; }
+  .seq-act { fill: #14274a; stroke: #7fb0ff; }
+  .seq-msg { stroke: #e4eaf2; }
+  .seq-head { fill: #e4eaf2; }
+  .seq-return, .seq-return-h { stroke: #9aa7b8; }
+  .seq-label { fill: #e4eaf2; }
+  .seq-step { fill: #7fb0ff; }
+
+  .sim { background: #161d26; border-color: #7fb0ff; }
+  .sim::before { background: #7fb0ff; color: #0f141b; }
+  .sim-group-label { color: #9aa7b8; }
+  .sim-btn { background: #1d2530; color: #e4eaf2; border-color: #3a4756; }
+  .sim-btn:hover { border-color: #7fb0ff; }
+  .sim-btn.active { background: #7fb0ff; border-color: #7fb0ff; color: #0f141b; }
+  .sim-btn.action { background: #4fd1c5; border-color: #4fd1c5; color: #0f141b; }
+  .sim-btn.action:hover { background: #3cb8ad; }
+  .sim-note { color: #9aa7b8; border-top-color: #2a3542; }
+
+  .rm-track { stroke: #2a3542; }
+  .rm-done { fill: #7fb0ff; stroke: #7fb0ff; }
+  .rm-next { fill: #161d26; stroke: #7fb0ff; }
+  .rm-planned { fill: #161d26; stroke: #3a4756; }
+  .rm-label { fill: #e4eaf2; }
+  .rm-sub { fill: #9aa7b8; }
+  .rm-here { fill: #7fb0ff; }
+  .rm-here-text { fill: #0f141b; }
+
+  .hub-chapter { color: #4fd1c5; }
+  .hub-card { background: #161d26; border-color: #2a3542; color: #e4eaf2; }
+  a.hub-card:hover { border-color: #7fb0ff; color: #e4eaf2; box-shadow: 0 3px 12px rgba(127, 176, 255, 0.15); }
+  .hub-card .hub-num { color: #7fb0ff; }
+  .hub-card .hub-desc { color: #9aa7b8; }
+  .status-badge.done { background: #7fb0ff; color: #0f141b; }
+  .status-badge.next { background: #161d26; color: #7fb0ff; border-color: #7fb0ff; }
+  .status-badge.planned { background: #1d2530; color: #9aa7b8; }
+  .hub-card.is-next { border-color: #7fb0ff; }
+}
+
+@media (prefers-color-scheme: dark) and (max-width: 960px) {
+  aside.toc { background: #161d26; border-color: #2a3542; }
+}
+
+/* ---------- 16. Motion kill-switch ---------- */
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+}
+
+/* ---------- 17. Print ---------- */
+
+@media print {
+  body { background: #ffffff; color: #000000; font-size: 11pt; }
+  .page { display: block; max-width: none; padding: 0; }
+  aside.toc, .toc-nav, .nextup, .sim { display: none; }
+  .banner { background: #ffffff; color: #000000; border: 2px solid #000000; }
+  .kicker, .subtitle, .meta, .meta a { color: #000000; }
+  pre.code, pre.terminal, pre.ascii, pre.output { white-space: pre-wrap; overflow-wrap: anywhere; border: 1px solid #000000; background: #ffffff; color: #000000; }
+  pre span { color: #000000 !important; }
+  pre.code::before, pre.terminal::before { display: none; }
+  .pred-label { background: #ffffff; color: #000000; border: 1px solid #000000; }
+  details.answer, details.check { border: 1px solid #000000; }
+  figure.fig, figure.roadmap, .callout, pre, table, ul.takeaways > li { break-inside: avoid; page-break-inside: avoid; }
+  main section > h2 { break-after: avoid; page-break-after: avoid; }
+  .term::after { display: none; }
+  a { color: #000000; }
+}

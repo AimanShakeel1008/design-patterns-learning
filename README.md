@@ -13,12 +13,18 @@ Every pattern here is taught *pain first*: we start from working-but-rotting cod
 
 ---
 
+## Start here: the lessons
+
+The lessons are standalone HTML pages that work fully offline. **Open [`lessons/index.html`](lessons/index.html) in your browser** (double-click it after cloning) for the course map, then follow the cards. Every page follows your light/dark theme, has hand-drawn diagrams, and hides each challenge's answer until you click.
+
+---
+
 ## What's in this repo
 
 | Folder / file | What it is |
 |---|---|
-| `lessons/` | The written lessons, in Markdown, organized by phase and chapter. |
-| `katas/` | One tiny, self-contained Maven project per pattern (the wrong way, the right way, a demo, and a test). Frozen once written. |
+| `lessons/` | The lessons as offline HTML pages, organized by phase and chapter. Start at `lessons/index.html`. |
+| `katas/` | One tiny, self-contained example per pattern (the wrong way, the right way, a demo, and a test). Frozen once written. |
 | `smarthome/` | The **Smart Home Hub** — one real, evolving Maven application that grows as patterns are applied where it genuinely needs them. |
 | `pattern-catalog.md` | The living cheat-sheet: one quick-reference entry per principle and pattern. |
 | `glossary.md` | Every design term, defined in plain language, in the order we meet it. |
@@ -36,7 +42,7 @@ Every pattern here is taught *pain first*: we start from working-but-rotting cod
 
 ## How to build and run
 
-You need **Java 21** and **Maven** installed (see `lessons/phase-0-oop-foundations/chapter-00-setup`).
+You need **Java 21** and **Maven 3.9+** installed (see Lesson 00).
 
 Run the katas' tests:
 
@@ -52,16 +58,23 @@ cd smarthome
 mvn test
 ```
 
-Run a project's `main`:
+Run the hub's `main`:
 
 ```bash
 cd smarthome
-mvn compile exec:java -Dexec.mainClass=com.smarthome.Main
+mvn compile exec:java
 ```
 
-*(Both projects are pinned to Java 21 and JUnit 5.)*
+Run a specific kata's demo (the quotes matter in PowerShell):
 
-**What the hub can do so far:** it defines a `Device` contract (`com.smarthome.devices.Device`) and two implementations — a `Light` and a `Thermostat` — and its `Main` turns them all on through a single loop that talks only to the `Device` interface. Adding new device types will not require changing that loop.
+```bash
+cd katas
+mvn compile exec:java "-Dexec.mainClass=com.katas.<pattern>.Main"
+```
+
+*(Both projects pin Java 21, JUnit 5.14.4, Surefire 3.5.5, and exec-maven-plugin 3.6.1.)*
+
+**What the hub can do so far:** it compiles, prints its startup banner, and passes its smoke test. Its first real code — a `Device` contract — arrives in Lesson 01.
 
 ---
 

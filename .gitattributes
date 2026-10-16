@@ -1,0 +1,9 @@
+# Force LF line endings on every text file so pages, sources and docs are
+# byte-identical on Windows and Linux (Git converts on checkout/commit).
+* text=auto eol=lf
+
+# Binary files are never touched.
+*.png binary
+*.jpg binary
+*.ico binary
+*.jar binary

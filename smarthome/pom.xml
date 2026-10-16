@@ -1,49 +1,72 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- This is the build file for the SMART HOME HUB project: the one single, -->
-<!-- real, evolving application we grow across the whole course. Unlike the -->
-<!-- katas (frozen exhibits), this project is edited in place, lesson by lesson. -->
+<!-- The line above says "this is an XML file, stored as UTF-8 text". -->
+<!-- This is the build file for the SMART HOME HUB: the one real, evolving -->
+<!-- application we grow across the course. Unlike the katas (frozen -->
+<!-- exhibits), this project is edited in place, lesson by lesson. -->
+
+<!-- <project> wraps everything. The xmlns lines name the official POM -->
+<!-- vocabulary, so Maven and your IDE can check every tag below is valid. -->
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
-    <!-- The POM language version (not our project's version). Always 4.0.0. -->
+    <!-- The version of the POM *language* (not of our project). Always 4.0.0. -->
     <modelVersion>4.0.0</modelVersion>
 
-    <!-- The project's unique coordinates (its "address"). -->
+    <!-- The coordinates: the project's unique address in the Java world. -->
+    <!-- groupId = who owns it. -->
     <groupId>com.smarthome</groupId>
+    <!-- artifactId = this project's name. -->
     <artifactId>smart-home-hub</artifactId>
+    <!-- version = our own version number for the hub. -->
     <version>1.0.0</version>
-    <!-- Build output is a plain .jar bundle of compiled classes. -->
+    <!-- packaging = bundle the compiled classes into one .jar file. -->
     <packaging>jar</packaging>
 
     <!-- Pinned settings, identical to the katas project for consistency. -->
     <properties>
-        <!-- Compile and run on Java 21. -->
+        <!-- Compile the Java 21 language AND produce Java 21 bytecode. -->
         <maven.compiler.release>21</maven.compiler.release>
-        <!-- Treat source files as UTF-8. -->
+        <!-- Read source files as UTF-8. -->
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <!-- The same single JUnit 5 version pinned across the course. -->
         <junit.version>5.14.4</junit.version>
+        <!-- The class `mvn compile exec:java` runs by default: the hub's -->
+        <!-- entry point. A property, so -Dexec.mainClass=... can override it. -->
+        <exec.mainClass>com.smarthome.Main</exec.mainClass>
     </properties>
 
+    <!-- Dependencies: outside libraries Maven downloads for us. -->
     <dependencies>
         <!-- JUnit 5 for the hub's regression tests. Deliberately the ONLY -->
         <!-- dependency: no Spring, no framework, so every pattern is seen bare. -->
         <dependency>
+            <!-- JUnit's owner name... -->
             <groupId>org.junit.jupiter</groupId>
+            <!-- ...its project name... -->
             <artifactId>junit-jupiter</artifactId>
+            <!-- ...and the pinned version, read from the property above. -->
             <version>${junit.version}</version>
+            <!-- test scope: available to tests only, never shipped in the jar. -->
             <scope>test</scope>
         </dependency>
     </dependencies>
 
+    <!-- Build settings: which plugins (Maven's add-on tools) to use. -->
     <build>
         <plugins>
-            <!-- Surefire runs the JUnit 5 tests during `mvn test`. -->
+            <!-- Surefire RUNS the JUnit 5 tests during `mvn test`. -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>3.5.5</version>
+            </plugin>
+            <!-- The exec plugin powers `mvn compile exec:java`, which runs -->
+            <!-- the hub's main method. Pinned so the run command never drifts. -->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>3.6.1</version>
             </plugin>
         </plugins>
     </build>

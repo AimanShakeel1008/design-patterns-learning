@@ -56,3 +56,49 @@ This page decodes the errors that actually come up while working through the cou
 **Why:** usually the test class or its `@Test` methods are not where Maven expects, or an old Surefire plugin cannot see JUnit 5 tests.
 
 **Fix:** confirm test files live under `src/test/java`, mirror the same package as the code, and that the POM pins a modern `maven-surefire-plugin` (3.x). This course's POMs already do.
+
+---
+
+### `there is no POM in this directory`
+
+**Symptom:** `[ERROR] The goal you specified requires a project to execute but there is no POM in this directory`.
+
+**Why:** Maven only reads the `pom.xml` in the folder you are standing in. The repository root has none; each project (`katas/`, `smarthome/`) has its own.
+
+**Fix:** `cd katas` (or `cd smarthome`) first, then run the Maven command.
+
+---
+
+### `-Dexec.mainClass=...` fails in PowerShell (`Unknown lifecycle phase ".mainClass=..."`)
+
+**Symptom:** on Windows PowerShell, `mvn compile exec:java -Dexec.mainClass=com.katas.x.Main` fails with an "Unknown lifecycle phase" error naming `.mainClass=...`.
+
+**Why:** PowerShell splits the unquoted argument at the dot, so Maven receives two broken pieces instead of one setting.
+
+**Fix:** wrap the whole option in double quotes: `mvn compile exec:java "-Dexec.mainClass=com.katas.x.Main"`. The quotes are harmless in other shells, so the course always writes them.
+
+---
+
+### Maven cannot resolve `exec-maven-plugin:3.6.1`
+
+**Symptom:** `mvn compile exec:java` fails with `Plugin org.codehaus.mojo:exec-maven-plugin:3.6.1 ... could not be resolved`.
+
+**Why:** that version was pinned at the course restart and is flagged to verify; your Maven may not find it (no internet on first use, or a version mismatch).
+
+**Fix:** check your internet connection for the first download. If it still fails, tell me the exact error and we will pin a version your Maven can resolve (`mvn test` does not need this plugin, so tests are unaffected).
+
+---
+
+## Lesson pages
+
+### A lesson page opens with no colours or layout (plain black text)
+
+**Why:** the page could not find its shared stylesheet, `lessons/assets/lesson.css`. That happens when a page is moved or copied out of the `lessons/` folder, since every page links the stylesheet by a relative path.
+
+**Fix:** open pages from inside the cloned repo — start at `lessons/index.html` and follow its cards. Do not move individual `.html` files.
+
+### A diagram's text overlaps its box, or a page looks off in dark mode
+
+**Why:** diagrams are hand-drawn SVG; how they render is something only your browser can confirm.
+
+**Fix:** tell me the page, the figure, and the theme (light or dark) — I will nudge the layout.

@@ -1,0 +1,740 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lesson 00 — Getting Your Machine Ready · Design Patterns in Java</title>
+<link rel="stylesheet" href="../../assets/lesson.css">
+</head>
+<body>
+<div class="page">
+
+<aside class="toc" aria-label="Table of contents">
+  <p class="toc-title">Lesson 00 · Contents</p>
+  <ol>
+    <li><a href="#s1">1 · The pain</a></li>
+    <li><a href="#s2">2 · Real-world analogy</a></li>
+    <li><a href="#s3">3 · The concepts explained</a></li>
+    <li><a href="#s4">4 · Setting up the repo</a></li>
+    <li><a href="#s5">5 · The Smart Home Hub</a></li>
+    <li><a href="#s6">6 · In the wild</a></li>
+    <li><a href="#s7">7 · Gotchas</a></li>
+    <li><a href="#s8">8 · Key takeaways</a></li>
+    <li><a href="#s9">9 · Challenge</a></li>
+    <li><a href="#s10">10 · Catalog update</a></li>
+  </ol>
+  <nav class="toc-nav" aria-label="Course navigation">
+    <span class="navcard disabled">
+      <span class="navkicker">← Prev</span>
+      <span class="navtitle">Start of the course</span>
+    </span>
+    <a class="navmap" href="../../index.html">↑ Course map</a>
+    <span class="navcard disabled">
+      <span class="navkicker">Next · Lesson 01 →</span>
+      <span class="navtitle">Objects, Encapsulation, and Interfaces</span>
+      <span class="navnote">not yet written</span>
+    </span>
+  </nav>
+</aside>
+
+<main>
+
+<header class="banner">
+  <p class="kicker">Phase 0 · Chapter 00 · Lesson 00</p>
+  <h1>Getting Your Machine Ready</h1>
+  <p class="subtitle">The JDK builds, the JVM runs, Maven drives the build, Git keeps the history. By the end, two Maven projects compile and their tests pass.</p>
+  <p class="meta">
+    <strong>Files created:</strong> <code>.gitignore</code>, <code>.gitattributes</code>, <code>katas/pom.xml</code>, <code>katas/…/Main.java</code>, <code>katas/…/SmokeTest.java</code>, <code>smarthome/pom.xml</code>, <code>smarthome/…/Main.java</code>, <code>smarthome/…/SmokeTest.java</code>, plus the course docs (<code>glossary.md</code>, <code>pattern-catalog.md</code>, <code>README.md</code>, <code>troubleshooting.md</code>).<br>
+    <strong>Kata package:</strong> none yet. <strong>Prerequisites:</strong> none. This is where everything begins.
+  </p>
+</header>
+
+<!-- ============================== SECTION 1 ============================== -->
+<section id="s1">
+  <h2><span class="sec-num">1</span>The pain</h2>
+
+  <p class="lead">Before we talk about design at all, we need a workshop that builds the same way every time, on every machine. Here is what life looks like without one.</p>
+
+  <p>Imagine you write one small Java file, <code>Main.java</code>. You translate it into something runnable by hand, then run it. It works. Easy.</p>
+
+  <pre class="terminal" data-title="building by hand"><code><span class="cmt"># translate Main.java into Main.class, then run it</span>
+javac Main.java
+java Main
+<span class="out">Hello!</span></code></pre>
+
+  <p>Now a new requirement arrives: "add an automatic check that the code works." That check needs an outside library called JUnit (you will meet it properly in Section 4). You try the same trick:</p>
+
+  <pre class="terminal" data-title="the trick stops working"><code>javac SmokeTest.java
+<span class="err">SmokeTest.java:3: error: package org.junit.jupiter.api does not exist</span>
+import org.junit.jupiter.api.Test;
+                            ^</code></pre>
+
+  <p>Now you must find the library on the internet, download the right version, tell the translator where it is, find every test by hand, and run each one. Then a friend clones your code. Their machine has a different Java version and a different copy of the library, and the code breaks for them but not for you. Every developer has heard the sad sentence: <em>"but it works on my machine."</em></p>
+
+  <p>The pain has a name: a <strong>manual, unrepeatable build</strong>. The cure is three tools, pinned to exact versions: a fixed Java toolbox (the JDK), a build tool that fetches libraries and runs tests with one command (Maven), and a history keeper so nothing is ever lost (Git). This lesson installs all three and proves they work.</p>
+
+  <div class="callout note">
+    <p>If your machine is already set up from an earlier run of this course, skim Sections 2 and 3, then run the checks in Section 4. The checks are the part that matters.</p>
+  </div>
+</section>
+
+<!-- ============================== SECTION 2 ============================== -->
+<section id="s2">
+  <h2><span class="sec-num">2</span>Real-world analogy</h2>
+
+  <p>Think of a <strong>furniture workshop</strong>. You draw the plans. A machine cuts the wood. A foreman reads a work order, fetches the parts, runs the machines in the right order, and calls in an inspector. A photo album records each finished stage, and a copy of the album is kept in a safe somewhere else.</p>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>In the workshop</th><th>In this course</th><th>Its job</th></tr></thead>
+      <tbody>
+        <tr><td>Your plans</td><td>Java source code (<code>.java</code> files)</td><td>What you write</td></tr>
+        <tr><td>The cutting machine</td><td><code>javac</code>, inside the JDK</td><td>Turns plans into real parts</td></tr>
+        <tr><td>The room where the furniture is used</td><td>The JVM</td><td>Where the finished program runs</td></tr>
+        <tr><td>The foreman with a work order</td><td>Maven, reading <code>pom.xml</code></td><td>Runs every step, in order, the same way every time</td></tr>
+        <tr><td>The inspector</td><td>JUnit tests</td><td>Checks the result is right</td></tr>
+        <tr><td>The photo album, and its copy in a safe</td><td>Git, and GitHub</td><td>Records every stage; keeps a backup elsewhere</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ============================== SECTION 3 ============================== -->
+<section id="s3">
+  <h2><span class="sec-num">3</span>The concepts explained</h2>
+
+  <h3>3.1 How Java runs: from your text to a running program</h3>
+
+  <p>A computer cannot run the text you type. It first has to be <strong>translated</strong>. Translating human-readable code into a form a machine can run is called <strong>compiling</strong>, and the program that does it is a <strong>compiler</strong>. Java's compiler is called <code>javac</code>.</p>
+
+  <p>Most compilers translate straight into the raw instructions of one kind of computer. Then the result only runs on that kind of computer. Java does something smarter. <code>javac</code> translates into a halfway language: not human text, and not raw machine instructions either. It is stored in <code>.class</code> files. For example, <code>javac Main.java</code> produces <code>Main.class</code>. This halfway language is called <strong>bytecode</strong>.</p>
+
+  <p>Bytecode needs a program to run it. That program reads the bytecode and carries out each instruction on whatever computer it is installed on. Windows has one, macOS has one, Linux has one. So you compile <em>once</em>, and the same <code>Main.class</code> runs everywhere. A program that acts like a computer inside your computer is called a <em>virtual machine</em>, and this one is the <strong>JVM</strong> (Java Virtual Machine).</p>
+
+  <figure class="fig">
+    <svg viewBox="0 0 720 200" role="img" aria-label="Flow diagram: Main.java goes into javac, which produces Main.class bytecode, which the JVM runs on Windows, macOS or Linux.">
+      <defs>
+        <marker id="f1-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+          <path d="M0,0 L10,5 L0,10 z" class="fig-arrow-h"/>
+        </marker>
+      </defs>
+      <rect x="10" y="40" width="150" height="70" rx="10" class="fig-code"/>
+      <text x="85" y="70" class="fig-heading fig-center fig-mono">Main.java</text>
+      <text x="85" y="92" class="fig-small fig-center">source you write</text>
+
+      <rect x="200" y="40" width="120" height="70" rx="10" class="fig-infra"/>
+      <text x="260" y="70" class="fig-heading fig-center fig-mono">javac</text>
+      <text x="260" y="92" class="fig-small fig-center">the compiler</text>
+
+      <rect x="360" y="40" width="150" height="70" rx="10" class="fig-code"/>
+      <text x="435" y="70" class="fig-heading fig-center fig-mono">Main.class</text>
+      <text x="435" y="92" class="fig-small fig-center">bytecode</text>
+
+      <rect x="550" y="40" width="160" height="70" rx="10" class="fig-infra"/>
+      <text x="630" y="70" class="fig-heading fig-center">JVM</text>
+      <text x="630" y="92" class="fig-small fig-center">runs the bytecode</text>
+
+      <line x1="160" y1="75" x2="196" y2="75" class="fig-arrow" marker-end="url(#f1-arrow)"/>
+      <line x1="320" y1="75" x2="356" y2="75" class="fig-arrow" marker-end="url(#f1-arrow)"/>
+      <line x1="510" y1="75" x2="546" y2="75" class="fig-arrow" marker-end="url(#f1-arrow)"/>
+
+      <rect x="550" y="135" width="160" height="44" rx="8" class="fig-generic"/>
+      <text x="630" y="162" class="fig-small fig-center">Windows · macOS · Linux</text>
+      <line x1="630" y1="110" x2="630" y2="131" class="fig-arrow" marker-end="url(#f1-arrow)"/>
+      <text x="260" y="160" class="fig-small fig-center">compile once …</text>
+      <text x="435" y="160" class="fig-small fig-center">… run anywhere a JVM exists</text>
+    </svg>
+    <figcaption>Blue = code we write (and its compiled form). Teal = tools from the JDK. Grey = the outside world, here the operating system. The same <code>Main.class</code> runs on any operating system that has a JVM.</figcaption>
+  </figure>
+
+  <h3>3.2 The JDK: the whole toolbox</h3>
+
+  <p>To <em>build</em> Java you need the compiler. To <em>run</em> Java you need the JVM plus Java's ready-made building blocks: text, lists, maps, files, and so on. Those ready-made blocks are called the <strong>standard library</strong>. One download gives you all of it, and that bundle is called the <strong>JDK</strong> (Java Development Kit).</p>
+
+  <p>The JDK has two halves. The <em>tools</em> half builds programs (<code>javac</code>, plus the <code>java</code> command that starts the JVM). The <em>runtime</em> half runs them: the JVM plus the standard library. That runtime half used to be downloaded on its own, under the name <strong>JRE</strong> (Java Runtime Environment). You will still see the word, but today you simply install the JDK.</p>
+
+  <figure class="fig">
+    <svg viewBox="0 0 720 260" role="img" aria-label="Containment diagram: the JDK contains development tools (javac, java, jar) and the runtime; the runtime contains the JVM and the standard library.">
+      <rect x="10" y="10" width="700" height="240" rx="14" class="fig-infra"/>
+      <text x="30" y="38" class="fig-heading">JDK — Java Development Kit</text>
+      <text x="30" y="58" class="fig-small">everything needed to BUILD and RUN Java</text>
+
+      <rect x="30" y="75" width="250" height="155" rx="10" class="fig-box"/>
+      <text x="155" y="102" class="fig-heading fig-center">Development tools</text>
+      <text x="155" y="132" class="fig-label fig-center fig-mono">javac — compiler</text>
+      <text x="155" y="156" class="fig-label fig-center fig-mono">java — starts the JVM</text>
+      <text x="155" y="180" class="fig-label fig-center fig-mono">jar — packager</text>
+      <text x="155" y="206" class="fig-small fig-center">(and a few more)</text>
+
+      <rect x="300" y="75" width="390" height="155" rx="10" class="fig-box"/>
+      <text x="495" y="102" class="fig-heading fig-center">Runtime (once sold alone as the JRE)</text>
+      <rect x="320" y="117" width="170" height="95" rx="10" class="fig-infra"/>
+      <text x="405" y="155" class="fig-heading fig-center">JVM</text>
+      <text x="405" y="177" class="fig-small fig-center">runs bytecode</text>
+      <rect x="505" y="117" width="165" height="95" rx="10" class="fig-infra"/>
+      <text x="587" y="155" class="fig-heading fig-center">Standard library</text>
+      <text x="587" y="177" class="fig-small fig-center fig-mono">String, List, Map …</text>
+    </svg>
+    <figcaption>Boxes inside boxes mean "is part of." The JDK contains the tools and the runtime; the runtime contains the JVM and the standard library. All teal: all of it is tooling we use, none of it is code we write.</figcaption>
+  </figure>
+
+  <p>Java releases a new version every six months. Most versions get fixes for only a short time. Every few years, one version is promised fixes for many years, so teams can stand on it safely. Such a version is called an <strong>LTS</strong> (Long-Term Support) release. We pin <strong>Java 21</strong>, an LTS release, for the whole course. Pinning one version means every prediction in these pages stays true for you.</p>
+
+  <p><strong>Install it.</strong> Any JDK 21 build works. A popular free one is <em>Eclipse Temurin 21</em> from adoptium.net. On Windows, the installer has an option to set <code>JAVA_HOME</code> and the PATH (both explained in 3.3). Tick both. Then open a <em>new</em> terminal and check:</p>
+
+  <pre class="terminal" data-title="terminal"><code>java -version
+javac -version</code></pre>
+
+  <p class="pred-label">Prediction — your exact numbers and vendor text will differ</p>
+  <pre class="output"><code>openjdk version "<span class="out">21</span>.0.x" 2025-xx-xx LTS
+OpenJDK Runtime Environment Temurin-21.0.x+y (build 21.0.x+y-LTS)
+OpenJDK 64-Bit Server VM Temurin-21.0.x+y (build 21.0.x+y-LTS, mixed mode, sharing)
+javac <span class="out">21</span>.0.x</code></pre>
+
+  <p>The only thing that must match is the leading <strong>21</strong> on both lines. If you see 17, 11 or 8, an older Java is getting in the way. The next section shows exactly why.</p>
+
+  <h3>3.3 PATH and JAVA_HOME: how your terminal finds Java</h3>
+
+  <p>When you type <code>java</code>, how does the terminal know which program you mean? Your computer keeps a few named settings that every program can read. For example, one setting holds your user name, and another says where temporary files go. These named settings are called <strong>environment variables</strong>.</p>
+
+  <p>One environment variable lists folders, in order. When you type a command, the terminal looks in the first folder, then the second, and so on, and runs the <em>first</em> match it finds. That list is called the <strong>PATH</strong>. If an old Java 17 folder comes before your Java 21 folder in the PATH, then typing <code>java</code> runs Java 17.</p>
+
+  <p>Maven does not rely on the PATH alone. It first looks for an environment variable that names one JDK folder directly, for example <code>C:\Program Files\Eclipse Adoptium\jdk-21…</code>. If that variable is set, Maven uses that JDK. If it is not set, Maven falls back to the <code>java</code> it finds on the PATH. That variable is called <strong><code>JAVA_HOME</code></strong>.</p>
+
+  <p>So the two can disagree. <code>java -version</code> can say 21 while Maven quietly compiles with 17, or the other way round. Try every combination below.</p>
+
+  <div class="sim" id="sim1">
+    <h4>Which Java wins? (PATH vs JAVA_HOME)</h4>
+    <div class="sim-controls">
+      <div class="sim-group">
+        <span class="sim-group-label">First Java on the PATH</span>
+        <div class="sim-group-buttons">
+          <button type="button" class="sim-btn" data-sim1-path="17">JDK 17</button>
+          <button type="button" class="sim-btn active" data-sim1-path="21">JDK 21</button>
+        </div>
+      </div>
+      <div class="sim-group">
+        <span class="sim-group-label">JAVA_HOME points to</span>
+        <div class="sim-group-buttons">
+          <button type="button" class="sim-btn" data-sim1-home="17">JDK 17</button>
+          <button type="button" class="sim-btn active" data-sim1-home="21">JDK 21</button>
+          <button type="button" class="sim-btn" data-sim1-home="unset">not set</button>
+        </div>
+      </div>
+      <div class="sim-group">
+        <span class="sim-group-label">Run a command</span>
+        <div class="sim-group-buttons">
+          <button type="button" class="sim-btn action" data-sim1-cmd="java">java -version</button>
+          <button type="button" class="sim-btn action" data-sim1-cmd="mvnv">mvn -version</button>
+          <button type="button" class="sim-btn action" data-sim1-cmd="mvntest">mvn test</button>
+        </div>
+      </div>
+    </div>
+    <div class="sim-console" id="sim1-out" aria-live="polite">Pick a setup, then run a command.</div>
+    <p class="sim-note">This is a simplified MODEL of how the terminal and Maven choose a JDK, not the real thing. The real authority is your own terminal: run <code>java -version</code> and <code>mvn -version</code> and read the "Java version" line.</p>
+  </div>
+  <script>
+  (function () {
+    var state = { path: "21", home: "21" };
+    var out = document.getElementById("sim1-out");
+    function esc(s) { return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
+    function line(cls, text) { return cls ? '<span class="' + cls + '">' + esc(text) + "</span>" : esc(text); }
+    function setActive(attr, value) {
+      var buttons = document.querySelectorAll("[data-sim1-" + attr + "]");
+      for (var i = 0; i < buttons.length; i++) {
+        buttons[i].classList.toggle("active", buttons[i].getAttribute("data-sim1-" + attr) === value);
+      }
+    }
+    function mavenJdk() { return state.home === "unset" ? state.path : state.home; }
+    function why() {
+      return state.home === "unset"
+        ? "JAVA_HOME is not set, so Maven fell back to the first java on the PATH (JDK " + state.path + ")."
+        : "JAVA_HOME is set, so Maven used it (JDK " + state.home + ") and ignored the PATH.";
+    }
+    function run(cmd) {
+      var lines = [line("hi", "> " + (cmd === "java" ? "java -version" : cmd === "mvnv" ? "mvn -version" : "mvn test"))];
+      if (cmd === "java") {
+        var v = state.path;
+        lines.push(line(v === "21" ? "ok" : "bad", 'openjdk version "' + v + '.0.x"'));
+        lines.push(line("skip", "# java -version only looks at the PATH. JAVA_HOME plays no part."));
+      } else if (cmd === "mvnv") {
+        var j = mavenJdk();
+        lines.push("Apache Maven 3.9.x");
+        lines.push(line(j === "21" ? "ok" : "bad", "Java version: " + j + ".0.x"));
+        lines.push(line("skip", "# " + why()));
+      } else {
+        var k = mavenJdk();
+        lines.push("[INFO] Building design-pattern-katas 1.0.0");
+        if (k === "21") {
+          lines.push(line("ok", "[INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0"));
+          lines.push(line("ok", "[INFO] BUILD SUCCESS"));
+        } else {
+          lines.push(line("bad", "[ERROR] Fatal error compiling: error: release version 21 not supported"));
+          lines.push(line("bad", "[INFO] BUILD FAILURE"));
+          lines.push(line("skip", "# The POM asks for Java 21, but JDK " + k + " is too old to produce it."));
+        }
+        lines.push(line("skip", "# " + why()));
+      }
+      out.innerHTML = lines.join("\n");
+    }
+    document.getElementById("sim1").addEventListener("click", function (e) {
+      var b = e.target.closest("button");
+      if (!b) { return; }
+      if (b.hasAttribute("data-sim1-path")) { state.path = b.getAttribute("data-sim1-path"); setActive("path", state.path); }
+      else if (b.hasAttribute("data-sim1-home")) { state.home = b.getAttribute("data-sim1-home"); setActive("home", state.home); }
+      else if (b.hasAttribute("data-sim1-cmd")) { run(b.getAttribute("data-sim1-cmd")); }
+    });
+  })();
+  </script>
+
+  <details class="check">
+    <summary>PATH starts with JDK 17, and JAVA_HOME points to JDK 21. What does <code>mvn test</code> compile with?</summary>
+    <p>JDK 21. Maven checks <code>JAVA_HOME</code> first and uses it when it is set. The PATH only matters to Maven when <code>JAVA_HOME</code> is missing. But <code>java -version</code> in the same terminal would print 17, because it only looks at the PATH. To avoid confusion, make both point at JDK 21.</p>
+  </details>
+
+  <h3>3.4 Maven: the foreman</h3>
+
+  <p>You <em>could</em> call <code>javac</code> by hand for every file, download libraries by hand, and run tests by hand. That is the pain from Section 1. A program that does all of it from one command is called a <strong>build tool</strong>. Ours is <strong>Maven</strong>. One command compiles your code, downloads the libraries you asked for, runs your tests, and reports the result.</p>
+
+  <p>A few words Maven uses constantly, one at a time:</p>
+  <ul>
+    <li>Your project often needs code that someone else wrote and published, like JUnit for tests. You do not copy it in by hand. You write down its name and version, and Maven downloads it. An outside library your project uses is called a <strong>dependency</strong>.</li>
+    <li>Maven needs a work order for each project: its name, its Java version, its dependencies, and its extra tools. That work order is one file, <code>pom.xml</code>. It is called the <strong>POM</strong> (Project Object Model).</li>
+    <li>Every published library needs a unique address so Maven can fetch exactly the right one. The address has three parts: who owns it (<code>groupId</code>), its name (<code>artifactId</code>), and its <code>version</code>. For example, <code>org.junit.jupiter : junit-jupiter : 5.14.4</code>. These three parts are the <strong>coordinates</strong>, and the published, versioned thing they point to is called an <strong>artifact</strong>.</li>
+    <li>Maven itself only knows the order of the steps. The real work in each step is done by small add-on tools, for example "the thing that runs tests." These add-ons are called <strong>plugins</strong>. We pin three: the compiler plugin (built in), <strong>Surefire</strong> (runs tests), and <strong>exec</strong> (runs a <code>main</code> method).</li>
+    <li>Downloaded artifacts are saved once in a folder in your home directory, <code>~/.m2/repository</code>, and reused by every project after that. This folder is called the <strong>local repository</strong>. It is why only your first build is slow.</li>
+  </ul>
+
+  <p><strong>Install Maven</strong> (3.9.x) from maven.apache.org. Unzip it, add its <code>bin</code> folder to your PATH, open a new terminal, and check:</p>
+
+  <pre class="terminal" data-title="terminal"><code>mvn -version</code></pre>
+  <p class="pred-label">Prediction — versions and paths will vary</p>
+  <pre class="output"><code>Apache Maven 3.9.x (…)
+Maven home: …
+<span class="out">Java version: 21.0.x</span>, vendor: …, runtime: …</code></pre>
+  <p>The line that matters is <strong>Java version: 21</strong>. That is the JDK Maven will compile with (see 3.3).</p>
+
+  <h3>3.5 An IDE: where you will type</h3>
+  <p>Plain text editors know nothing about Java. A smarter editor colours your code, spots typos as you type, suggests method names, and runs tests with a click. Such an editor is called an <strong>IDE</strong> (Integrated Development Environment). Pick either <strong>IntelliJ IDEA Community Edition</strong> (free, the smoothest for Java) or <strong>VS Code</strong> with the "Extension Pack for Java." Every command in this course is a terminal command, so nothing depends on which one you choose.</p>
+
+  <h3>3.6 Git and GitHub: the photo album and the safe</h3>
+  <ul>
+    <li>A tool that records the history of your files as a series of saved snapshots, so you can always go back, is called a <strong>version-control</strong> tool. Ours is <strong>Git</strong>.</li>
+    <li>The folder Git watches, together with its whole saved history, is called a <strong>repository</strong> (or <strong>repo</strong>).</li>
+    <li>One saved snapshot, with a short message saying what changed (for example, "lesson 00 – setup"), is called a <strong>commit</strong>.</li>
+    <li><strong>GitHub</strong> is a website that keeps a copy of your repository online, so a broken laptop never loses your work. That online copy is called a <strong>remote</strong>. Sending your new commits up to it is called a <strong>push</strong>.</li>
+  </ul>
+  <p><strong>Install Git</strong> from git-scm.com and check it with <code>git --version</code> (prediction: <code>git version 2.xx.x</code>). Create a free GitHub account and one <em>empty</em> repository named <code>design-patterns-learning</code>. Do not let GitHub add a README or <code>.gitignore</code>. We write those ourselves.</p>
+</section>
+
+<!-- ============================== SECTION 4 ============================== -->
+<section id="s4">
+  <h2><span class="sec-num">4</span>Setting up the repo and the two projects</h2>
+
+  <h3>4.1 The shape of the repository</h3>
+
+  <pre class="ascii"><code>design-patterns-learning/        &lt;- the Git repository root
+    .gitignore                   &lt;- files Git must never save
+    .gitattributes               &lt;- forces one line-ending style
+    CLAUDE.md, curriculum.md,
+    progress-tracker.md          &lt;- course control files (local only, never committed)
+    glossary.md                  &lt;- every term, defined
+    pattern-catalog.md           &lt;- the cheat-sheet: one entry per principle/pattern
+    README.md                    &lt;- the repo's front page on GitHub
+    troubleshooting.md           &lt;- errors and their fixes
+    lessons/                     &lt;- these HTML pages (open lessons/index.html)
+        assets/lesson.css
+        index.html
+        phase-0-oop-foundations/chapter-00-setup/lesson-00-setup.html
+    katas/                       &lt;- one tiny frozen example per pattern
+        pom.xml
+        src/main/java/com/katas/Main.java
+        src/test/java/com/katas/SmokeTest.java
+    smarthome/                   &lt;- the one real, evolving project
+        pom.xml
+        src/main/java/com/smarthome/Main.java
+        src/test/java/com/smarthome/SmokeTest.java</code></pre>
+
+  <p>Maven expects one layout, and needs no extra settings when you follow it. Real code goes under <code>src/main/java</code>. Tests go under <code>src/test/java</code>, in the same folders. Inside those, the folders <code>com/katas</code> spell out a name that keeps classes from clashing, the way a street name separates two houses both numbered 10. The first line of each Java file must say the same name: <code>package com.katas;</code>. This name is called the <strong>package</strong>.</p>
+
+  <h3>4.2 <code>.gitignore</code> and <code>.gitattributes</code></h3>
+
+  <p class="filepath">Saved: .gitignore</p>
+  <pre class="code" data-title=".gitignore"><code><span class="cmt"># Local-only course control files - never commit these</span>
+CLAUDE.md
+curriculum.md
+progress-tracker.md
+
+<span class="cmt"># Maven / Java build output</span>
+target/
+*.class
+
+<span class="cmt"># IDEs</span>
+.idea/
+*.iml
+.vscode/
+
+<span class="cmt"># Local Claude Code settings - machine-specific, never commit</span>
+.claude/</code></pre>
+  <p>Git must never save some files. The three course-control files run the course on <em>your</em> machine and are not course content. <code>target/</code> and <code>*.class</code> are build output. You save the source that makes them, never the output itself. IDE folders hold settings for your machine only. A file that lists paths Git must ignore is a <strong><code>.gitignore</code></strong>. It was written <em>before</em> the first commit, so these files were never saved, not even once.</p>
+
+  <p>Windows and Linux end each line of a text file with different invisible characters. Mixing them makes Git report changes nobody made. One small file tells Git to always store the Linux style (called "LF"):</p>
+  <p class="filepath">Saved: .gitattributes</p>
+  <pre class="code" data-title=".gitattributes"><code><span class="cmt"># Force LF line endings on every text file</span>
+* text=auto eol=lf</code></pre>
+
+  <h3>4.3 <code>katas/pom.xml</code>: read it slowly, it teaches how Maven thinks</h3>
+  <p class="filepath">Saved: katas/pom.xml</p>
+  <pre class="code" data-title="katas/pom.xml"><code><span class="ty">&lt;?xml version="1.0" encoding="UTF-8"?&gt;</span>
+<span class="cmt">&lt;!-- The line above says "this is an XML file, stored as UTF-8 text". --&gt;</span>
+<span class="cmt">&lt;!-- This is the build file for the KATAS project: one tiny, frozen example --&gt;</span>
+<span class="cmt">&lt;!-- per pattern. Maven reads THIS file to know how to compile and test. --&gt;</span>
+
+<span class="cmt">&lt;!-- &lt;project&gt; wraps everything. The xmlns lines name the official POM --&gt;</span>
+<span class="cmt">&lt;!-- vocabulary, so Maven and your IDE can check every tag below is valid. --&gt;</span>
+<span class="ty">&lt;project</span> xmlns=<span class="str">"http://maven.apache.org/POM/4.0.0"</span>
+         xmlns:xsi=<span class="str">"http://www.w3.org/2001/XMLSchema-instance"</span>
+         xsi:schemaLocation=<span class="str">"http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd"</span><span class="ty">&gt;</span>
+
+    <span class="cmt">&lt;!-- The version of the POM *language* (not of our project). Always 4.0.0. --&gt;</span>
+    <span class="ty">&lt;modelVersion&gt;</span>4.0.0<span class="ty">&lt;/modelVersion&gt;</span>
+
+    <span class="cmt">&lt;!-- The coordinates: the project's unique address in the Java world. --&gt;</span>
+    <span class="cmt">&lt;!-- groupId = who owns it (a reverse-domain-style name we chose). --&gt;</span>
+    <span class="ty">&lt;groupId&gt;</span><span class="str">com.katas</span><span class="ty">&lt;/groupId&gt;</span>
+    <span class="cmt">&lt;!-- artifactId = this particular project's name. --&gt;</span>
+    <span class="ty">&lt;artifactId&gt;</span><span class="str">design-pattern-katas</span><span class="ty">&lt;/artifactId&gt;</span>
+    <span class="cmt">&lt;!-- version = our own version number for this project. --&gt;</span>
+    <span class="ty">&lt;version&gt;</span><span class="num">1.0.0</span><span class="ty">&lt;/version&gt;</span>
+    <span class="cmt">&lt;!-- packaging = bundle the compiled classes into one .jar file. --&gt;</span>
+    <span class="ty">&lt;packaging&gt;</span>jar<span class="ty">&lt;/packaging&gt;</span>
+
+    <span class="cmt">&lt;!-- Properties: named settings, reused below as ${name}. Pinning them --&gt;</span>
+    <span class="cmt">&lt;!-- here once means every lesson builds against the SAME versions. --&gt;</span>
+    <span class="ty">&lt;properties&gt;</span>
+        <span class="cmt">&lt;!-- Compile the Java 21 language AND produce Java 21 bytecode. --&gt;</span>
+        <span class="ty">&lt;maven.compiler.release&gt;</span><span class="num">21</span><span class="ty">&lt;/maven.compiler.release&gt;</span>
+        <span class="cmt">&lt;!-- Read source files as UTF-8 so special characters never corrupt. --&gt;</span>
+        <span class="ty">&lt;project.build.sourceEncoding&gt;</span>UTF-8<span class="ty">&lt;/project.build.sourceEncoding&gt;</span>
+        <span class="cmt">&lt;!-- The one JUnit 5 version pinned for the whole course. --&gt;</span>
+        <span class="ty">&lt;junit.version&gt;</span><span class="num">5.14.4</span><span class="ty">&lt;/junit.version&gt;</span>
+        <span class="cmt">&lt;!-- The class `mvn compile exec:java` runs when you name none. A --&gt;</span>
+        <span class="cmt">&lt;!-- property (not plugin config) so -Dexec.mainClass=... can override --&gt;</span>
+        <span class="cmt">&lt;!-- it: that is how each kata's own Main demo is picked later. --&gt;</span>
+        <span class="ty">&lt;exec.mainClass&gt;</span><span class="str">com.katas.Main</span><span class="ty">&lt;/exec.mainClass&gt;</span>
+    <span class="ty">&lt;/properties&gt;</span>
+
+    <span class="cmt">&lt;!-- Dependencies: outside libraries Maven downloads for us. --&gt;</span>
+    <span class="ty">&lt;dependencies&gt;</span>
+        <span class="cmt">&lt;!-- JUnit 5 ("Jupiter"), our testing library. This one artifact --&gt;</span>
+        <span class="cmt">&lt;!-- pulls in everything needed to write and run tests. --&gt;</span>
+        <span class="ty">&lt;dependency&gt;</span>
+            <span class="cmt">&lt;!-- JUnit's owner name... --&gt;</span>
+            <span class="ty">&lt;groupId&gt;</span><span class="str">org.junit.jupiter</span><span class="ty">&lt;/groupId&gt;</span>
+            <span class="cmt">&lt;!-- ...its project name... --&gt;</span>
+            <span class="ty">&lt;artifactId&gt;</span><span class="str">junit-jupiter</span><span class="ty">&lt;/artifactId&gt;</span>
+            <span class="cmt">&lt;!-- ...and the pinned version, read from the property above. --&gt;</span>
+            <span class="ty">&lt;version&gt;</span>${junit.version}<span class="ty">&lt;/version&gt;</span>
+            <span class="cmt">&lt;!-- test scope: available to tests only, never shipped in the jar. --&gt;</span>
+            <span class="ty">&lt;scope&gt;</span>test<span class="ty">&lt;/scope&gt;</span>
+        <span class="ty">&lt;/dependency&gt;</span>
+    <span class="ty">&lt;/dependencies&gt;</span>
+
+    <span class="cmt">&lt;!-- Build settings: which plugins (Maven's add-on tools) to use. --&gt;</span>
+    <span class="ty">&lt;build&gt;</span>
+        <span class="ty">&lt;plugins&gt;</span>
+            <span class="cmt">&lt;!-- Surefire RUNS the tests during `mvn test`. A modern 3.x --&gt;</span>
+            <span class="cmt">&lt;!-- version is needed to find JUnit 5 tests reliably. --&gt;</span>
+            <span class="ty">&lt;plugin&gt;</span>
+                <span class="ty">&lt;groupId&gt;</span><span class="str">org.apache.maven.plugins</span><span class="ty">&lt;/groupId&gt;</span>
+                <span class="ty">&lt;artifactId&gt;</span><span class="str">maven-surefire-plugin</span><span class="ty">&lt;/artifactId&gt;</span>
+                <span class="ty">&lt;version&gt;</span><span class="num">3.5.5</span><span class="ty">&lt;/version&gt;</span>
+            <span class="ty">&lt;/plugin&gt;</span>
+            <span class="cmt">&lt;!-- The exec plugin powers `mvn compile exec:java`: it runs a --&gt;</span>
+            <span class="cmt">&lt;!-- class's main method with our compiled classes on hand. --&gt;</span>
+            <span class="ty">&lt;plugin&gt;</span>
+                <span class="ty">&lt;groupId&gt;</span><span class="str">org.codehaus.mojo</span><span class="ty">&lt;/groupId&gt;</span>
+                <span class="ty">&lt;artifactId&gt;</span><span class="str">exec-maven-plugin</span><span class="ty">&lt;/artifactId&gt;</span>
+                <span class="ty">&lt;version&gt;</span><span class="num">3.6.1</span><span class="ty">&lt;/version&gt;</span>
+            <span class="ty">&lt;/plugin&gt;</span>
+        <span class="ty">&lt;/plugins&gt;</span>
+    <span class="ty">&lt;/build&gt;</span>
+
+<span class="ty">&lt;/project&gt;</span></code></pre>
+
+  <p>Read top to bottom, the POM answers four questions. <em>Who am I?</em> The coordinates. <em>Which versions?</em> The properties: Java 21 and JUnit 5.14.4, pinned once. <em>What do I need?</em> One dependency, JUnit, in <code>test</code> scope, so it helps the tests but never ships with the program. <em>Which tools run the steps?</em> Surefire and exec. <strong>Saved: <code>smarthome/pom.xml</code></strong> is the same file with <code>com.smarthome</code> coordinates and <code>com.smarthome.Main</code> as its default main class. Deliberately, JUnit is the <em>only</em> dependency in either project. There is no framework, so every pattern is seen bare.</p>
+
+  <div class="callout note">
+    <p>The versions <strong>JUnit 5.14.4</strong> and <strong>Surefire 3.5.5</strong> are the ones pinned at the course's first setup. <strong>exec-maven-plugin 3.6.1</strong> was newly pinned for this restart. If Maven reports it cannot find that version, tell me what it says, and we will pin the version your Maven can find.</p>
+  </div>
+
+  <h3>4.4 The four Java files</h3>
+
+  <p>Every Java program needs a starting point, a method the JVM knows to call first. It must be spelled exactly <code>public static void main(String[] args)</code>, or the JVM will not recognise it. This is the <strong><code>main</code> method</strong>. (The words <code>public</code> and <code>static</code> get their full story in Lesson 01 and beyond. For now: "callable from outside" and "no object needed.")</p>
+
+  <p class="filepath">Saved: katas/src/main/java/com/katas/Main.java</p>
+  <pre class="code" data-title="Main.java (katas)"><code><span class="cmt">// Declares the package (folder-path namespace) this class lives in. The folders</span>
+<span class="cmt">// on disk (com/katas) must match this line exactly, or Java will not find it.</span>
+<span class="kw">package</span> com.katas;
+
+<span class="cmt">// A public class is one visible to code in other packages. The file name</span>
+<span class="cmt">// (Main.java) must match the class name (Main) exactly in Java.</span>
+<span class="kw">public class</span> <span class="ty">Main</span> {
+
+    <span class="cmt">// main is the special method the Java runtime calls first when the program</span>
+    <span class="cmt">// starts. Its signature MUST be exactly this for the JVM to recognise it:</span>
+    <span class="cmt">// public (callable from outside), static (no object needed to call it),</span>
+    <span class="cmt">// void (returns nothing), named main, taking an array of String arguments.</span>
+    <span class="kw">public static void</span> <span class="fn">main</span>(<span class="ty">String</span>[] args) {
+        <span class="cmt">// Print one line to the console so we can SEE the toolchain works:</span>
+        <span class="cmt">// if this text appears, Java compiled and ran our code successfully.</span>
+        <span class="ty">System</span>.out.<span class="fn">println</span>(<span class="str">"Katas project is ready."</span>);
+    }
+}</code></pre>
+
+  <p class="filepath">Saved: smarthome/src/main/java/com/smarthome/Main.java</p>
+  <pre class="code" data-title="Main.java (smarthome)"><code><span class="cmt">// The package (namespace) for the Smart Home Hub's entry point. The folder</span>
+<span class="cmt">// path com/smarthome on disk must mirror this line exactly.</span>
+<span class="kw">package</span> com.smarthome;
+
+<span class="cmt">// The application's top-level class. File name Main.java matches class Main.</span>
+<span class="kw">public class</span> <span class="ty">Main</span> {
+
+    <span class="cmt">// The JVM's starting point: same required signature as any Java program.</span>
+    <span class="kw">public static void</span> <span class="fn">main</span>(<span class="ty">String</span>[] args) {
+        <span class="cmt">// A friendly startup banner. Later lessons will replace this with real</span>
+        <span class="cmt">// hub behaviour (creating devices, running scenes). For now it simply</span>
+        <span class="cmt">// proves the Smart Home project compiles and runs.</span>
+        <span class="ty">System</span>.out.<span class="fn">println</span>(<span class="str">"Smart Home Hub is starting up..."</span>);
+    }
+}</code></pre>
+
+  <p>Now the tests. A small piece of code that checks other code automatically, so a mistake shows up the moment you run it, is called a <strong>unit test</strong>. The library that finds and runs unit tests and reports pass or fail is <strong>JUnit</strong>. Two more words appear in the file below:</p>
+  <ul>
+    <li>A tag stuck onto code, which tools read but Java itself ignores, is an <strong>annotation</strong>. <code>@Test</code> tells JUnit "run this method as a test."</li>
+    <li>A line inside a test that states what must be true, and fails the test if it is not, is an <strong>assertion</strong>. <code>assertEquals(4, 2 + 2)</code> fails if the two values differ.</li>
+  </ul>
+  <p>Our first tests check nothing real. They only prove that the machinery works: the compiler, Maven, JUnit and Surefire. The name comes from electronics: you switch a new device on and check that no smoke comes out. A test like this is called a <strong>smoke test</strong>.</p>
+
+  <p class="filepath">Saved: katas/src/test/java/com/katas/SmokeTest.java</p>
+  <pre class="code" data-title="SmokeTest.java (katas)"><code><span class="cmt">// Same package as the code under test. Test sources live in src/test/java,</span>
+<span class="cmt">// but share the package name so tests can reach package-visible members.</span>
+<span class="kw">package</span> com.katas;
+
+<span class="cmt">// Import the @Test annotation: the marker that tells JUnit "run this method</span>
+<span class="cmt">// as a test". An annotation is a tag attached to code that tools can read.</span>
+<span class="kw">import</span> org.junit.jupiter.api.<span class="ty">Test</span>;
+<span class="cmt">// Import the assertion helper. assertEquals(expected, actual) fails the test</span>
+<span class="cmt">// if the two values are not equal. A "static import" lets us write the method</span>
+<span class="cmt">// name directly (assertEquals) instead of Assertions.assertEquals.</span>
+<span class="kw">import static</span> org.junit.jupiter.api.<span class="ty">Assertions</span>.<span class="fn">assertEquals</span>;
+
+<span class="cmt">// A "smoke test" is the simplest possible test: it does not check real logic,</span>
+<span class="cmt">// it just confirms the build-and-test machinery itself is wired up correctly.</span>
+<span class="cmt">// (The name comes from switching on a device and checking no smoke comes out.)</span>
+<span class="kw">public class</span> <span class="ty">SmokeTest</span> {
+
+    <span class="cmt">// @Test marks this method as one JUnit should execute. No return value; a</span>
+    <span class="cmt">// test passes if it finishes without an assertion throwing an error.</span>
+    <span class="anno">@Test</span>
+    <span class="kw">void</span> <span class="fn">toolchain_is_wired_up</span>() {
+        <span class="cmt">// Assert that 2 + 2 equals 4. This is trivially true, so the test</span>
+        <span class="cmt">// passes ONLY if Maven, JUnit, and the compiler are all working.</span>
+        <span class="fn">assertEquals</span>(<span class="num">4</span>, <span class="num">2</span> + <span class="num">2</span>);
+    }
+}</code></pre>
+  <p class="filepath">Saved: smarthome/src/test/java/com/smarthome/SmokeTest.java</p>
+  <p>The hub's smoke test is the same idea, using <code>assertTrue(true)</code>: a condition that is always true. It passes the moment the machinery works.</p>
+
+  <h3>4.5 What <code>mvn test</code> does, step by step</h3>
+
+  <figure class="fig">
+    <svg viewBox="0 0 720 230" role="img" aria-label="Pipeline: you type mvn test; Maven reads pom.xml; fetches libraries into the .m2 cache; compiles main code; compiles test code; Surefire runs every @Test method; reports counts; prints BUILD SUCCESS or BUILD FAILURE.">
+      <defs>
+        <marker id="f3-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+          <path d="M0,0 L10,5 L0,10 z" class="fig-arrow-h"/>
+        </marker>
+      </defs>
+      <rect x="15" y="20" width="150" height="64" rx="10" class="fig-generic"/>
+      <text x="90" y="46" class="fig-heading fig-center">1 · You type</text>
+      <text x="90" y="68" class="fig-small fig-center fig-mono">mvn test</text>
+
+      <rect x="195" y="20" width="150" height="64" rx="10" class="fig-infra"/>
+      <text x="270" y="46" class="fig-heading fig-center">2 · Read POM</text>
+      <text x="270" y="68" class="fig-small fig-center">versions, deps, plugins</text>
+
+      <rect x="375" y="20" width="150" height="64" rx="10" class="fig-infra"/>
+      <text x="450" y="46" class="fig-heading fig-center">3 · Fetch libs</text>
+      <text x="450" y="68" class="fig-small fig-center">into the ~/.m2 cache</text>
+
+      <rect x="555" y="20" width="150" height="64" rx="10" class="fig-code"/>
+      <text x="630" y="46" class="fig-heading fig-center">4 · Compile main</text>
+      <text x="630" y="68" class="fig-small fig-center fig-mono">src/main/java</text>
+
+      <rect x="15" y="146" width="150" height="64" rx="10" class="fig-code"/>
+      <text x="90" y="172" class="fig-heading fig-center">5 · Compile tests</text>
+      <text x="90" y="194" class="fig-small fig-center fig-mono">src/test/java</text>
+
+      <rect x="195" y="146" width="150" height="64" rx="10" class="fig-infra"/>
+      <text x="270" y="172" class="fig-heading fig-center">6 · Surefire</text>
+      <text x="270" y="194" class="fig-small fig-center">runs every @Test</text>
+
+      <rect x="375" y="146" width="150" height="64" rx="10" class="fig-infra"/>
+      <text x="450" y="172" class="fig-heading fig-center">7 · Report</text>
+      <text x="450" y="194" class="fig-small fig-center">counts pass / fail</text>
+
+      <rect x="555" y="146" width="150" height="64" rx="10" class="fig-box"/>
+      <text x="630" y="172" class="fig-heading fig-center">BUILD SUCCESS</text>
+      <text x="630" y="194" class="fig-small fig-center">or BUILD FAILURE</text>
+
+      <line x1="165" y1="52" x2="191" y2="52" class="fig-arrow" marker-end="url(#f3-arrow)"/>
+      <line x1="345" y1="52" x2="371" y2="52" class="fig-arrow" marker-end="url(#f3-arrow)"/>
+      <line x1="525" y1="52" x2="551" y2="52" class="fig-arrow" marker-end="url(#f3-arrow)"/>
+      <path d="M630,84 L630,115 L90,115 L90,142" class="fig-arrow" marker-end="url(#f3-arrow)"/>
+      <line x1="165" y1="178" x2="191" y2="178" class="fig-arrow" marker-end="url(#f3-arrow)"/>
+      <line x1="345" y1="178" x2="371" y2="178" class="fig-arrow" marker-end="url(#f3-arrow)"/>
+      <line x1="525" y1="178" x2="551" y2="178" class="fig-arrow" marker-end="url(#f3-arrow)"/>
+    </svg>
+    <figcaption>One command, eight steps, always in this order. Teal steps are Maven and its plugins working. Blue steps compile <em>our</em> code into the <code>target/</code> folder.</figcaption>
+  </figure>
+
+  <ol class="trace">
+    <li>You type <code>mvn test</code> inside the <code>katas/</code> folder. Maven looks for <code>pom.xml</code> <em>in the current folder</em>. That is why the folder matters.</li>
+    <li>Maven reads the POM and learns three things: Java 21, one dependency (JUnit 5.14.4), and two pinned plugins.</li>
+    <li>For each library and plugin, Maven checks <code>~/.m2/repository</code>. The very first time they are missing, so Maven downloads them and you see many <code>Downloading…</code> lines. Every later run finds them in the cache.</li>
+    <li>The compiler plugin runs <code>javac</code> on everything under <code>src/main/java</code>. It writes <span class="term" tabindex="0" data-def="The halfway language Java source is compiled into (.class files); not human source, not raw machine code — the JVM reads it.">bytecode</span> (<code>Main.class</code>) into <code>target/classes</code>.</li>
+    <li>It does the same for <code>src/test/java</code>, writing <code>SmokeTest.class</code> into <code>target/test-classes</code>. JUnit is available here because of its <code>test</code> scope.</li>
+    <li>Surefire looks through the compiled test classes, finds every method marked <code>@Test</code>, and asks JUnit to run each one. <code>toolchain_is_wired_up()</code> runs: <code>2 + 2</code> is <code>4</code>, so the assertion holds and the test passes.</li>
+    <li>Surefire counts the results: 1 run, 0 failures, 0 errors, 0 skipped.</li>
+    <li>Nothing failed, so Maven prints <code>BUILD SUCCESS</code>.</li>
+  </ol>
+
+  <p class="pred-label">Prediction — trimmed; timings and download lines will differ</p>
+  <pre class="output"><code>[INFO] Scanning for projects...
+[INFO] ------------------&lt; com.katas:design-pattern-katas &gt;-------------------
+[INFO] Building design-pattern-katas 1.0.0
+...
+[INFO] --- surefire:3.5.5:test (default-test) @ design-pattern-katas ---
+[INFO] -------------------------------------------------------
+[INFO]  T E S T S
+[INFO] -------------------------------------------------------
+[INFO] Running com.katas.SmokeTest
+<span class="out">[INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0</span>, Time elapsed: 0.03 s -- in com.katas.SmokeTest
+[INFO]
+[INFO] Results:
+[INFO]
+<span class="out">[INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0</span>
+[INFO]
+<span class="out">[INFO] BUILD SUCCESS</span></code></pre>
+
+  <h3>4.6 Run it yourself, and compare</h3>
+  <pre class="terminal" data-title="terminal — from design-patterns-learning/"><code><span class="cmt"># the katas project</span>
+cd katas
+mvn test
+cd ..
+
+<span class="cmt"># the Smart Home Hub</span>
+cd smarthome
+mvn test
+mvn compile exec:java</code></pre>
+
+  <p class="pred-label">Prediction — the key lines of <code>mvn compile exec:java</code> in smarthome/</p>
+  <pre class="output"><code>[INFO] --- exec:3.6.1:java (default-cli) @ smart-home-hub ---
+<span class="out">Smart Home Hub is starting up...</span>
+[INFO] BUILD SUCCESS</code></pre>
+
+  <div class="callout tryit">
+    <p>Run each command and check the result against the predictions above. Both test runs should show <code>Tests run: 1, Failures: 0</code> and <code>BUILD SUCCESS</code>. The exec run should print the banner line. <strong>If what you see differs, your machine is right.</strong> Tell me what you saw and we will work out why. <a href="#s7">Section 7</a> and <code>troubleshooting.md</code> decode the usual suspects.</p>
+  </div>
+
+  <h3>4.7 These lesson pages</h3>
+  <p>Every lesson is a single HTML file that works without internet. Double-click <code>lessons/index.html</code> to open the course map in your browser, and follow the cards from there. Each page has its contents and a <em>Prev / Course map / Next</em> stack in the side column. The pages follow your system's light or dark theme. Glossary words with a dotted underline show their definition when you hover over them or tab to them. Hover <span class="term" tabindex="0" data-def="A small automated check that one piece of code does what it should, run with a single command so breakage is caught early.">unit test</span> to try it.</p>
+
+  <details class="check">
+    <summary>You run <code>mvn test</code> and it ends with <code>BUILD SUCCESS</code>, but the report says <code>Tests run: 0</code>. Is everything fine?</summary>
+    <p>No. Zero tests ran, so nothing was checked, and the green build is lying to you by omission. Usually the test file is in the wrong folder, or its package line does not match its folders, or an old Surefire cannot see JUnit 5 tests. Always read the <code>Tests run:</code> count, not just the last line.</p>
+  </details>
+</section>
+
+<!-- ============================== SECTION 5 ============================== -->
+<section id="s5">
+  <h2><span class="sec-num">5</span>The two code homes, and the Smart Home Hub</h2>
+
+  <p>This course keeps code in two homes, on purpose, because they do two different jobs.</p>
+
+  <p>A <strong>kata</strong> is a small practice exercise you can repeat until it becomes second nature (the word comes from martial arts). Here it means one tiny, self-contained example per pattern, in its own package, for example <code>com.katas.strategy</code>. Each kata holds the wrong-way version (in a sub-package called <code>naive</code>), the right-way version, a small <code>main</code> demo, and a test. Once its lesson is done, a kata is <strong>frozen</strong>: never edited again. You can always go back and see a pattern in its smallest, purest form.</p>
+
+  <p>The <strong>Smart Home Hub</strong> is the opposite: one real, living application that grows lesson by lesson. It controls lights, thermostats, locks, cameras and speakers, reacts to sensors, runs scenes and schedules, and plugs in third-party devices. A pattern goes into the hub only when the hub genuinely needs it. Today the hub is just its banner line. In Lesson 01 it gets its first real code: a <code>Device</code> contract and two devices.</p>
+
+  <div class="callout forlearning">
+    <p>Keeping the wrong-way code beside the right-way code is a teaching device. In a real codebase you delete the naive version once it is refactored, because Git's history already remembers it.</p>
+  </div>
+</section>
+
+<!-- ============================== SECTION 6 ============================== -->
+<section id="s6">
+  <h2><span class="sec-num">6</span>In the wild</h2>
+
+  <p>The three-part address you just wrote is how the whole Java world shares code. The free public store of open-source Java libraries is called <em>Maven Central</em>. Every library in it is fetched by exactly these coordinates: <code>org.junit.jupiter : junit-jupiter : 5.14.4</code> is the line our POM used. Gradle, the other big Java build tool, reads the very same coordinates from the very same store. Learn coordinates once, and you can pull any open-source Java library into any project.</p>
+
+  <div class="callout realworld">
+    <p>On a real team, nobody trusts "it passed on my laptop." Every push to GitHub triggers a clean server that checks out the code and runs the <em>same</em> <code>mvn test</code>. This setup is called continuous integration (CI). Pinned versions are what make that server's result match yours. That is the professional cure for "works on my machine," and it rests on exactly what you set up today.</p>
+  </div>
+</section>
+
+<!-- ============================== SECTION 7 ============================== -->
+<section id="s7">
+  <h2><span class="sec-num">7</span>Gotchas and common mistakes</h2>
+  <ul>
+    <li><strong><code>'mvn' is not recognized</code> / <code>command not found</code>.</strong> The tool's <code>bin</code> folder is not on the PATH, or the terminal was opened <em>before</em> you changed it. PATH changes only reach terminals opened afterwards, so open a new one.</li>
+    <li><strong><code>release version 21 not supported</code>.</strong> Maven is using an older JDK, usually because <code>JAVA_HOME</code> points at it. Re-run the simulation in 3.3, then fix <code>JAVA_HOME</code>.</li>
+    <li><strong><code>there is no POM in this directory</code>.</strong> You ran Maven in the wrong folder. Each project (<code>katas/</code>, <code>smarthome/</code>) has its own POM, and Maven only looks in the current folder. The repo root has no POM.</li>
+    <li><strong>PowerShell and <code>-D</code> options.</strong> Later lessons run a chosen kata with <code>-Dexec.mainClass=com.katas.x.Main</code>. PowerShell splits that argument at the dot unless you wrap it in quotes. Always write <code>mvn compile exec:java "-Dexec.mainClass=com.katas.x.Main"</code>. The quotes do no harm in other terminals.</li>
+    <li><strong>Committing build output.</strong> If <code>target/</code> ever appears in <code>git status</code>, your <code>.gitignore</code> is missing or misnamed. Compiled <span class="term" tabindex="0" data-def="The halfway language Java source is compiled into (.class files); not human source, not raw machine code — the JVM reads it.">bytecode</span> never belongs in Git.</li>
+  </ul>
+</section>
+
+<!-- ============================== SECTION 8 ============================== -->
+<section id="s8">
+  <h2><span class="sec-num">8</span>Key takeaways</h2>
+  <ul class="takeaways">
+    <li>The JDK builds, the JVM runs, and Maven drives the whole build: <code>javac</code> compiles source into bytecode, the JVM executes it on any operating system, and Maven does every step from one <code>pom.xml</code>.</li>
+    <li>Versions are pinned on purpose (Java 21 LTS, JUnit 5.14.4, Surefire 3.5.5, exec 3.6.1), so the code and its predicted output stay the same on every machine and in every lesson.</li>
+    <li>The PATH decides which <code>java</code> your terminal runs, while <code>JAVA_HOME</code> (when set) decides which JDK Maven compiles with, so both must point at JDK 21.</li>
+    <li>A smoke test proves the machinery, not the logic: a green test on day one means the compiler, Maven, JUnit and Surefire are all wired up, and you should always read the <code>Tests run:</code> count.</li>
+    <li>The course has two code homes: frozen katas that show each pattern alone, and the one evolving Smart Home Hub that shows patterns working together. <code>.gitignore</code> keeps the course-control files local, so <code>git add .</code> is always safe.</li>
+  </ul>
+</section>
+
+<!-- ============================== SECTION 9 ============================== -->
+<section id="s9">
+  <h2><span class="sec-num">9</span>Challenge</h2>
+  <p>You open a terminal in the <strong>repository root</strong> (<code>design-patterns-learning/</code>, not <code>katas/</code>) and type <code>mvn test</code>. Predict what happens. Does Maven test both projects, test neither, or something else? Then say what one change of habit avoids it, and why the course is laid out this way at all.</p>
+
+  <details class="answer">
+    <summary>Click to reveal the answer</summary>
+    <p>Maven tests <strong>neither</strong> project. It fails before doing any work, because Maven only reads the <code>pom.xml</code> in the <em>current</em> folder, and the repo root has none:</p>
+    <p class="pred-label">Prediction</p>
+    <pre class="output"><code><span class="err">[ERROR] The goal you specified requires a project to execute but there is no POM in this directory (…\design-patterns-learning). Please verify you invoked Maven from the correct directory.</span>
+[INFO] BUILD FAILURE</code></pre>
+    <p><strong>The habit:</strong> always <code>cd</code> into the project first (<code>cd katas</code>, then <code>mvn test</code>). Every command in this course names its folder for this reason.</p>
+    <p><strong>Why the layout?</strong> The two projects do different jobs. Katas are frozen exhibits, and the hub keeps changing. Keeping them as separate Maven projects means a change to the hub can never break a kata, and the other way round. Maven <em>can</em> build several projects at once from a parent POM (a "multi-module" build). We skip that on purpose: it would add machinery the course does not need. You will see that judgment again and again: <strong>do not add structure until a real pain asks for it.</strong></p>
+    <p>Check it: run <code>mvn test</code> from the repo root and compare the error with the prediction. Then <code>cd katas</code> and run it again.</p>
+  </details>
+</section>
+
+<!-- ============================== SECTION 10 ============================== -->
+<section id="s10">
+  <h2><span class="sec-num">10</span>Catalog update</h2>
+  <p>No entry this lesson. <code>pattern-catalog.md</code> is seeded with its header and an empty index, ready for its first entry: the Single Responsibility Principle in Lesson 05. Every principle and pattern after that adds one entry with the same fields: intent, the pain it cures, use it when, do NOT use it when, the cost, relatives, seen in the wild, and where it lives.</p>
+</section>
+
+<div class="nextup">
+  <p><strong>Lesson 01 — Objects, Encapsulation, and Interfaces.</strong> We write the hub's first real code, a <code>Device</code> contract and two devices. We also unpack the most load-bearing idea in the whole course: programming to a <em>contract</em> instead of to a concrete class.</p>
+</div>
+<p class="position">Lesson 00 · the first of 45 lessons (00–44) · Phase 0, Chapter 00 · Setup complete</p>
+
+</main>
+</div>
+</body>
+</html>

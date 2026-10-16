@@ -1,0 +1,250 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Course Map · Design Patterns and SOLID in Java</title>
+<link rel="stylesheet" href="assets/lesson.css">
+</head>
+<body>
+<div class="page">
+
+<aside class="toc" aria-label="Course phases">
+  <p class="toc-title">Course map</p>
+  <ol>
+    <li><a href="#p0">Phase 0 · OOP foundations</a></li>
+    <li><a href="#p1">Phase 1 · SOLID</a></li>
+    <li><a href="#p2">Phase 2 · Creational</a></li>
+    <li><a href="#p3">Phase 3 · Structural</a></li>
+    <li><a href="#p4">Phase 4 · Behavioral</a></li>
+    <li><a href="#p5">Phase 5 · Beyond the GoF</a></li>
+    <li><a href="#p6">Phase 6 · Capstone</a></li>
+  </ol>
+  <nav class="toc-nav" aria-label="Where to go next">
+    <a class="navcard" href="phase-0-oop-foundations/chapter-00-setup/lesson-00-setup.html">
+      <span class="navkicker">Start here · Lesson 00</span>
+      <span class="navtitle">Getting Your Machine Ready</span>
+    </a>
+    <span class="navcard disabled">
+      <span class="navkicker">Up next · Lesson 01</span>
+      <span class="navtitle">Objects, Encapsulation, and Interfaces</span>
+      <span class="navnote">not yet written</span>
+    </span>
+  </nav>
+</aside>
+
+<main>
+
+<header class="banner">
+  <p class="kicker">Course map · 45 lessons · 7 phases</p>
+  <h1>Design Patterns and SOLID in Java</h1>
+  <p class="subtitle">A pattern is a named cure for a specific pain. If you cannot name the pain, you do not yet need the pattern.</p>
+  <p class="meta">Plain Java 21, no frameworks. Every pattern is taught pain first, built as a frozen <strong>kata</strong>, and applied to the evolving <strong>Smart Home Hub</strong> wherever it genuinely fits. The course gives equal weight to when <em>not</em> to use each one.</p>
+</header>
+
+<figure class="roadmap">
+  <svg viewBox="0 0 760 150" role="img" aria-label="Roadmap of seven phases from Phase 0 OOP foundations to Phase 6 Capstone. You are here: Phase 0, in progress.">
+    <line x1="60" y1="85" x2="700" y2="85" class="rm-track"/>
+
+    <rect x="12" y="14" width="96" height="24" rx="12" class="rm-here"/>
+    <text x="60" y="30" class="rm-here-text">YOU ARE HERE</text>
+    <path d="M54,38 L66,38 L60,46 z" class="rm-here"/>
+
+    <circle cx="60" cy="85" r="15" class="rm-next"/>
+    <text x="60" y="122" class="rm-label">Phase 0</text>
+    <text x="60" y="138" class="rm-sub">OOP basics</text>
+
+    <circle cx="167" cy="85" r="13" class="rm-planned"/>
+    <text x="167" y="122" class="rm-label">Phase 1</text>
+    <text x="167" y="138" class="rm-sub">SOLID</text>
+
+    <circle cx="273" cy="85" r="13" class="rm-planned"/>
+    <text x="273" y="122" class="rm-label">Phase 2</text>
+    <text x="273" y="138" class="rm-sub">Creational</text>
+
+    <circle cx="380" cy="85" r="13" class="rm-planned"/>
+    <text x="380" y="122" class="rm-label">Phase 3</text>
+    <text x="380" y="138" class="rm-sub">Structural</text>
+
+    <circle cx="487" cy="85" r="13" class="rm-planned"/>
+    <text x="487" y="122" class="rm-label">Phase 4</text>
+    <text x="487" y="138" class="rm-sub">Behavioral</text>
+
+    <circle cx="593" cy="85" r="13" class="rm-planned"/>
+    <text x="593" y="122" class="rm-label">Phase 5</text>
+    <text x="593" y="138" class="rm-sub">Beyond GoF</text>
+
+    <circle cx="700" cy="85" r="13" class="rm-planned"/>
+    <text x="700" y="122" class="rm-label">Phase 6</text>
+    <text x="700" y="138" class="rm-sub">Capstone</text>
+  </svg>
+  <figcaption>Filled = phase complete · ringed in blue = in progress · grey = planned. Lesson 00 is done; Lesson 01 is next.</figcaption>
+</figure>
+
+<p class="hub-intro">Each card is one page. <strong>Done</strong> cards open the lesson; <strong>next</strong> marks where to continue; <strong>planned</strong> cards are written as the course reaches them.</p>
+
+<!-- ============================== PHASE 0 ============================== -->
+<section class="hub-phase" id="p0">
+  <h2>Phase 0 — OOP foundations</h2>
+
+  <h3 class="hub-chapter">Chapter 00 · Setup</h3>
+  <div class="hub-grid">
+    <a class="hub-card" href="phase-0-oop-foundations/chapter-00-setup/lesson-00-setup.html">
+      <span class="status-badge done">done</span>
+      <span class="hub-num">Lesson 00</span>
+      <span class="hub-title">Getting Your Machine Ready</span>
+      <span class="hub-desc">JDK 21, Maven, Git, and the two Maven projects, proven with smoke tests.</span>
+    </a>
+  </div>
+
+  <h3 class="hub-chapter">Chapter 01 · The object-oriented toolbox</h3>
+  <div class="hub-grid">
+    <div class="hub-card is-next">
+      <span class="status-badge next">next</span>
+      <span class="hub-num">Lesson 01</span>
+      <span class="hub-title">Objects, Encapsulation, and Interfaces</span>
+      <span class="hub-desc">Data plus the behaviour that guards it; programming to a contract.</span>
+    </div>
+    <div class="hub-card is-planned">
+      <span class="status-badge planned">planned</span>
+      <span class="hub-num">Lesson 02</span>
+      <span class="hub-title">Inheritance and Polymorphism</span>
+      <span class="hub-desc">What inheritance gives and silently costs; one call, many behaviours.</span>
+    </div>
+    <div class="hub-card is-planned">
+      <span class="status-badge planned">planned</span>
+      <span class="hub-num">Lesson 03</span>
+      <span class="hub-title">Composition versus Inheritance</span>
+      <span class="hub-desc">The fragile base class, and why "has-a" usually beats "is-a".</span>
+    </div>
+    <div class="hub-card is-planned">
+      <span class="status-badge planned">planned</span>
+      <span class="hub-num">Lesson 04</span>
+      <span class="hub-title">Coupling, Cohesion, and Reading UML</span>
+      <span class="hub-desc">The goal every pattern serves, and the diagrams that show it.</span>
+    </div>
+    <div class="hub-card is-planned">
+      <span class="status-badge planned">planned</span>
+      <span class="hub-num">Chapter 01</span>
+      <span class="hub-title">Chapter summary</span>
+      <span class="hub-desc">Recap, hub diagram, self-check, and the chapter boss challenge.</span>
+    </div>
+  </div>
+</section>
+
+<!-- ============================== PHASE 1 ============================== -->
+<section class="hub-phase" id="p1">
+  <h2>Phase 1 — The SOLID principles</h2>
+
+  <h3 class="hub-chapter">Chapter 02 · SOLID</h3>
+  <div class="hub-grid">
+    <div class="hub-card is-planned"><span class="status-badge planned">planned</span><span class="hub-num">Lesson 05</span><span class="hub-title">S — Single Responsibility</span><span class="hub-desc">One reason to change; the god class split apart.</span></div>
+    <div class="hub-card is-planned"><span class="status-badge planned">planned</span><span class="hub-num">Lesson 06</span><span class="hub-title">O — Open/Closed</span><span class="hub-desc">Add behaviour without editing what already works.</span></div>
+    <div class="hub-card is-planned"><span class="status-badge planned">planned</span><span class="hub-num">Lesson 07</span><span class="hub-title">L — Liskov Substitution</span><span class="hub-desc">A subclass must keep its parent's promises.</span></div>
+    <div class="hub-card is-planned"><span class="status-badge planned">planned</span><span class="hub-num">Lesson 08</span><span class="hub-title">I — Interface Segregation</span><span class="hub-desc">No client should depend on methods it never uses.</span></div>
+    <div class="hub-card is-planned"><span class="status-badge planned">planned</span><span class="hub-num">Lesson 09</span><span class="hub-title">D — Dependency Inversion</span><span class="hub-desc">Policy and detail both depend on abstractions; wiring by hand.</span></div>
+    <div class="hub-card is-planned"><span class="status-badge planned">planned</span><span class="hub-num">Lesson 10</span><span class="hub-title">SOLID Together</span><span class="hub-desc">One rotten module refactored end to end.</span></div>
+    <div class="hub-card is-planned"><span class="status-badge planned">planned</span><span class="hub-num">Lesson 11</span><span class="hub-title">The Companion Principles</span><span class="hub-desc">DRY, KISS, YAGNI, and the Law of Demeter.</span></div>
+    <div class="hub-card is-planned"><span class="status-badge planned">planned</span><span class="hub-num">Chapter 02</span><span class="hub-title">Chapter summary</span><span class="hub-desc">How the five principles reinforce, and pull against, each other.</span></div>
+  </div>
+</section>
+
+<!-- ============================== PHASE 2 ============================== -->
+<section class="hub-phase" id="p2">
+  <h2>Phase 2 — Creational patterns</h2>
+
+  <h3 class="hub-chapter">Chapter 03 · What design patterns are</h3>
+  <div class="hub-grid">
+    <div class="hub-card is-planned"><span class="status-badge planned">planned</span><span class="hub-num">Lesson 12</span><span class="hub-title">Patterns: Named Cures for Named Pains</span><span class="hub-desc">The Gang of Four, the three families, and pattern fever.</span></div>
+    <div class="hub-card is-planned"><span class="status-badge planned">planned</span><span class="hub-num">Chapter 03</span><span class="hub-title">Chapter summary</span><span class="hub-desc">How to read any pattern: intent, roles, structure, consequences.</span></div>
+  </div>
+
+  <h3 class="hub-chapter">Chapter 04 · Creating objects</h3>
+  <div class="hub-grid">
+    <div class="hub-card is-planned"><span class="status-badge planned">planned</span><span class="hub-num">Lesson 13</span><span class="hub-title">Singleton</span><span class="hub-desc">One instance, and why it is the most abused pattern.</span></div>
+    <div class="hub-card is-planned"><span class="status-badge planned">planned</span><span class="hub-num">Lesson 14</span><span class="hub-title">Factory Method</span><span class="hub-desc">Hand the "which class?" decision to one place.</span></div>
+    <div class="hub-card is-planned"><span class="status-badge planned">planned</span><span class="hub-num">Lesson 15</span><span class="hub-title">Abstract Factory</span><span class="hub-desc">Families of products that must stay consistent.</span></div>
+    <div class="hub-card is-planned"><span class="status-badge planned">planned</span><span class="hub-num">Lesson 16</span><span class="hub-title">Builder</span><span class="hub-desc">Step-by-step construction instead of telescoping constructors.</span></div>
+    <div class="hub-card is-planned"><span class="status-badge planned">planned</span><span class="hub-num">Lesson 17</span><span class="hub-title">Prototype</span><span class="hub-desc">Create by copying; shallow versus deep copy.</span></div>
+    <div class="hub-card is-planned"><span class="status-badge planned">planned</span><span class="hub-num">Chapter 04</span><span class="hub-title">Chapter summary</span><span class="hub-desc">Choosing between the creational patterns, or none.</span></div>
+  </div>
+</section>
+
+<!-- ============================== PHASE 3 ============================== -->
+<section class="hub-phase" id="p3">
+  <h2>Phase 3 — Structural patterns</h2>
+
+  <h3 class="hub-chapter">Chapter 05 · Composing objects</h3>
+  <div class="hub-grid">
+    <div class="hub-card is-planned"><span class="status-badge planned">planned</span><span class="hub-num">Lesson 18</span><span class="hub-title">Adapter</span><span class="hub-desc">Make a mismatched third-party API fit our interface.</span></div>
+    <div class="hub-card is-planned"><span class="status-badge planned">planned</span><span class="hub-num">Lesson 19</span><span class="hub-title">Decorator</span><span class="hub-desc">Stack extra behaviour by wrapping, at run time.</span></div>
+    <div class="hub-card is-planned"><span class="status-badge planned">planned</span><span class="hub-num">Lesson 20</span><span class="hub-title">Facade</span><span class="hub-desc">One simple front door over a complex subsystem.</span></div>
+    <div class="hub-card is-planned"><span class="status-badge planned">planned</span><span class="hub-num">Lesson 21</span><span class="hub-title">Composite</span><span class="hub-desc">Treat one device and a whole house the same way.</span></div>
+    <div class="hub-card is-planned"><span class="status-badge planned">planned</span><span class="hub-num">Lesson 22</span><span class="hub-title">Proxy</span><span class="hub-desc">A stand-in that controls access to the real thing.</span></div>
+    <div class="hub-card is-planned"><span class="status-badge planned">planned</span><span class="hub-num">Lesson 23</span><span class="hub-title">Bridge</span><span class="hub-desc">Let two dimensions vary without multiplying classes.</span></div>
+    <div class="hub-card is-planned"><span class="status-badge planned">planned</span><span class="hub-num">Lesson 24</span><span class="hub-title">Flyweight</span><span class="hub-desc">Share the identical parts of a million objects.</span></div>
+    <div class="hub-card is-planned"><span class="status-badge planned">planned</span><span class="hub-num">Chapter 05</span><span class="hub-title">Chapter summary</span><span class="hub-desc">Adapter vs Decorator vs Proxy, finally side by side.</span></div>
+  </div>
+</section>
+
+<!-- ============================== PHASE 4 ============================== -->
+<section class="hub-phase" id="p4">
+  <h2>Phase 4 — Behavioral patterns</h2>
+
+  <h3 class="hub-chapter">Chapter 06 · Objects talking, part 1</h3>
+  <div class="hub-grid">
+    <div class="hub-card is-planned"><span class="status-badge planned">planned</span><span class="hub-num">Lesson 25</span><span class="hub-title">Strategy</span><span class="hub-desc">Interchangeable algorithms behind one interface.</span></div>
+    <div class="hub-card is-planned"><span class="status-badge planned">planned</span><span class="hub-num">Lesson 26</span><span class="hub-title">Template Method</span><span class="hub-desc">A fixed skeleton with fill-in steps.</span></div>
+    <div class="hub-card is-planned"><span class="status-badge planned">planned</span><span class="hub-num">Lesson 27</span><span class="hub-title">Observer</span><span class="hub-desc">Notify many listeners without knowing them.</span></div>
+    <div class="hub-card is-planned"><span class="status-badge planned">planned</span><span class="hub-num">Lesson 28</span><span class="hub-title">Command</span><span class="hub-desc">A request as an object: queue it, undo it, replay it.</span></div>
+    <div class="hub-card is-planned"><span class="status-badge planned">planned</span><span class="hub-num">Lesson 29</span><span class="hub-title">State</span><span class="hub-desc">Behaviour that changes with the object's mode.</span></div>
+    <div class="hub-card is-planned"><span class="status-badge planned">planned</span><span class="hub-num">Lesson 30</span><span class="hub-title">Chain of Responsibility</span><span class="hub-desc">Pass a request along until someone handles it.</span></div>
+    <div class="hub-card is-planned"><span class="status-badge planned">planned</span><span class="hub-num">Chapter 06</span><span class="hub-title">Chapter summary</span><span class="hub-desc">Strategy vs State vs Template Method, untangled.</span></div>
+  </div>
+
+  <h3 class="hub-chapter">Chapter 07 · Objects talking, part 2</h3>
+  <div class="hub-grid">
+    <div class="hub-card is-planned"><span class="status-badge planned">planned</span><span class="hub-num">Lesson 31</span><span class="hub-title">Mediator</span><span class="hub-desc">One coordinator instead of everyone-talks-to-everyone.</span></div>
+    <div class="hub-card is-planned"><span class="status-badge planned">planned</span><span class="hub-num">Lesson 32</span><span class="hub-title">Memento</span><span class="hub-desc">Snapshot and restore without breaking encapsulation.</span></div>
+    <div class="hub-card is-planned"><span class="status-badge planned">planned</span><span class="hub-num">Lesson 33</span><span class="hub-title">Iterator</span><span class="hub-desc">Walk a collection without seeing its insides.</span></div>
+    <div class="hub-card is-planned"><span class="status-badge planned">planned</span><span class="hub-num">Lesson 34</span><span class="hub-title">Visitor</span><span class="hub-desc">New operations over a stable hierarchy; double dispatch.</span></div>
+    <div class="hub-card is-planned"><span class="status-badge planned">planned</span><span class="hub-num">Lesson 35</span><span class="hub-title">Interpreter</span><span class="hub-desc">A tiny rule language as a tree of objects.</span></div>
+    <div class="hub-card is-planned"><span class="status-badge planned">planned</span><span class="hub-num">Chapter 07</span><span class="hub-title">Chapter summary</span><span class="hub-desc">The behavioral family as one map.</span></div>
+  </div>
+</section>
+
+<!-- ============================== PHASE 5 ============================== -->
+<section class="hub-phase" id="p5">
+  <h2>Phase 5 — Beyond the Gang of Four</h2>
+
+  <h3 class="hub-chapter">Chapter 08 · The wider world</h3>
+  <div class="hub-grid">
+    <div class="hub-card is-planned"><span class="status-badge planned">planned</span><span class="hub-num">Lesson 36</span><span class="hub-title">Null Object and Optional</span><span class="hub-desc">A do-nothing object instead of null checks everywhere.</span></div>
+    <div class="hub-card is-planned"><span class="status-badge planned">planned</span><span class="hub-num">Lesson 37</span><span class="hub-title">Dependency Injection and Service Locator</span><span class="hub-desc">The pattern behind every DI framework, demystified.</span></div>
+    <div class="hub-card is-planned"><span class="status-badge planned">planned</span><span class="hub-num">Lesson 38</span><span class="hub-title">Repository and DAO</span><span class="hub-desc">Keep storage details out of business code.</span></div>
+    <div class="hub-card is-planned"><span class="status-badge planned">planned</span><span class="hub-num">Lesson 39</span><span class="hub-title">MVC, MVP, MVVM</span><span class="hub-desc">Separating what you see from what it does.</span></div>
+    <div class="hub-card is-planned"><span class="status-badge planned">planned</span><span class="hub-num">Lesson 40</span><span class="hub-title">Patterns in Modern Java</span><span class="hub-desc">Lambdas, records, sealed types, and switch patterns.</span></div>
+    <div class="hub-card is-planned"><span class="status-badge planned">planned</span><span class="hub-num">Lesson 41</span><span class="hub-title">Anti-patterns and Pattern Fever</span><span class="hub-desc">The rot, the golden hammer, and the simplest design that survives.</span></div>
+    <div class="hub-card is-planned"><span class="status-badge planned">planned</span><span class="hub-num">Chapter 08</span><span class="hub-title">Chapter summary</span><span class="hub-desc">From smell to cure, or to deletion.</span></div>
+  </div>
+</section>
+
+<!-- ============================== PHASE 6 ============================== -->
+<section class="hub-phase" id="p6">
+  <h2>Phase 6 — Capstone</h2>
+
+  <h3 class="hub-chapter">Chapter 09 · Putting it all together</h3>
+  <div class="hub-grid">
+    <div class="hub-card is-planned"><span class="status-badge planned">planned</span><span class="hub-num">Lesson 42</span><span class="hub-title">Capstone 1: The Hub, Reviewed</span><span class="hub-desc">Every pattern in the finished hub, and the pain it cured.</span></div>
+    <div class="hub-card is-planned"><span class="status-badge planned">planned</span><span class="hub-num">Lesson 43</span><span class="hub-title">Capstone 2: The Grand Refactoring</span><span class="hub-desc">A rotten codebase cured, including where NO pattern is right.</span></div>
+    <div class="hub-card is-planned"><span class="status-badge planned">planned</span><span class="hub-num">Lesson 44</span><span class="hub-title">Capstone 3: The Catalog, Completed</span><span class="hub-desc">A decision guide from smell to pattern.</span></div>
+    <div class="hub-card is-planned"><span class="status-badge planned">planned</span><span class="hub-num">Chapter 09</span><span class="hub-title">Chapter summary &amp; course recap</span><span class="hub-desc">Connecting every dot.</span></div>
+  </div>
+</section>
+
+<p class="position">Course map · updated as each lesson is written</p>
+
+</main>
+</div>
+</body>
+</html>
