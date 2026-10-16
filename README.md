@@ -74,7 +74,7 @@ mvn compile exec:java "-Dexec.mainClass=com.katas.<pattern>.Main"
 
 *(Both projects pin Java 21, JUnit 5.14.4, Surefire 3.5.5, and exec-maven-plugin 3.6.1.)*
 
-**What the hub can do so far:** it compiles, prints its startup banner, and passes its smoke test. Its first real code — a `Device` contract — arrives in Lesson 01.
+**What the hub can do so far:** it defines a `Device` contract (`com.smarthome.devices.Device`) and two devices — a `Light` and a `Thermostat` that refuses targets outside 5–30 °C — and its `Main` switches them all on through one loop that talks only to the `Device` interface. New device kinds will not require changing that loop.
 
 ---
 

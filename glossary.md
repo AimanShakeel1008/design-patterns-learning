@@ -47,3 +47,33 @@ Terms are grouped by first-appearance lesson so the list reads in learning order
 - **Maven Central** — the free public store of open-source Java libraries, fetched by coordinates. (Lesson 00)
 - **Continuous integration (CI)** — a clean server that runs the same build and tests on every push, so "works on my machine" is not enough. (Lesson 00)
 - **Multi-module build** — one parent POM building several Maven projects at once; deliberately not used in this course. (Lesson 00)
+
+---
+
+## Lesson 01 — Objects, Encapsulation, and Interfaces
+
+- **Class** — the one description (blueprint) from which many objects of the same kind are built; it declares their fields and methods. (Lesson 01)
+- **Object (instance)** — one thing built from a class with `new`, holding its own copy of the fields; at heart, data plus the behaviour that guards it. (Lesson 01)
+- **Field** — a variable that lives inside an object (e.g. `balance`); each object has its own copy. (Lesson 01)
+- **Method** — a named block of code an object can run (e.g. `withdraw(30)`). (Lesson 01)
+- **Constructor** — the special block that runs once when `new` builds an object; its job is to give the object a valid starting state. (Lesson 01)
+- **`this`** — inside a class's code, "the object whose code is running right now" (e.g. `this.balance = openingBalance`). (Lesson 01)
+- **`private`** — access keyword: only code inside the same class can touch the field or method. (Lesson 01)
+- **`public`** — access keyword: any code anywhere can use the field or method. (Lesson 01)
+- **Invariant** — a rule about an object that must always be true for its whole life (e.g. "balance is never negative"). (Lesson 01)
+- **Encapsulation** — hiding an object's data (`private`) behind guarded methods, so it can only change in rule-respecting ways. (Lesson 01)
+- **Exception (throw / try / catch)** — an error object a method throws to stop and report "I cannot do this, and here is why"; the caller can catch it. (Lesson 01)
+- **Getter** — a small public method that only returns a field's value, giving read access without write access. (Lesson 01)
+- **Contract** — a promise about what will be provided, with the how left open. (Lesson 01)
+- **Interface** — a Java type that is only a list of method promises with no bodies: a contract in code. (Lesson 01)
+- **Implementation** — the real working code that fulfils a contract; `Lamp` is an implementation of `Switchable`. (Lesson 01)
+- **`implements`** — the keyword by which a class promises, compiler-checked, to provide every method an interface lists. (Lesson 01)
+- **`@Override`** — an annotation saying "this method fulfils one that was promised"; the compiler catches misspellings. (Lesson 01)
+- **Client** — any code that uses an object (the hub's loop is a client of `Device`). (Lesson 01)
+- **Program to an interface, not an implementation** — have client code name only the contract, never a concrete class, so new implementations need no client changes. (Lesson 01)
+- **Polymorphism** — one call that runs different code depending on the actual object present at run time. (Lesson 01)
+- **Abstraction** — hiding complexity behind a small set of simple operations (vs encapsulation, which hides data to protect rules). (Lesson 01)
+- **Conditional operator (`? :`)** — a compact if/else that produces a value: `on ? "ON" : "OFF"`. (Lesson 01)
+- **Lambda (first look)** — a small bundle of code handed to something else to run later, e.g. `() -> account.withdraw(500)`. Full story in the Strategy lesson. (Lesson 01)
+- **`final` (field)** — a field that can be given a value only once, in the constructor. (Lesson 01)
+- **Constant (`static final`)** — one fixed value shared by the whole class, written in CAPITALS (e.g. `MIN_CELSIUS`). (Lesson 01)

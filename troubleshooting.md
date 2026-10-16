@@ -89,6 +89,22 @@ This page decodes the errors that actually come up while working through the cou
 
 ---
 
+## Objects and interfaces (Lesson 01)
+
+### `error: balance has private access in ...BankAccount`
+
+**Why:** code outside the class tried to read or write a `private` field. That is encapsulation working, not a bug.
+
+**Fix:** go through the class's public methods instead (`getBalance()`, `withdraw(...)`). Never "fix" it by making the field public.
+
+### `error: Lamp is not abstract and does not override abstract method describe() in Switchable`
+
+**Why:** a class says `implements Switchable` but is missing (or misspelled) one of the promised methods.
+
+**Fix:** add the missing method with exactly the interface's name and parameters, marked `@Override` so the compiler checks the spelling.
+
+---
+
 ## Lesson pages
 
 ### A lesson page opens with no colours or layout (plain black text)

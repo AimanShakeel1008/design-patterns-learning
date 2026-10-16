@@ -482,6 +482,8 @@ figure.fig figcaption, figure.roadmap figcaption {
 .fig-arrow-h        { fill: #5a6676; }
 .fig-arrow-accent   { stroke: #7c3aed; stroke-width: 1.8; fill: none; }
 .fig-arrow-accent-h { fill: #7c3aed; }
+.fig-arrow-smell    { stroke: #b42318; stroke-width: 1.8; fill: none; }
+.fig-arrow-smell-h  { fill: #b42318; }
 .fig-dashed         { stroke-dasharray: 6 4; }
 
 /* Before/after badge. */
@@ -727,6 +729,8 @@ a.hub-card:hover { border-color: #1d5fbf; color: #1b2430; box-shadow: 0 3px 10px
   .fig-arrow-h { fill: #9aa7b8; }
   .fig-arrow-accent { stroke: #c4b5fd; }
   .fig-arrow-accent-h { fill: #c4b5fd; }
+  .fig-arrow-smell { stroke: #ff8a80; }
+  .fig-arrow-smell-h { fill: #ff8a80; }
   .fig-vs { fill: #e4eaf2; }
   .fig-vs-text { fill: #0f141b; }
 
