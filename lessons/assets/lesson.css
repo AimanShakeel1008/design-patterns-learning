@@ -138,6 +138,21 @@ a.navcard:hover { border-color: #1d5fbf; color: #1b2430; box-shadow: 0 2px 8px r
   text-decoration: none;
 }
 a.navmap:hover { background: #0f766e; color: #ffffff; }
+/* Pattern-catalog pill: same shape as the course-map pill, violet, because
+   the catalog is the course's book of contracts. */
+.navcatalog {
+  display: block;
+  text-align: center;
+  background: #efe8fd;
+  color: #7c3aed;
+  border: 1px solid #7c3aed;
+  border-radius: 999px;
+  padding: 0.35rem 0.75rem;
+  font-weight: 700;
+  font-size: 0.85rem;
+  text-decoration: none;
+}
+a.navcatalog:hover { background: #7c3aed; color: #ffffff; }
 
 main { min-width: 0; }
 
@@ -634,6 +649,46 @@ a.hub-card:hover { border-color: #1d5fbf; color: #1b2430; box-shadow: 0 3px 10px
 .hub-card.is-planned { opacity: 0.8; }
 .hub-card.is-next { border: 2px solid #1d5fbf; }
 
+/* ---------- 13b. Pattern catalog (lessons/pattern-catalog.html) ---------- */
+
+.catalog-entry {
+  background: #ffffff;
+  border: 1px solid #d5dce6;
+  border-top: 5px solid #7c3aed;
+  border-radius: 12px;
+  padding: 1.1rem 1.3rem 0.6rem;
+  margin: 0 0 2rem;
+  scroll-margin-top: 1rem;
+}
+.catalog-entry > h2 { font-size: 1.45rem; margin: 0 0 0.35rem; display: flex; flex-wrap: wrap; align-items: center; gap: 0.6rem; }
+.catalog-intent { font-size: 1.08rem; font-style: italic; color: #2b3747; margin: 0 0 1rem; }
+dl.catalog-fields { margin: 0; }
+dl.catalog-fields dt {
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: #7c3aed;
+  margin: 0.9rem 0 0.2rem;
+}
+dl.catalog-fields dt.not { color: #b42318; }
+dl.catalog-fields dd { margin: 0; }
+dl.catalog-fields dd ul { margin: 0.2rem 0 0.4rem; }
+.family-badge {
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  border-radius: 999px;
+  padding: 0.15rem 0.6rem;
+  border: 1px solid transparent;
+}
+.family-badge.principle  { background: #1d5fbf; color: #ffffff; }
+.family-badge.creational { background: #0f766e; color: #ffffff; }
+.family-badge.structural { background: #7c3aed; color: #ffffff; }
+.family-badge.behavioral { background: #ffffff; color: #1d5fbf; border-color: #1d5fbf; }
+.family-badge.beyond     { background: #eceff3; color: #5a6676; border-color: #b8c2cf; }
+
 /* ---------- 14. Narrow screens ---------- */
 
 @media (max-width: 960px) {
@@ -667,6 +722,8 @@ a.hub-card:hover { border-color: #1d5fbf; color: #1b2430; box-shadow: 0 3px 10px
   .navnote { color: #9aa7b8; }
   .navmap { background: #0f2e2c; color: #4fd1c5; border-color: #4fd1c5; }
   a.navmap:hover { background: #4fd1c5; color: #0f141b; }
+  .navcatalog { background: #261a45; color: #c4b5fd; border-color: #c4b5fd; }
+  a.navcatalog:hover { background: #c4b5fd; color: #0f141b; }
 
   .banner { background: #173a73; background: linear-gradient(135deg, #173a73 0%, #2c2f7a 55%, #3b2470 100%); color: #e4eaf2; }
   .kicker { color: #b9d3ff; }
@@ -785,6 +842,16 @@ a.hub-card:hover { border-color: #1d5fbf; color: #1b2430; box-shadow: 0 3px 10px
   .status-badge.next { background: #161d26; color: #7fb0ff; border-color: #7fb0ff; }
   .status-badge.planned { background: #1d2530; color: #9aa7b8; }
   .hub-card.is-next { border-color: #7fb0ff; }
+
+  .catalog-entry { background: #161d26; border-color: #2a3542; border-top-color: #c4b5fd; }
+  .catalog-intent { color: #cfd8e5; }
+  dl.catalog-fields dt { color: #c4b5fd; }
+  dl.catalog-fields dt.not { color: #ff8a80; }
+  .family-badge.principle  { background: #7fb0ff; color: #0f141b; }
+  .family-badge.creational { background: #4fd1c5; color: #0f141b; }
+  .family-badge.structural { background: #c4b5fd; color: #0f141b; }
+  .family-badge.behavioral { background: #161d26; color: #7fb0ff; border-color: #7fb0ff; }
+  .family-badge.beyond     { background: #1d2530; color: #9aa7b8; border-color: #3a4756; }
 }
 
 @media (prefers-color-scheme: dark) and (max-width: 960px) {

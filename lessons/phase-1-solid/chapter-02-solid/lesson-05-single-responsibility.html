@@ -1,0 +1,700 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lesson 05 — S: Single Responsibility Principle · Design Patterns in Java</title>
+<link rel="stylesheet" href="../../assets/lesson.css">
+</head>
+<body>
+<div class="page">
+
+<aside class="toc" aria-label="Table of contents">
+  <p class="toc-title">Lesson 05 · Contents</p>
+  <ol>
+    <li><a href="#s1">1 · The pain</a></li>
+    <li><a href="#s2">2 · Real-world analogy</a></li>
+    <li><a href="#s3">3 · The principle explained</a></li>
+    <li><a href="#s4">4 · The kata</a></li>
+    <li><a href="#s5">5 · Applied to the hub</a></li>
+    <li><a href="#s6">6 · In the wild</a></li>
+    <li><a href="#s7">7 · When NOT to use it</a></li>
+    <li><a href="#s8">8 · Key takeaways</a></li>
+    <li><a href="#s9">9 · Challenge</a></li>
+    <li><a href="#s10">10 · Catalog update</a></li>
+  </ol>
+  <nav class="toc-nav" aria-label="Course navigation">
+    <a class="navcard" href="../../phase-0-oop-foundations/chapter-01-oop/chapter-01-summary.html">
+      <span class="navkicker">← Prev · Chapter 01 summary</span>
+      <span class="navtitle">The Object-Oriented Toolbox</span>
+    </a>
+    <a class="navmap" href="../../index.html">↑ Course map</a>
+    <a class="navcatalog" href="../../pattern-catalog.html">◆ Pattern catalog</a>
+    <span class="navcard disabled">
+      <span class="navkicker">Next · Lesson 06 →</span>
+      <span class="navtitle">O — Open/Closed Principle</span>
+      <span class="navnote">not yet written</span>
+    </span>
+  </nav>
+</aside>
+
+<main>
+
+<header class="banner">
+  <p class="kicker">Phase 1 · Chapter 02 · Lesson 05</p>
+  <h1>S — Single Responsibility Principle</h1>
+  <p class="subtitle">A class should have one reason to change: it should answer to one group of people. When it answers to several, one group's change breaks another group's feature.</p>
+  <p class="meta">
+    <strong>Kata package:</strong> <code>com.katas.srp</code> (wrong way in <code>com.katas.srp.naive</code>).<br>
+    <strong>Smart Home Hub:</strong> created <code>home/HomeSetup.java</code>, <code>home/Hub.java</code>, <code>report/HouseReport.java</code> and their tests; modified <code>Main.java</code>.<br>
+    <strong>Prerequisites:</strong> <a href="../../phase-0-oop-foundations/chapter-01-oop/lesson-04-coupling-cohesion-uml.html">Lesson 04 — Coupling, Cohesion, and Reading UML</a> and the <a href="../../phase-0-oop-foundations/chapter-01-oop/chapter-01-summary.html">Chapter 01 summary</a>.
+  </p>
+</header>
+
+<!-- ============================== SECTION 1 ============================== -->
+<section id="s1">
+  <h2><span class="sec-num">1</span>The pain</h2>
+
+  <p class="lead">A payroll class that works perfectly. Then Accounting asks for a small change, and HR's weekly report quietly starts lying.</p>
+
+  <pre class="code" data-title="naive/Employee.java (key lines)"><code><span class="kw">public int</span> <span class="fn">calculatePay</span>() {                <span class="cmt">// used by ACCOUNTING</span>
+    <span class="kw">return</span> <span class="fn">regularHours</span>() * hourlyRate + <span class="fn">overtimeHours</span>() * hourlyRate * <span class="num">2</span>;
+}
+<span class="kw">public</span> <span class="ty">String</span> <span class="fn">reportHours</span>() {             <span class="cmt">// used by HR</span>
+    <span class="kw">return</span> name + <span class="str">": "</span> + <span class="fn">regularHours</span>() + <span class="str">" regular hours"</span>;
+}
+<span class="kw">public</span> <span class="ty">String</span> <span class="fn">toCsv</span>() { … }                <span class="cmt">// used by the DATABASE team</span>
+
+<span class="kw">private int</span> <span class="fn">regularHours</span>() {               <span class="cmt">// SHARED by pay and HR</span>
+    <span class="kw">return</span> <span class="ty">Math</span>.<span class="fn">min</span>(hoursWorked, <span class="num">40</span>);
+}</code></pre>
+
+  <p>Accounting asks: "for <em>pay</em>, overtime should start after 35 hours." A developer finds <code>regularHours()</code>, changes 40 to 35, runs the pay tests, which are green, and ships. HR never asked for anything. But <code>reportHours()</code> uses the same helper, so HR's report changed too:</p>
+
+  <p class="pred-label">Predicted symptom (Asha worked 45 hours)</p>
+  <pre class="output"><code>Naive pay: 1100                              <span class="cmt">&lt;- correct, as Accounting asked</span>
+<span class="err">Naive HR report: Asha: 35 regular hours      &lt;- HR's rule is 40; nobody told HR</span></code></pre>
+
+  <p>Nobody was careless. The developer did exactly what Accounting asked, in the place where the rule lived. The fault is the class: it serves <strong>three different groups</strong>, so a change requested by one can reach the others. The smell has a name: a class that does many unrelated jobs for many masters is called a <strong>god class</strong>. Our own hub has the start of one: <code>Main</code>, which <a href="../../phase-0-oop-foundations/chapter-01-oop/lesson-04-coupling-cohesion-uml.html#s5">Lesson 04 flagged</a> as losing <span class="term" tabindex="0" data-def="how strongly the parts inside one class serve a single, clear purpose; high is good. Test: one sentence, no &quot;and&quot;.">cohesion</span>.</p>
+
+  <p class="filepath">Full wrong-way code: katas/src/main/java/com/katas/srp/naive/Employee.java</p>
+</section>
+
+<!-- ============================== SECTION 2 ============================== -->
+<section id="s2">
+  <h2><span class="sec-num">2</span>Real-world analogy</h2>
+
+  <p><strong>One circuit breaker for the whole house.</strong> Imagine every light, the fridge and the doorbell all on one breaker. When the electrician works on the kitchen, the bedroom goes dark too. A fault in the doorbell trips the fridge. Real houses have <em>one breaker per circuit</em>, so work on the kitchen touches only the kitchen. The breaker panel's only job is to hold the breakers side by side.</p>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>In the house</th><th>In code</th></tr></thead>
+      <tbody>
+        <tr><td>One breaker for everything</td><td>A god class (<code>naive/Employee</code>)</td></tr>
+        <tr><td>Work on the kitchen darkens the bedroom</td><td>Accounting's change breaks HR's report</td></tr>
+        <tr><td>One breaker per circuit</td><td>One class per responsibility (<code>PayCalculator</code>, <code>HoursReporter</code>, <code>EmployeeCsv</code>)</td></tr>
+        <tr><td>Whoever uses that circuit</td><td>The group of people who request changes to that class</td></tr>
+        <tr><td>The breaker panel</td><td>The assembly point that wires the pieces together (<code>Main</code>)</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ============================== SECTION 3 ============================== -->
+<section id="s3">
+  <h2><span class="sec-num">3</span>The principle explained</h2>
+
+  <h3>3.1 First, where "SOLID" comes from</h3>
+  <p>Around 2000, Robert C. Martin collected five rules for designing classes that bend without breaking. A few years later Michael Feathers noticed their initials spelled a word, and the five became known together as <strong>SOLID</strong>: <strong>S</strong>ingle responsibility, <strong>O</strong>pen/closed, <strong>L</strong>iskov substitution, <strong>I</strong>nterface segregation, <strong>D</strong>ependency inversion. This chapter teaches one per lesson, each starting from a real pain. Each one is a sharper version of a Chapter 01 idea.</p>
+
+  <h3>3.2 What a "responsibility" really is</h3>
+  <p>"A class should do one thing" sounds right, but it is too vague to apply. Is "calculate pay" one thing? Is "handle employees"? Martin's sharper wording is about <em>change</em>. A class's responsibility is defined by who would ask you to change it. A person or group whose needs a piece of code serves, and who would request changes to it, is called an <strong>actor</strong>. The principle then reads:</p>
+  <div class="callout note">
+    <p><strong>A class should have one, and only one, reason to change.</strong> In other words, it should be responsible to one actor. This is the <strong>Single Responsibility Principle (SRP)</strong>.</p>
+  </div>
+
+  <p>Apply it to <code>Employee</code>. Ask "who would ask me to change this method?":</p>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Method</th><th>Who asks for changes (actor)</th><th>Their kind of change</th></tr></thead>
+      <tbody>
+        <tr><td><code>calculatePay()</code></td><td>Accounting</td><td>Overtime rules, pay rates</td></tr>
+        <tr><td><code>reportHours()</code></td><td>HR</td><td>What counts as a working week</td></tr>
+        <tr><td><code>toCsv()</code></td><td>The database team</td><td>Storage format, new columns</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>Three actors means three reasons to change, which means one class with three responsibilities. The shared <code>regularHours()</code> helper is where they collided. It <em>looked</em> like one rule, but it was really two different rules (Accounting's 35, HR's 40) that happened to have the same number on day one.</p>
+
+  <h3>3.3 The cure: split along the actors</h3>
+  <p>Give each actor its own class, and keep the plain facts that every actor needs in a separate data class that holds no actor's rules.</p>
+
+  <figure class="fig">
+    <svg viewBox="0 0 720 300" role="img" aria-label="Before: three actors, Accounting, HR and the database team, all point into one Employee class; calculatePay and reportHours both use a shared regularHours helper. After: each actor points to its own class, PayCalculator with cutoff 35, HoursReporter with cutoff 40, and EmployeeCsv, each reading EmployeeData.">
+      <defs>
+        <marker id="f1-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+          <path d="M0,0 L10,5 L0,10 z" class="fig-arrow-h"/>
+        </marker>
+        <marker id="f1-smell" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+          <path d="M0,0 L10,5 L0,10 z" class="fig-arrow-smell-h"/>
+        </marker>
+      </defs>
+      <text x="185" y="18" class="fig-heading fig-center fig-smell-text">Before: one class, three actors</text>
+      <rect x="10" y="45" width="110" height="40" rx="8" class="fig-generic"/>
+      <text x="65" y="70" class="fig-label fig-center">Accounting</text>
+      <rect x="10" y="145" width="110" height="40" rx="8" class="fig-generic"/>
+      <text x="65" y="170" class="fig-label fig-center">HR</text>
+      <rect x="10" y="225" width="110" height="40" rx="8" class="fig-generic"/>
+      <text x="65" y="250" class="fig-label fig-center">Database team</text>
+      <rect x="170" y="30" width="190" height="250" rx="12" class="fig-smell"/>
+      <text x="265" y="50" class="fig-heading fig-center fig-mono">Employee</text>
+      <rect x="185" y="60" width="160" height="30" rx="6" class="fig-box"/>
+      <text x="265" y="80" class="fig-label fig-center fig-mono">calculatePay()</text>
+      <rect x="185" y="105" width="160" height="30" rx="6" class="fig-box fig-dashed"/>
+      <text x="265" y="125" class="fig-label fig-center fig-mono fig-smell-text">regularHours()</text>
+      <rect x="185" y="150" width="160" height="30" rx="6" class="fig-box"/>
+      <text x="265" y="170" class="fig-label fig-center fig-mono">reportHours()</text>
+      <rect x="185" y="230" width="160" height="30" rx="6" class="fig-box"/>
+      <text x="265" y="250" class="fig-label fig-center fig-mono">toCsv()</text>
+      <line x1="120" y1="70" x2="181" y2="74" class="fig-arrow" marker-end="url(#f1-arrow)"/>
+      <line x1="120" y1="165" x2="181" y2="165" class="fig-arrow" marker-end="url(#f1-arrow)"/>
+      <line x1="120" y1="245" x2="181" y2="245" class="fig-arrow" marker-end="url(#f1-arrow)"/>
+      <line x1="265" y1="90" x2="265" y2="101" class="fig-arrow-smell" marker-end="url(#f1-smell)"/>
+      <line x1="265" y1="150" x2="265" y2="139" class="fig-arrow-smell" marker-end="url(#f1-smell)"/>
+      <text x="265" y="205" class="fig-small fig-center fig-smell-text">shared helper = collision point</text>
+
+      <circle cx="385" cy="160" r="17" class="fig-vs"/>
+      <text x="385" y="165" class="fig-vs-text">vs</text>
+
+      <text x="560" y="18" class="fig-heading fig-center fig-code-text">After: one class per actor</text>
+      <rect x="420" y="45" width="100" height="40" rx="8" class="fig-generic"/>
+      <text x="470" y="70" class="fig-label fig-center">Accounting</text>
+      <rect x="420" y="145" width="100" height="40" rx="8" class="fig-generic"/>
+      <text x="470" y="170" class="fig-label fig-center">HR</text>
+      <rect x="420" y="225" width="100" height="40" rx="8" class="fig-generic"/>
+      <text x="470" y="250" class="fig-label fig-center">DB team</text>
+      <rect x="545" y="40" width="165" height="50" rx="8" class="fig-code"/>
+      <text x="627" y="62" class="fig-label fig-center fig-mono">PayCalculator</text>
+      <text x="627" y="80" class="fig-small fig-center">overtime after 35</text>
+      <rect x="545" y="140" width="165" height="50" rx="8" class="fig-code"/>
+      <text x="627" y="162" class="fig-label fig-center fig-mono">HoursReporter</text>
+      <text x="627" y="180" class="fig-small fig-center">regular week 40</text>
+      <rect x="545" y="220" width="165" height="50" rx="8" class="fig-code"/>
+      <text x="627" y="242" class="fig-label fig-center fig-mono">EmployeeCsv</text>
+      <text x="627" y="260" class="fig-small fig-center">name,hours,rate</text>
+      <line x1="520" y1="65" x2="541" y2="65" class="fig-arrow" marker-end="url(#f1-arrow)"/>
+      <line x1="520" y1="165" x2="541" y2="165" class="fig-arrow" marker-end="url(#f1-arrow)"/>
+      <line x1="520" y1="245" x2="541" y2="245" class="fig-arrow" marker-end="url(#f1-arrow)"/>
+      <text x="627" y="292" class="fig-small fig-center">all three read EmployeeData</text>
+    </svg>
+    <figcaption>Left (red): three actors reach into one class, and two of them meet in a shared helper. Right (blue): each actor has its own class with its own private rule, so Accounting's 35 and HR's 40 can never collide. Grey boxes are people, not code; they are the "reasons to change."</figcaption>
+  </figure>
+
+  <p>Notice the two <code>Math.min(...)</code> lines in <code>PayCalculator</code> and <code>HoursReporter</code>. They look like duplication, and on day one they even used the same number. But they change for different reasons, at different actors' request. Code that looks the same but represents different rules is called <strong>accidental duplication</strong>. Merging it is what caused the bug. Lesson 11's "don't repeat yourself" rule comes with exactly this caveat.</p>
+
+  <details class="check">
+    <summary>A class <code>Invoice</code> has <code>total()</code>, <code>applyDiscount()</code> and <code>printAsPdf()</code>. How many responsibilities, by the actor test?</summary>
+    <p>Two. <code>total()</code> and <code>applyDiscount()</code> both change when the <em>pricing/sales</em> rules change: one actor, so they belong together. <code>printAsPdf()</code> changes when whoever designs the document wants a new layout: a different actor. Split out the printing (an <code>InvoicePdf</code> class); keep total and discount together. Counting methods would have said "three," which is the wrong answer.</p>
+  </details>
+
+  <h3>3.4 What each piece gains</h3>
+  <ul>
+    <li><strong>Safety:</strong> a change for one actor cannot reach another actor's code, because they share nothing but plain data.</li>
+    <li><strong>Findability:</strong> "where is the overtime rule?" has exactly one answer.</li>
+    <li><strong>Testability:</strong> each class is tested alone, with no unrelated setup.</li>
+    <li><strong>Fewer collisions in a team:</strong> when two developers work for two actors, they edit two different files.</li>
+  </ul>
+  <div class="callout note">
+    <p>The honest cost: the caller now deals with three small classes instead of one, and someone must wire them together. In the kata that is <code>Main</code>; in the hub it is <code>Main</code> again, now doing <em>only</em> the wiring. If callers find juggling many small objects painful, a single front door over them is a named pattern of its own (Lesson 20).</p>
+  </div>
+</section>
+
+<!-- ============================== SECTION 4 ============================== -->
+<section id="s4">
+  <h2><span class="sec-num">4</span>The kata</h2>
+
+  <p>Package <code>com.katas.srp</code>. The god class stays in <code>naive/Employee.java</code>, already "after" Accounting's change, so its bug can be run and tested. <span class="filepath">Saved: katas/src/main/java/com/katas/srp/EmployeeData.java</span> holds the plain facts (<code>name</code>, <code>hoursWorked</code>, <code>hourlyRate</code>) with getters and no rules. <span class="filepath">Saved: katas/src/main/java/com/katas/srp/EmployeeCsv.java</span> turns them into <code>"Asha,45,20"</code>.</p>
+
+  <p class="filepath">Saved: katas/src/main/java/com/katas/srp/PayCalculator.java</p>
+  <pre class="code" data-title="PayCalculator.java"><code><span class="cmt">// The RIGHT WAY, part 2: Accounting's rules, and only Accounting's.</span>
+<span class="kw">package</span> com.katas.srp;
+
+<span class="cmt">// Answers to ONE group: Accounting. Its overtime cutoff is private to it,</span>
+<span class="cmt">// so changing it can never touch HR's report.</span>
+<span class="kw">public class</span> <span class="ty">PayCalculator</span> {
+
+    <span class="cmt">// Accounting's rule: for pay, overtime starts after 35 hours.</span>
+    <span class="kw">private static final int</span> PAY_OVERTIME_AFTER = <span class="num">35</span>;
+
+    <span class="cmt">// Regular hours at the normal rate, overtime at double.</span>
+    <span class="kw">public int</span> <span class="fn">calculatePay</span>(<span class="ty">EmployeeData</span> employee) {
+        <span class="cmt">// Hours up to Accounting's cutoff.</span>
+        <span class="kw">int</span> regular = <span class="ty">Math</span>.<span class="fn">min</span>(employee.<span class="fn">getHoursWorked</span>(), PAY_OVERTIME_AFTER);
+        <span class="cmt">// Hours beyond it, never negative.</span>
+        <span class="kw">int</span> overtime = <span class="ty">Math</span>.<span class="fn">max</span>(employee.<span class="fn">getHoursWorked</span>() - regular, <span class="num">0</span>);
+        <span class="cmt">// Normal pay plus double-rate overtime.</span>
+        <span class="kw">return</span> regular * employee.<span class="fn">getHourlyRate</span>() + overtime * employee.<span class="fn">getHourlyRate</span>() * <span class="num">2</span>;
+    }
+}</code></pre>
+
+  <p class="filepath">Saved: katas/src/main/java/com/katas/srp/HoursReporter.java</p>
+  <pre class="code" data-title="HoursReporter.java"><code><span class="cmt">// The RIGHT WAY, part 3: HR's rules, and only HR's.</span>
+<span class="kw">package</span> com.katas.srp;
+
+<span class="cmt">// Answers to ONE group: HR. Its idea of "regular hours" is its own, and it</span>
+<span class="cmt">// stays 40 no matter what Accounting decides about pay.</span>
+<span class="kw">public class</span> <span class="ty">HoursReporter</span> {
+
+    <span class="cmt">// HR's rule: a regular working week is up to 40 hours.</span>
+    <span class="kw">private static final int</span> REGULAR_WEEK = <span class="num">40</span>;
+
+    <span class="cmt">// One line for HR's weekly report.</span>
+    <span class="kw">public</span> <span class="ty">String</span> <span class="fn">reportHours</span>(<span class="ty">EmployeeData</span> employee) {
+        <span class="cmt">// Hours up to HR's cutoff.</span>
+        <span class="kw">int</span> regular = <span class="ty">Math</span>.<span class="fn">min</span>(employee.<span class="fn">getHoursWorked</span>(), REGULAR_WEEK);
+        <span class="cmt">// e.g. "Asha: 40 regular hours".</span>
+        <span class="kw">return</span> employee.<span class="fn">getName</span>() + <span class="str">": "</span> + regular + <span class="str">" regular hours"</span>;
+    }
+}</code></pre>
+
+  <p class="filepath">Saved: katas/src/main/java/com/katas/srp/Main.java</p>
+  <pre class="code" data-title="Main.java (srp)"><code><span class="cmt">// The runnable demo for Lesson 05's kata.</span>
+<span class="kw">package</span> com.katas.srp;
+
+<span class="cmt">// Runs one week for one employee through the god class and through the</span>
+<span class="cmt">// split classes, so the HR report's silent change is visible side by side.</span>
+<span class="kw">public class</span> <span class="ty">Main</span> {
+
+    <span class="cmt">// The JVM starts here when you run this class.</span>
+    <span class="kw">public static void</span> <span class="fn">main</span>(<span class="ty">String</span>[] args) {
+        <span class="cmt">// NAIVE: one class, three departments, one shared helper.</span>
+        com.katas.srp.naive.<span class="ty">Employee</span> asha = <span class="kw">new</span> com.katas.srp.naive.<span class="ty">Employee</span>(<span class="str">"Asha"</span>, <span class="num">45</span>, <span class="num">20</span>);
+        <span class="cmt">// Accounting's number is right: 35 x 20 + 10 x 40 = 1100.</span>
+        <span class="ty">System</span>.out.<span class="fn">println</span>(<span class="str">"Naive pay: "</span> + asha.<span class="fn">calculatePay</span>());
+        <span class="cmt">// HR's number moved from 40 to 35 although HR asked for nothing.</span>
+        <span class="ty">System</span>.out.<span class="fn">println</span>(<span class="str">"Naive HR report: "</span> + asha.<span class="fn">reportHours</span>());
+
+        <span class="cmt">// SRP: the same facts, three classes, each answering to one department.</span>
+        <span class="ty">EmployeeData</span> data = <span class="kw">new</span> <span class="ty">EmployeeData</span>(<span class="str">"Asha"</span>, <span class="num">45</span>, <span class="num">20</span>);
+        <span class="cmt">// Accounting's rule, kept in PayCalculator.</span>
+        <span class="ty">System</span>.out.<span class="fn">println</span>(<span class="str">"SRP pay: "</span> + <span class="kw">new</span> <span class="ty">PayCalculator</span>().<span class="fn">calculatePay</span>(data));
+        <span class="cmt">// HR's rule, kept in HoursReporter: still 40.</span>
+        <span class="ty">System</span>.out.<span class="fn">println</span>(<span class="str">"SRP HR report: "</span> + <span class="kw">new</span> <span class="ty">HoursReporter</span>().<span class="fn">reportHours</span>(data));
+        <span class="cmt">// Storage format, kept in EmployeeCsv.</span>
+        <span class="ty">System</span>.out.<span class="fn">println</span>(<span class="str">"SRP CSV: "</span> + <span class="kw">new</span> <span class="ty">EmployeeCsv</span>().<span class="fn">toCsv</span>(data));
+    }
+}</code></pre>
+
+  <h4>What happens when it runs</h4>
+  <ol class="trace">
+    <li>Naive <code>calculatePay()</code>: <code>regularHours()</code> gives min(45, 35) = 35, overtime is 10, so 35 × 20 + 10 × 20 × 2 = 700 + 400 = <strong>1100</strong>.</li>
+    <li>Naive <code>reportHours()</code> calls the <em>same</em> <code>regularHours()</code>, which gives 35, so it prints "Asha: 35 regular hours." HR's rule (40) is lost.</li>
+    <li><code>PayCalculator</code> uses its private 35 and also gives <strong>1100</strong>. Accounting is still served correctly.</li>
+    <li><code>HoursReporter</code> uses its private 40: min(45, 40) = 40, giving "Asha: 40 regular hours." HR is untouched by Accounting's change.</li>
+    <li><code>EmployeeCsv</code> prints the raw facts: "Asha,45,20".</li>
+  </ol>
+
+  <p class="pred-label">Prediction — the program's own lines</p>
+  <pre class="output"><code>Naive pay: 1100
+<span class="err">Naive HR report: Asha: 35 regular hours</span>
+SRP pay: 1100
+<span class="out">SRP HR report: Asha: 40 regular hours</span>
+SRP CSV: Asha,45,20</code></pre>
+
+  <h4>The tests</h4>
+  <p><span class="filepath">Saved: katas/src/test/java/com/katas/srp/ResponsibilitiesTest.java</span> has three tests: <code>payUsesAccountingsCutoff</code> (1100), <code>hoursReportUsesHrsCutoff</code> ("Asha: 40 regular hours"), and <code>csvHoldsTheRawFacts</code> ("Asha,45,20"). <span class="filepath">Saved: katas/src/test/java/com/katas/srp/GodClassTest.java</span> deliberately <em>pins the bug</em>, as Lesson 03 did: it asserts that the naive pay is 1100 <em>and</em> that the naive HR report says 35, so the machine confirms the leak.</p>
+
+  <pre class="terminal" data-title="terminal — from design-patterns-learning/"><code>cd katas
+mvn test
+mvn compile exec:java <span class="str">"-Dexec.mainClass=com.katas.srp.Main"</span></code></pre>
+  <p class="pred-label">Prediction — mvn test summary</p>
+  <pre class="output"><code><span class="out">[INFO] Tests run: 27, Failures: 0, Errors: 0, Skipped: 0</span>
+<span class="out">[INFO] BUILD SUCCESS</span></code></pre>
+  <div class="callout tryit">
+    <p>Expect <strong>27 tests</strong> (23 earlier + 4 new) and the five demo lines. If anything differs, the machine is right. Tell me what you saw. Then play Accounting: change <code>PAY_OVERTIME_AFTER</code> to 38 and run <code>mvn test</code>. Only <code>payUsesAccountingsCutoff</code> fails (expected 1100, now 1040); HR's test stays green. Undo the change afterwards.</p>
+  </div>
+</section>
+
+<!-- ============================== SECTION 5 ============================== -->
+<section id="s5">
+  <h2><span class="sec-num">5</span>Applied to the Smart Home Hub</h2>
+
+  <h4>The pain, arriving in the hub</h4>
+  <p>Three requests arrive the same week, from three different people. The <strong>installer</strong> will add devices next month. The <strong>homeowner</strong> wants a fixed start-up routine: everything on, then the living-room light off. The <strong>app designer</strong> wants a proper house report: how many devices, how many are on, each one's status, then the activity history. All three would land in <code>Main</code>, which already builds the devices, wraps them, loops over them and prints the log. One method, three actors, and no way to test the report, because it is printed straight to the console. That is the Employee problem on our own doorstep.</p>
+
+  <h4>The split</h4>
+  <figure class="fig">
+    <svg viewBox="0 0 720 300" role="img" aria-label="Hub after Lesson 05. Main depends on HomeSetup, Hub and HouseReport. HomeSetup creates Devices. Hub holds many Devices. HouseReport reads Devices.">
+      <defs>
+        <marker id="f2-open" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="10" markerHeight="10" orient="auto-start-reverse">
+          <path d="M0,0 L10,5 L0,10" class="uml-head-open"/>
+        </marker>
+      </defs>
+      <rect x="285" y="10" width="150" height="50" rx="6" class="fig-code"/>
+      <text x="360" y="32" class="uml-name">Main</text>
+      <text x="360" y="50" class="uml-stereo">wiring only</text>
+
+      <rect x="20" y="110" width="190" height="60" rx="6" class="fig-code"/>
+      <text x="115" y="130" class="uml-name">HomeSetup</text>
+      <line x1="20" y1="138" x2="210" y2="138" class="uml-divider"/>
+      <text x="30" y="158" class="uml-member">+ createDevices(log)</text>
+
+      <rect x="265" y="110" width="190" height="80" rx="6" class="fig-code"/>
+      <text x="360" y="130" class="uml-name">Hub</text>
+      <line x1="265" y1="138" x2="455" y2="138" class="uml-divider"/>
+      <text x="275" y="158" class="uml-member">+ startUp()</text>
+      <text x="275" y="176" class="uml-member">+ turnOff(name)</text>
+
+      <rect x="510" y="110" width="190" height="60" rx="6" class="fig-code"/>
+      <text x="605" y="130" class="uml-name">HouseReport</text>
+      <line x1="510" y1="138" x2="700" y2="138" class="uml-divider"/>
+      <text x="520" y="158" class="uml-member">+ render(devices, log)</text>
+
+      <rect x="265" y="240" width="190" height="50" rx="6" class="fig-contract"/>
+      <text x="360" y="260" class="uml-stereo">«interface»</text>
+      <text x="360" y="280" class="uml-name">Device</text>
+
+      <line x1="300" y1="60" x2="150" y2="106" class="uml-dashed" marker-end="url(#f2-open)"/>
+      <line x1="360" y1="60" x2="360" y2="106" class="uml-dashed" marker-end="url(#f2-open)"/>
+      <line x1="420" y1="60" x2="570" y2="106" class="uml-dashed" marker-end="url(#f2-open)"/>
+
+      <line x1="360" y1="190" x2="360" y2="236" class="uml-line" marker-end="url(#f2-open)"/>
+      <text x="368" y="228" class="uml-mult">*</text>
+      <path d="M115,170 L115,265 L261,265" class="uml-dashed" marker-end="url(#f2-open)"/>
+      <text x="122" y="220" class="uml-mult">creates</text>
+      <path d="M605,170 L605,265 L459,265" class="uml-dashed" marker-end="url(#f2-open)"/>
+      <text x="612" y="220" class="uml-mult">reads</text>
+    </svg>
+    <figcaption>One class per actor. <code>HomeSetup</code> answers to the installer, <code>Hub</code> to the homeowner's routines, and <code>HouseReport</code> to the app designer. <code>Main</code> only wires them. The hub (solid line) holds devices; setup and report touch them only briefly (dashed lines). All three know only the <code>Device</code> contract, except the setup, whose one job is to choose concrete devices.</figcaption>
+  </figure>
+
+  <p class="filepath">Saved: smarthome/src/main/java/com/smarthome/home/HomeSetup.java</p>
+  <pre class="code" data-title="HomeSetup.java"><code><span class="cmt">// Code about the house as a whole lives in the "home" package.</span>
+<span class="kw">package</span> com.smarthome.home;
+
+<span class="cmt">// The logging wrapper and the log it writes to.</span>
+<span class="kw">import</span> com.smarthome.activity.<span class="ty">ActivityLog</span>;
+<span class="kw">import</span> com.smarthome.activity.<span class="ty">LoggedDevice</span>;
+<span class="cmt">// The contract and the concrete device kinds this house contains.</span>
+<span class="kw">import</span> com.smarthome.devices.<span class="ty">Device</span>;
+<span class="kw">import</span> com.smarthome.devices.<span class="ty">Light</span>;
+<span class="kw">import</span> com.smarthome.devices.<span class="ty">Thermostat</span>;
+
+<span class="cmt">// The JDK's list interface.</span>
+<span class="kw">import</span> java.util.<span class="ty">List</span>;
+
+<span class="cmt">// ONE responsibility: "which devices does this house have, and how are they</span>
+<span class="cmt">// wired?" It answers to whoever installs the house. Adding a device changes</span>
+<span class="cmt">// this class and nothing else.</span>
+<span class="kw">public class</span> <span class="ty">HomeSetup</span> {
+
+    <span class="cmt">// Build every device in the house, each wrapped so its switching is logged.</span>
+    <span class="kw">public</span> <span class="ty">List</span>&lt;<span class="ty">Device</span>&gt; <span class="fn">createDevices</span>(<span class="ty">ActivityLog</span> log) {
+        <span class="cmt">// An unmodifiable list: the setup is fixed once created.</span>
+        <span class="kw">return</span> <span class="ty">List</span>.<span class="fn">of</span>(
+                <span class="cmt">// A real Light inside a LoggedDevice.</span>
+                <span class="kw">new</span> <span class="ty">LoggedDevice</span>(<span class="kw">new</span> <span class="ty">Light</span>(<span class="str">"Living Room Light"</span>), log),
+                <span class="cmt">// A real Thermostat inside a LoggedDevice.</span>
+                <span class="kw">new</span> <span class="ty">LoggedDevice</span>(<span class="kw">new</span> <span class="ty">Thermostat</span>(<span class="str">"Hall Thermostat"</span>, <span class="num">21</span>), log)
+        );
+    }
+}</code></pre>
+
+  <p class="filepath">Saved: smarthome/src/main/java/com/smarthome/home/Hub.java</p>
+  <pre class="code" data-title="Hub.java"><code><span class="cmt">// Code about the house as a whole lives in the "home" package.</span>
+<span class="kw">package</span> com.smarthome.home;
+
+<span class="cmt">// The contract: the hub never names a concrete device class.</span>
+<span class="kw">import</span> com.smarthome.devices.<span class="ty">Device</span>;
+
+<span class="cmt">// The JDK's list interface.</span>
+<span class="kw">import</span> java.util.<span class="ty">List</span>;
+
+<span class="cmt">// ONE responsibility: operating the house (starting it up, switching</span>
+<span class="cmt">// devices). It answers to whoever decides how the home behaves. It does not</span>
+<span class="cmt">// know which devices exist (HomeSetup) or how anything is displayed (report).</span>
+<span class="kw">public class</span> <span class="ty">Hub</span> {
+
+    <span class="cmt">// The devices under control. Typed by the contract.</span>
+    <span class="kw">private final</span> <span class="ty">List</span>&lt;<span class="ty">Device</span>&gt; devices;
+
+    <span class="cmt">// The devices are handed in: the hub operates them but did not choose them.</span>
+    <span class="kw">public</span> <span class="fn">Hub</span>(<span class="ty">List</span>&lt;<span class="ty">Device</span>&gt; devices) {
+        <span class="cmt">// Keep an unmodifiable copy, so nobody can add or remove behind our back.</span>
+        <span class="kw">this</span>.devices = <span class="ty">List</span>.<span class="fn">copyOf</span>(devices);
+    }
+
+    <span class="cmt">// Switch every device on.</span>
+    <span class="kw">public void</span> <span class="fn">startUp</span>() {
+        <span class="cmt">// Same call for every device; each does its own thing.</span>
+        <span class="kw">for</span> (<span class="ty">Device</span> device : devices) {
+            <span class="cmt">// Polymorphism at work, through the Device contract.</span>
+            device.<span class="fn">turnOn</span>();
+        }
+    }
+
+    <span class="cmt">// Switch one device off, found by its name.</span>
+    <span class="kw">public void</span> <span class="fn">turnOff</span>(<span class="ty">String</span> name) {
+        <span class="cmt">// Find it (or fail loudly), then switch it off.</span>
+        <span class="fn">find</span>(name).<span class="fn">turnOff</span>();
+    }
+
+    <span class="cmt">// The devices, for anyone who needs to read their state.</span>
+    <span class="kw">public</span> <span class="ty">List</span>&lt;<span class="ty">Device</span>&gt; <span class="fn">devices</span>() {
+        <span class="cmt">// Already unmodifiable (List.copyOf), so safe to hand out.</span>
+        <span class="kw">return</span> devices;
+    }
+
+    <span class="cmt">// Look a device up by its exact name.</span>
+    <span class="kw">private</span> <span class="ty">Device</span> <span class="fn">find</span>(<span class="ty">String</span> name) {
+        <span class="cmt">// Check each device in turn...</span>
+        <span class="kw">for</span> (<span class="ty">Device</span> device : devices) {
+            <span class="cmt">// ...and return the first whose name matches.</span>
+            <span class="kw">if</span> (device.<span class="fn">getName</span>().<span class="fn">equals</span>(name)) {
+                <span class="cmt">// Found it.</span>
+                <span class="kw">return</span> device;
+            }
+        }
+        <span class="cmt">// No match: refuse loudly, naming what was asked for.</span>
+        <span class="kw">throw new</span> <span class="ty">IllegalArgumentException</span>(<span class="str">"No device named: "</span> + name);
+    }
+}</code></pre>
+
+  <p>The report builds its text piece by piece. The JDK's tool for that is a growable piece of text: <code>append(...)</code> adds to its end, and <code>toString()</code> gives back the finished <code>String</code>. That tool is called <code>StringBuilder</code>. It is cheaper than joining many strings with <code>+</code> in a loop, and it returns the text instead of printing it, which is what makes the report testable.</p>
+
+  <p class="filepath">Saved: smarthome/src/main/java/com/smarthome/report/HouseReport.java</p>
+  <pre class="code" data-title="HouseReport.java"><code><span class="cmt">// Presentation code lives in its own "report" package.</span>
+<span class="kw">package</span> com.smarthome.report;
+
+<span class="cmt">// The contract: the report reads devices, whatever their kind.</span>
+<span class="kw">import</span> com.smarthome.devices.<span class="ty">Device</span>;
+
+<span class="cmt">// The JDK's list interface.</span>
+<span class="kw">import</span> java.util.<span class="ty">List</span>;
+
+<span class="cmt">// ONE responsibility: how the house's state LOOKS as text. It answers to</span>
+<span class="cmt">// whoever designs the display. It changes nothing; it only reads and formats.</span>
+<span class="kw">public class</span> <span class="ty">HouseReport</span> {
+
+    <span class="cmt">// Turn the devices and the activity history into one block of text.</span>
+    <span class="kw">public</span> <span class="ty">String</span> <span class="fn">render</span>(<span class="ty">List</span>&lt;<span class="ty">Device</span>&gt; devices, <span class="ty">List</span>&lt;<span class="ty">String</span>&gt; activity) {
+        <span class="cmt">// StringBuilder: a growable piece of text; append() adds to its end.</span>
+        <span class="ty">StringBuilder</span> text = <span class="kw">new</span> <span class="ty">StringBuilder</span>();
+        <span class="cmt">// The heading.</span>
+        text.<span class="fn">append</span>(<span class="str">"=== House report ===\n"</span>);
+        <span class="cmt">// Count how many devices are currently on.</span>
+        <span class="kw">int</span> onCount = <span class="num">0</span>;
+        <span class="cmt">// Look at each device...</span>
+        <span class="kw">for</span> (<span class="ty">Device</span> device : devices) {
+            <span class="cmt">// ...and count it if it is on.</span>
+            <span class="kw">if</span> (device.<span class="fn">isOn</span>()) {
+                <span class="cmt">// One more device on.</span>
+                onCount++;
+            }
+        }
+        <span class="cmt">// Summary line, e.g. "Devices: 2 (1 on)".</span>
+        text.<span class="fn">append</span>(<span class="str">"Devices: "</span>).<span class="fn">append</span>(devices.<span class="fn">size</span>()).<span class="fn">append</span>(<span class="str">" ("</span>).<span class="fn">append</span>(onCount).<span class="fn">append</span>(<span class="str">" on)\n"</span>);
+        <span class="cmt">// One indented status line per device.</span>
+        <span class="kw">for</span> (<span class="ty">Device</span> device : devices) {
+            <span class="cmt">// Each device describes itself in its own words.</span>
+            text.<span class="fn">append</span>(<span class="str">"  "</span>).<span class="fn">append</span>(device.<span class="fn">status</span>()).<span class="fn">append</span>(<span class="str">"\n"</span>);
+        }
+        <span class="cmt">// The activity heading, with the number of entries.</span>
+        text.<span class="fn">append</span>(<span class="str">"Activity ("</span>).<span class="fn">append</span>(activity.<span class="fn">size</span>()).<span class="fn">append</span>(<span class="str">" entries):\n"</span>);
+        <span class="cmt">// Each entry numbered from 1.</span>
+        <span class="kw">for</span> (<span class="kw">int</span> i = <span class="num">0</span>; i &lt; activity.<span class="fn">size</span>(); i++) {
+            <span class="cmt">// i starts at 0, so add 1 for human numbering.</span>
+            text.<span class="fn">append</span>(<span class="str">"  "</span>).<span class="fn">append</span>(i + <span class="num">1</span>).<span class="fn">append</span>(<span class="str">". "</span>).<span class="fn">append</span>(activity.<span class="fn">get</span>(i)).<span class="fn">append</span>(<span class="str">"\n"</span>);
+        }
+        <span class="cmt">// The finished text.</span>
+        <span class="kw">return</span> text.<span class="fn">toString</span>();
+    }
+}</code></pre>
+
+  <p class="filepath">Saved: smarthome/src/main/java/com/smarthome/Main.java (modified)</p>
+  <pre class="code" data-title="Main.java (smarthome)"><code><span class="cmt">// The package (namespace) for the Smart Home Hub's entry point. The folder</span>
+<span class="cmt">// path com/smarthome on disk must mirror this line exactly.</span>
+<span class="kw">package</span> com.smarthome;
+
+<span class="cmt">// The shared activity history.</span>
+<span class="kw">import</span> com.smarthome.activity.<span class="ty">ActivityLog</span>;
+<span class="cmt">// Which devices the house has (HomeSetup) and how it is operated (Hub).</span>
+<span class="kw">import</span> com.smarthome.home.<span class="ty">HomeSetup</span>;
+<span class="kw">import</span> com.smarthome.home.<span class="ty">Hub</span>;
+<span class="cmt">// How the house's state is displayed.</span>
+<span class="kw">import</span> com.smarthome.report.<span class="ty">HouseReport</span>;
+
+<span class="cmt">// The application's entry point. Since Lesson 05 it has ONE job: wire the</span>
+<span class="cmt">// pieces together and run one scenario. Each piece's real work lives in a</span>
+<span class="cmt">// class that answers to one kind of change.</span>
+<span class="kw">public class</span> <span class="ty">Main</span> {
+
+    <span class="cmt">// The JVM's starting point: same required signature as any Java program.</span>
+    <span class="kw">public static void</span> <span class="fn">main</span>(<span class="ty">String</span>[] args) {
+        <span class="cmt">// The startup banner, unchanged since Lesson 00.</span>
+        <span class="ty">System</span>.out.<span class="fn">println</span>(<span class="str">"Smart Home Hub is starting up..."</span>);
+
+        <span class="cmt">// One shared history for the whole house.</span>
+        <span class="ty">ActivityLog</span> log = <span class="kw">new</span> <span class="ty">ActivityLog</span>();
+        <span class="cmt">// Ask the setup for this house's devices, wired to the log.</span>
+        <span class="ty">Hub</span> hub = <span class="kw">new</span> <span class="ty">Hub</span>(<span class="kw">new</span> <span class="ty">HomeSetup</span>().<span class="fn">createDevices</span>(log));
+
+        <span class="cmt">// Operate the house: everything on...</span>
+        hub.<span class="fn">startUp</span>();
+        <span class="cmt">// ...then the living room light off.</span>
+        hub.<span class="fn">turnOff</span>(<span class="str">"Living Room Light"</span>);
+
+        <span class="cmt">// Display the result. print, not println: the report ends with its own newline.</span>
+        <span class="ty">System</span>.out.<span class="fn">print</span>(<span class="kw">new</span> <span class="ty">HouseReport</span>().<span class="fn">render</span>(hub.<span class="fn">devices</span>(), log.<span class="fn">entries</span>()));
+    }
+}</code></pre>
+
+  <h4>The tests</h4>
+  <p><span class="filepath">Saved: smarthome/src/test/java/com/smarthome/home/HubTest.java</span> has three tests: <code>startUpTurnsEveryDeviceOn</code>, <code>turnOffSwitchesOnlyTheNamedDevice</code>, and <code>unknownNameIsRefused</code>. <span class="filepath">Saved: smarthome/src/test/java/com/smarthome/home/HomeSetupTest.java</span> checks both device names and that switching the first one lands in the log. <span class="filepath">Saved: smarthome/src/test/java/com/smarthome/report/HouseReportTest.java</span> compares the <em>exact</em> report text for a typical house and an empty one. That test was impossible while the report was printed from inside <code>Main</code>:</p>
+  <pre class="code" data-title="HouseReportTest.java (key assertion)"><code>        <span class="cmt">// Every line, exactly.</span>
+        <span class="fn">assertEquals</span>(<span class="str">"=== House report ===\n"</span>
+                + <span class="str">"Devices: 2 (1 on)\n"</span>
+                + <span class="str">"  Living Room Light: OFF\n"</span>
+                + <span class="str">"  Hall Thermostat: regulating to 21C\n"</span>
+                + <span class="str">"Activity (3 entries):\n"</span>
+                + <span class="str">"  1. Living Room Light: ON\n"</span>
+                + <span class="str">"  2. Hall Thermostat: regulating to 21C\n"</span>
+                + <span class="str">"  3. Living Room Light: OFF\n"</span>, text);</code></pre>
+
+  <p><strong>What this adds:</strong> a proper house report with an on-count, and a hub where each of the three actors has one file to change. Adding a device touches only <code>HomeSetup</code>; changing the start-up routine touches only <code>Hub</code>; restyling the report touches only <code>HouseReport</code>. The device classes, the wrapper and the log were not touched.</p>
+
+  <ol class="trace">
+    <li>The banner prints. <code>Main</code> creates the log, then asks <code>HomeSetup</code> for the devices: two <code>LoggedDevice</code>s wrapping a Light and a Thermostat.</li>
+    <li><code>new Hub(...)</code> keeps an unmodifiable copy of that list.</li>
+    <li><code>hub.startUp()</code> calls <code>turnOn()</code> on each wrapper. Each one delegates and records: "Living Room Light: ON", then "Hall Thermostat: regulating to 21C".</li>
+    <li><code>hub.turnOff("Living Room Light")</code>: <code>find</code> matches the first device's name (the wrapper forwards <code>getName()</code>), switches it off, and the log records "Living Room Light: OFF".</li>
+    <li><code>HouseReport.render</code> counts 1 device on out of 2, writes both status lines and the 3 log entries, and returns the text. <code>Main</code> prints it.</li>
+  </ol>
+
+  <p class="pred-label">Prediction — the hub's own lines</p>
+  <pre class="output"><code>Smart Home Hub is starting up...
+=== House report ===
+Devices: 2 (1 on)
+  Living Room Light: OFF
+  Hall Thermostat: regulating to 21C
+Activity (3 entries):
+  1. Living Room Light: ON
+  2. Hall Thermostat: regulating to 21C
+  3. Living Room Light: OFF</code></pre>
+
+  <pre class="terminal" data-title="terminal — from design-patterns-learning/"><code>cd smarthome
+mvn test
+mvn compile exec:java</code></pre>
+  <p class="pred-label">Prediction — mvn test</p>
+  <pre class="output"><code><span class="out">[INFO] Tests run: 19, Failures: 0, Errors: 0, Skipped: 0</span>
+<span class="out">[INFO] BUILD SUCCESS</span></code></pre>
+  <div class="callout tryit">
+    <p>Expect <strong>19 tests</strong> (13 earlier + 6 new) and the nine lines above. If what you see differs, your machine is right. Tell me what you saw and we will work out why.</p>
+  </div>
+</section>
+
+<!-- ============================== SECTION 6 ============================== -->
+<section id="s6">
+  <h2><span class="sec-num">6</span>In the wild</h2>
+  <p>The JDK's date-and-time library keeps <em>what a date is</em> separate from <em>how a date looks</em>. <code>java.time.LocalDate</code> holds a date and knows calendar arithmetic (<code>plusDays</code>, <code>isLeapYear</code>…). <code>java.time.format.DateTimeFormatter</code> owns the display rules: <code>"16/10/2026"</code> versus <code>"Oct 16, 2026"</code>. <code>LocalDate</code> does have a convenience method, <code>format(formatter)</code>, but the formatting <em>rules</em> live in the formatter. A designer changing a date style never touches calendar code, and a calendar fix never touches display code. That is the hub's <code>HouseReport</code> split, at JDK scale.</p>
+
+  <div class="callout realworld">
+    <p>On teams, SRP violations show up as merge conflicts. Two developers, working for two different stakeholders, keep editing the same file. "Who would ask for this change?" is also a strong code-review question. If the answer for one class is "three different teams," it is a god class in the making.</p>
+  </div>
+</section>
+
+<!-- ============================== SECTION 7 ============================== -->
+<section id="s7">
+  <h2><span class="sec-num">7</span>When NOT to use it</h2>
+
+  <h3>The over-application trap</h3>
+  <p>Read wrongly, "one responsibility" becomes "one method per class," and a design turns into a swarm of tiny classes that only pass calls along. Suppose we "SRP'd" <code>HouseReport</code> into <code>ReportHeaderFormatter</code>, <code>DeviceLinesFormatter</code>, <code>ActivityLinesFormatter</code> and a <code>ReportAssembler</code> to call them. Every one of those would change for the <em>same</em> actor, the app designer, and usually <em>together</em>: a new style touches all four. We would have taken one cohesive class and scattered it. Classes with almost no behaviour of their own, that exist only to hold one sliver of a job, are called <strong>anemic</strong> classes. They are the needless-complexity smell from Lesson 04.</p>
+  <p>The test is never "how many methods?" It is "<strong>how many actors?</strong>" One actor with ten methods is fine. Two actors sharing one helper is not.</p>
+
+  <h3>The simpler alternative that often suffices</h3>
+  <p>If a class serves two actors but both parts are tiny and stable, a clear comment and well-separated private sections can be enough <em>for now</em>. Split when the second real change request arrives, the moment the collision would actually hurt. The cost of SRP is real: more files, wiring code, and more hops when reading. Pay it when there are real, separate reasons to change, not imagined ones.</p>
+
+  <h3>Relatives and look-alikes</h3>
+  <ul>
+    <li><strong>Cohesion</strong> (<a href="../../phase-0-oop-foundations/chapter-01-oop/lesson-04-coupling-cohesion-uml.html">Lesson 04</a>) is the measure, and SRP is the rule built on it, with "reason to change" as the ruler.</li>
+    <li><strong>Interface Segregation</strong> (Lesson 08) applies the same instinct to <em>interfaces</em>, from the side of the code that uses them.</li>
+    <li><strong>DRY</strong> (Lesson 11) says "don't repeat yourself." SRP explains when <em>not</em> to merge look-alike code: when the copies serve different actors (accidental duplication).</li>
+  </ul>
+</section>
+
+<!-- ============================== SECTION 8 ============================== -->
+<section id="s8">
+  <h2><span class="sec-num">8</span>Key takeaways</h2>
+  <ul class="takeaways">
+    <li>The Single Responsibility Principle says a class should have one reason to change, meaning it should answer to one actor: one person or group who would request its changes.</li>
+    <li>Count actors, not methods. "Who would ask me to change this?" finds responsibilities far more reliably than "does it do one thing?"</li>
+    <li>When one class serves several actors, a change for one can silently break another, especially through a shared helper that merges rules that only looked alike.</li>
+    <li>Splitting along actors gives each change one obvious home, keeps teams out of each other's files, and makes each piece testable alone. The price is more classes and some wiring code.</li>
+    <li>Over-splitting is a smell too. Pieces that always change together for the same actor belong in one cohesive class, not in a swarm of anemic one-method classes.</li>
+  </ul>
+</section>
+
+<!-- ============================== SECTION 9 ============================== -->
+<section id="s9">
+  <h2><span class="sec-num">9</span>Challenge</h2>
+  <p>A teammate wrote this class for the hub's future camera. Using the actor test, decide how many responsibilities it has, which methods must <strong>stay together</strong>, and how you would split it. Then predict what <code>new MotionAlert().text("Porch")</code> returns in your design.</p>
+  <pre class="code" data-title="SecurityCamera.java (as written)"><code><span class="kw">public class</span> <span class="ty">SecurityCamera</span> {
+    <span class="kw">public boolean</span> <span class="fn">isMotionDetected</span>() { … }        <span class="cmt">// reads the sensor</span>
+    <span class="kw">public byte</span>[] <span class="fn">recordClip</span>(<span class="kw">int</span> seconds) { … }   <span class="cmt">// grabs frames from the lens</span>
+    <span class="kw">public byte</span>[] <span class="fn">compress</span>(<span class="kw">byte</span>[] clip) { … }    <span class="cmt">// video encoding settings</span>
+    <span class="kw">public void</span> <span class="fn">upload</span>(<span class="kw">byte</span>[] clip, <span class="ty">String</span> url) { … }  <span class="cmt">// cloud storage</span>
+    <span class="kw">public</span> <span class="ty">String</span> <span class="fn">alertText</span>(<span class="ty">String</span> place) { <span class="kw">return</span> <span class="str">"Motion at "</span> + place; }   <span class="cmt">// wording</span>
+}</code></pre>
+
+  <details class="answer">
+    <summary>Click to reveal the answer</summary>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Methods</th><th>Who asks for changes</th><th>Class in the split</th></tr></thead>
+        <tbody>
+          <tr><td><code>isMotionDetected</code>, <code>recordClip</code></td><td>The device/hardware team (new sensor, new lens)</td><td><code>SecurityCamera</code>: <strong>keep these two together</strong>, since they change for the same reasons</td></tr>
+          <tr><td><code>compress</code></td><td>Whoever owns video quality and file size</td><td><code>ClipEncoder</code></td></tr>
+          <tr><td><code>upload</code></td><td>Whoever runs storage/operations (new provider, retries)</td><td><code>ClipUploader</code></td></tr>
+          <tr><td><code>alertText</code></td><td>Whoever writes what users read (product/app designer)</td><td><code>MotionAlert</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>That makes <strong>four responsibilities, not five</strong>. Splitting <code>isMotionDetected</code> from <code>recordClip</code> would be the over-application trap: both are "talk to this camera's hardware," for the same actor.</p>
+    <pre class="code" data-title="the wording piece (sketch)"><code><span class="cmt">// Answers only to whoever decides what users read.</span>
+<span class="kw">public class</span> <span class="ty">MotionAlert</span> {
+    <span class="cmt">// The wording rule, in one place.</span>
+    <span class="kw">public</span> <span class="ty">String</span> <span class="fn">text</span>(<span class="ty">String</span> place) {
+        <span class="cmt">// e.g. "Motion at Porch".</span>
+        <span class="kw">return</span> <span class="str">"Motion at "</span> + place;
+    }
+}</code></pre>
+    <p class="pred-label">Prediction</p>
+    <pre class="output"><code>Motion at Porch</code></pre>
+    <p>Wiring them (camera → encoder → uploader, plus the alert) is assembly work, so it belongs in the hub's assembly point, just as <code>Main</code> wires <code>HomeSetup</code>, <code>Hub</code> and <code>HouseReport</code>. The hub gets a real camera in a later lesson. If you code <code>MotionAlert</code> in a scratch package with a one-line test, run <code>mvn test</code> and compare. The machine is the judge.</p>
+  </details>
+</section>
+
+<!-- ============================== SECTION 10 ============================== -->
+<section id="s10">
+  <h2><span class="sec-num">10</span>Catalog update</h2>
+  <p>The <strong>first entry</strong> in the course's cheat-sheet: <a href="../../pattern-catalog.html#srp">Single Responsibility Principle, in the pattern catalog</a>. In brief:</p>
+  <ul>
+    <li><strong>Intent:</strong> one reason to change; answer to one actor.</li>
+    <li><strong>Pain:</strong> a god class where one group's change breaks another's feature.</li>
+    <li><strong>Use when:</strong> no one-sentence description without "and"; different people request changes to different parts; a helper shared across actors.</li>
+    <li><strong>Do NOT use when:</strong> the parts always change together for one actor; the split would create anemic one-method classes; the reasons are imagined.</li>
+    <li><strong>Cost:</strong> more classes, wiring code, more hops.</li>
+    <li><strong>Seen in the wild:</strong> <code>LocalDate</code> vs <code>DateTimeFormatter</code>.</li>
+    <li><strong>Where:</strong> kata <code>com.katas.srp</code>; hub <code>home.HomeSetup</code>, <code>home.Hub</code>, <code>report.HouseReport</code>.</li>
+  </ul>
+</section>
+
+<div class="nextup">
+  <p><strong>Lesson 06 — O: the Open/Closed Principle.</strong> How can code be open to new behaviour yet closed to edits? We start from the growing if-else chain, the most common shape of rot, and cure it with a tool you already own: the interface.</p>
+</div>
+<p class="position">Lesson 05 · the sixth of 45 lessons (00–44) · Phase 1, Chapter 02 · lesson 1 of 7 in this chapter</p>
+
+</main>
+</div>
+</body>
+</html>

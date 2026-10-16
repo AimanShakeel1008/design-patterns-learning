@@ -139,3 +139,17 @@ Terms are grouped by first-appearance lesson so the list reads in learning order
 - **Multiplicity** — numbers at a line's end saying how many objects take part: `1`, `0..1`, `*`, `1..*`. (Lesson 04)
 - **Sequence diagram** — a UML picture of one scenario's calls between objects, in time order from top to bottom. (Lesson 04)
 - **Lifeline / message / return / activation / frame** — an object's dashed timeline; a call (solid, filled head); a returned value (dashed); the bar while a method runs; a labelled box such as `loop` around repeated messages. (Lesson 04)
+
+---
+
+## Lesson 05 — S: Single Responsibility Principle
+
+- **SOLID** — five class-design principles collected by Robert C. Martin (acronym by Michael Feathers): Single responsibility, Open/closed, Liskov substitution, Interface segregation, Dependency inversion. (Lesson 05)
+- **God class** — a class that does many unrelated jobs for many masters, so every change touches it. (Lesson 05)
+- **Actor** — a person or group whose needs a piece of code serves, and who would request changes to it (Accounting, HR, the installer, the app designer). (Lesson 05)
+- **Responsibility (SRP sense)** — a reason to change, i.e. one actor a class answers to. (Lesson 05)
+- **Single Responsibility Principle (SRP)** — a class should have one, and only one, reason to change: it should answer to one actor. (Lesson 05)
+- **Accidental duplication** — code that looks the same but represents different rules for different actors; merging it couples them. (Lesson 05)
+- **Anemic class** — a class with almost no behaviour of its own that holds one sliver of a job; the result of over-splitting. (Lesson 05)
+- **`StringBuilder`** — the JDK's growable piece of text: `append(...)` adds to its end, `toString()` gives the finished `String`. (Lesson 05)
+- **Pattern catalog** — the course's cheat-sheet page (`lessons/pattern-catalog.html`), one entry per principle and pattern, linked from every lesson. (Lesson 05)

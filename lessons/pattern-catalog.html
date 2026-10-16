@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pattern Catalog · Design Patterns in Java</title>
+<link rel="stylesheet" href="assets/lesson.css">
+</head>
+<body>
+<div class="page">
+
+<aside class="toc" aria-label="Catalog contents">
+  <p class="toc-title">Pattern catalog</p>
+  <ol>
+    <li><a href="#how">How to read an entry</a></li>
+    <li><a href="#index">Index</a></li>
+    <li><a href="#srp">Single Responsibility</a></li>
+  </ol>
+  <nav class="toc-nav" aria-label="Course navigation">
+    <a class="navmap" href="index.html">↑ Course map</a>
+    <a class="navcard" href="phase-1-solid/chapter-02-solid/lesson-05-single-responsibility.html">
+      <span class="navkicker">Latest entry · Lesson 05</span>
+      <span class="navtitle">S — Single Responsibility Principle</span>
+    </a>
+  </nav>
+</aside>
+
+<main>
+
+<header class="banner">
+  <p class="kicker">The course's living cheat-sheet</p>
+  <h1>Pattern Catalog</h1>
+  <p class="subtitle">One entry per principle and pattern, added as we learn it. Reread it before any design decision or interview.</p>
+  <p class="meta">The golden rule above every entry: <strong>a pattern is a named cure for a specific pain.</strong> If you cannot name the pain, you do not yet need the pattern.</p>
+</header>
+
+<section id="how">
+  <h2><span class="sec-num">?</span>How to read an entry</h2>
+  <p>Every entry answers the same questions in the same order, so entries can be compared side by side:</p>
+  <ul>
+    <li><strong>Intent</strong>: what it is, in one plain sentence.</li>
+    <li><strong>The pain it cures</strong>: the specific problem that makes you reach for it.</li>
+    <li><strong>Use it when…</strong>: the concrete signals that it fits.</li>
+    <li><strong>Do NOT use it when…</strong>: the equally concrete signals that it is the wrong tool. Over-applying patterns is the classic beginner mistake, so this field is never left thin.</li>
+    <li><strong>The cost</strong>: the indirection or complexity it always adds. Nothing is free.</li>
+    <li><strong>Relatives</strong>: what it resembles, and the one-line difference.</li>
+    <li><strong>Seen in the wild</strong>: one place the JDK or a popular framework already uses it.</li>
+    <li><strong>Where it lives</strong>: its kata package, and its home in the Smart Home Hub if it has one.</li>
+  </ul>
+  <p>Family badges: <span class="family-badge principle">principle</span> <span class="family-badge creational">creational</span> <span class="family-badge structural">structural</span> <span class="family-badge behavioral">behavioral</span> <span class="family-badge beyond">beyond GoF</span></p>
+</section>
+
+<section id="index">
+  <h2><span class="sec-num">#</span>Index</h2>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>#</th><th>Principle / pattern</th><th>Family</th><th>Lesson</th></tr></thead>
+      <tbody>
+        <tr><td>1</td><td><a href="#srp">Single Responsibility Principle</a></td><td><span class="family-badge principle">principle</span></td><td><a href="phase-1-solid/chapter-02-solid/lesson-05-single-responsibility.html">05</a></td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ============================== ENTRIES ============================== -->
+
+<article class="catalog-entry" id="srp">
+  <h2>Single Responsibility Principle (SRP) <span class="family-badge principle">principle</span></h2>
+  <p class="catalog-intent">A class should have one reason to change. Put another way, it should answer to one group of people who might ask for changes.</p>
+  <dl class="catalog-fields">
+    <dt>The pain it cures</dt>
+    <dd>A "god class" serving several groups at once: one group's change silently breaks another group's feature (often through a shared helper), every change touches the same file, and the class is hard to test because every test needs everything.</dd>
+    <dt>Use it when…</dt>
+    <dd><ul>
+      <li>You cannot describe the class in one sentence without "and."</li>
+      <li>Different people (accounting, HR, the display designer, the installer) request changes to different parts of it.</li>
+      <li>Two methods serving different groups share a private helper.</li>
+      <li>Testing one behaviour forces you to set up, or capture output from, unrelated ones.</li>
+    </ul></dd>
+    <dt class="not">Do NOT use it when…</dt>
+    <dd><ul>
+      <li>The parts always change together, for the same people. Splitting them just scatters one purpose across files.</li>
+      <li>The split would produce one-method classes that only forward calls ("anemic" fragments with no rules of their own).</li>
+      <li>The "reasons to change" are imagined. Wait for the second real request before splitting.</li>
+      <li>It is a short script or prototype that will be thrown away.</li>
+    </ul></dd>
+    <dt>The cost</dt>
+    <dd>More classes and files; wiring code somewhere (an assembly point like <code>Main</code>) to put the pieces together; callers may have to know several objects instead of one; navigating the design takes more hops.</dd>
+    <dt>Relatives</dt>
+    <dd><ul>
+      <li><strong>Cohesion</strong> (Lesson 04): SRP is cohesion turned into a rule, with "reason to change" as the measuring stick.</li>
+      <li><strong>Interface Segregation</strong> (Lesson 08): the same idea seen from the <em>client's</em> side: no client should depend on methods it does not use.</li>
+      <li><strong>DRY</strong> (Lesson 11): SRP sometimes <em>keeps</em> look-alike code apart, because it changes for different reasons (accidental duplication).</li>
+    </ul></dd>
+    <dt>Seen in the wild</dt>
+    <dd><code>java.time</code> keeps <code>LocalDate</code> (the date value and its arithmetic) separate from <code>DateTimeFormatter</code> (how a date looks as text). Display rules change for different reasons than calendar rules, so they live in different classes.</dd>
+    <dt>Where it lives</dt>
+    <dd>Kata: <code>com.katas.srp</code> (<code>EmployeeData</code>, <code>PayCalculator</code>, <code>HoursReporter</code>, <code>EmployeeCsv</code>; the god class in <code>naive/Employee</code>). Hub: <code>Main</code> split into <code>home.HomeSetup</code> (which devices), <code>home.Hub</code> (operating them) and <code>report.HouseReport</code> (how it looks). Lesson: <a href="phase-1-solid/chapter-02-solid/lesson-05-single-responsibility.html">05</a>.</dd>
+  </dl>
+</article>
+
+<p class="position">Pattern catalog · 1 entry · updated by every principle and pattern lesson</p>
+
+</main>
+</div>
+</body>
+</html>

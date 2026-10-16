@@ -26,7 +26,7 @@ The lessons are standalone HTML pages that work fully offline. **Open [`lessons/
 | `lessons/` | The lessons as offline HTML pages, organized by phase and chapter. Start at `lessons/index.html`. |
 | `katas/` | One tiny, self-contained example per pattern (the wrong way, the right way, a demo, and a test). Frozen once written. |
 | `smarthome/` | The **Smart Home Hub** — one real, evolving Maven application that grows as patterns are applied where it genuinely needs them. |
-| `pattern-catalog.md` | The living cheat-sheet: one quick-reference entry per principle and pattern. |
+| [`lessons/pattern-catalog.html`](lessons/pattern-catalog.html) | The living cheat-sheet: one quick-reference entry per principle and pattern. Open it in a browser; every lesson links to it. |
 | `glossary.md` | Every design term, defined in plain language, in the order we meet it. |
 | `troubleshooting.md` | Common errors and their fixes. |
 
@@ -74,7 +74,7 @@ mvn compile exec:java "-Dexec.mainClass=com.katas.<pattern>.Main"
 
 *(Both projects pin Java 21, JUnit 5.14.4, Surefire 3.5.5, and exec-maven-plugin 3.6.1.)*
 
-**What the hub can do so far:** it defines a `Device` contract (`com.smarthome.devices.Device`), a shared `AbstractDevice` parent holding the common name/on-off code, and two devices — a `Light` and a `Thermostat` that refuses targets outside 5–30 °C — and its `Main` switches them all on through one loop that talks only to the `Device` interface. New device kinds will not require changing that loop. It also keeps a house-wide **activity log** (`com.smarthome.activity`): any device can be wrapped in a `LoggedDevice` that records every switch, without any device class knowing logging exists.
+**What the hub can do so far:** it defines a `Device` contract (`com.smarthome.devices.Device`), a shared `AbstractDevice` parent holding the common name/on-off code, and two devices — a `Light` and a `Thermostat` that refuses targets outside 5–30 °C — and its `Main` switches them all on through one loop that talks only to the `Device` interface. New device kinds will not require changing that loop. It also keeps a house-wide **activity log** (`com.smarthome.activity`): any device can be wrapped in a `LoggedDevice` that records every switch, without any device class knowing logging exists. Its responsibilities are split by who asks for changes: `home.HomeSetup` decides which devices exist, `home.Hub` operates them (start-up, switch off by name), and `report.HouseReport` prints a **house report** (device count, how many are on, each status, and the numbered activity history).
 
 ---
 
