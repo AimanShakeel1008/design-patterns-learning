@@ -1,0 +1,843 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lesson 04 — Coupling, Cohesion, and Reading UML · Design Patterns in Java</title>
+<link rel="stylesheet" href="../../assets/lesson.css">
+</head>
+<body>
+<div class="page">
+
+<aside class="toc" aria-label="Table of contents">
+  <p class="toc-title">Lesson 04 · Contents</p>
+  <ol>
+    <li><a href="#s1">1 · The pain</a></li>
+    <li><a href="#s2">2 · Real-world analogy</a></li>
+    <li><a href="#s3">3 · The concepts explained</a></li>
+    <li><a href="#s4">4 · The kata</a></li>
+    <li><a href="#s5">5 · Applied to the hub</a></li>
+    <li><a href="#s6">6 · In the wild</a></li>
+    <li><a href="#s7">7 · When NOT to, and gotchas</a></li>
+    <li><a href="#s8">8 · Key takeaways</a></li>
+    <li><a href="#s9">9 · Challenge</a></li>
+    <li><a href="#s10">10 · Catalog update</a></li>
+  </ol>
+  <nav class="toc-nav" aria-label="Course navigation">
+    <a class="navcard" href="lesson-03-composition-vs-inheritance.html">
+      <span class="navkicker">← Prev · Lesson 03</span>
+      <span class="navtitle">Composition versus Inheritance</span>
+    </a>
+    <a class="navmap" href="../../index.html">↑ Course map</a>
+    <a class="navcard" href="chapter-01-summary.html">
+      <span class="navkicker">Next · Chapter 01 summary →</span>
+      <span class="navtitle">The Object-Oriented Toolbox</span>
+    </a>
+  </nav>
+</aside>
+
+<main>
+
+<header class="banner">
+  <p class="kicker">Phase 0 · Chapter 01 · Lesson 04</p>
+  <h1>Coupling, Cohesion, and Reading UML</h1>
+  <p class="subtitle">The two measures every good design improves, the vocabulary of code rot, and the diagram language every pattern in this course is drawn in.</p>
+  <p class="meta">
+    <strong>Kata package:</strong> <code>com.katas.coupling</code> (wrong way in <code>com.katas.coupling.naive</code>).<br>
+    <strong>Smart Home Hub:</strong> no code changes; we read and measure the hub instead (Section 5 explains why).<br>
+    <strong>Prerequisites:</strong> <a href="lesson-01-objects-encapsulation-interfaces.html">Lesson 01</a>, <a href="lesson-02-inheritance-polymorphism.html">Lesson 02</a>, <a href="lesson-03-composition-vs-inheritance.html">Lesson 03</a>.
+  </p>
+</header>
+
+<!-- ============================== SECTION 1 ============================== -->
+<section id="s1">
+  <h2><span class="sec-num">1</span>The pain</h2>
+
+  <p class="lead">Three lessons in, we keep saying one design is "better" than another. Better by what measure? And how do we show a design to a teammate without pasting every file?</p>
+
+  <p>Here is a pizza shop's order code. It works:</p>
+
+  <pre class="code" data-title="naive/OrderManager.java (key lines)"><code><span class="kw">public class</span> <span class="ty">OrderManager</span> {
+    <span class="kw">public void</span> <span class="fn">add</span>(<span class="ty">String</span> itemName, <span class="kw">int</span> quantity) {
+        <span class="kw">int</span> price;
+        <span class="kw">if</span> (itemName.<span class="fn">equals</span>(<span class="str">"Margherita"</span>)) price = <span class="num">9</span>;        <span class="cmt">// the menu lives here...</span>
+        <span class="kw">else if</span> (itemName.<span class="fn">equals</span>(<span class="str">"Pepperoni"</span>)) price = <span class="num">11</span>;
+        <span class="kw">else if</span> (itemName.<span class="fn">equals</span>(<span class="str">"Cola"</span>)) price = <span class="num">3</span>;
+        <span class="kw">else throw new</span> <span class="ty">IllegalArgumentException</span>(<span class="str">"Unknown item: "</span> + itemName);
+        total += price * quantity;                                  <span class="cmt">// ...and the order...</span>
+        itemCount += quantity;
+    }
+    <span class="kw">public void</span> <span class="fn">placeOrder</span>() {
+        <span class="ty">System</span>.out.<span class="fn">println</span>(<span class="str">"Order placed: "</span> + itemCount + <span class="str">" items, total "</span> + total);   <span class="cmt">// ...and the announcing</span>
+    }
+}</code></pre>
+
+  <p>Now three ordinary requests arrive in one week. Add a dessert section. Announce orders by text message instead of on the screen. And the test team asks: "can we check what <code>placeOrder</code> announced, without reading the console?"</p>
+
+  <p>Every one of them lands on <code>OrderManager</code>. The dessert edits the price ladder. The text message edits <code>placeOrder</code>. The test cannot check the announcement at all, because it is welded to <code>System.out</code>. Three unrelated jobs live in one class, so every change touches it, and one of its jobs is glued to one specific output channel.</p>
+
+  <p class="pred-label">Predicted symptom</p>
+  <pre class="output"><code><span class="err">3 unrelated changes → 3 edits to the same class → 3 chances to break the other 2 jobs
+1 test the team wants → impossible without capturing the console</span></code></pre>
+
+  <p>This lesson names the two measures this code fails: it has <strong>low cohesion</strong> and <strong>tight coupling</strong>. It also gives the rot its proper vocabulary, and teaches the picture language (UML) for showing a better design at a glance.</p>
+
+  <p class="filepath">Full wrong-way code: katas/src/main/java/com/katas/coupling/naive/OrderManager.java</p>
+</section>
+
+<!-- ============================== SECTION 2 ============================== -->
+<section id="s2">
+  <h2><span class="sec-num">2</span>Real-world analogy</h2>
+
+  <p><strong>A restaurant kitchen.</strong> In a good kitchen each station does one thing: the pastry station makes desserts, the grill grills. That is <em>cohesion</em>. Stations talk to each other only through the order tickets at the pass, never by walking over and rearranging each other's fridges. That is <em>loose coupling</em>. Hire a new grill chef, and the pastry station never notices. And when the head chef explains the kitchen to a new hire, they don't walk them through every pan. They sketch the stations and arrows on a whiteboard. That sketch is <em>UML</em>.</p>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>In the kitchen</th><th>In code</th></tr></thead>
+      <tbody>
+        <tr><td>Each station does one kind of work</td><td>High cohesion: each class has one job</td></tr>
+        <tr><td>Stations talk only through tickets at the pass</td><td>Loose coupling: classes talk only through small contracts</td></tr>
+        <tr><td>One cook doing pastry, grill <em>and</em> dishes</td><td>Low cohesion (<code>OrderManager</code>)</td></tr>
+        <tr><td>Grill cook rearranging the pastry fridge</td><td>Tight coupling: reaching into another class's insides</td></tr>
+        <tr><td>The whiteboard sketch of stations and arrows</td><td>A UML class diagram</td></tr>
+        <tr><td>"Ticket goes grill → pass → waiter → table"</td><td>A UML sequence diagram</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ============================== SECTION 3 ============================== -->
+<section id="s3">
+  <h2><span class="sec-num">3</span>The concepts explained</h2>
+
+  <h3>3.1 Coupling: how much one piece knows about another</h3>
+
+  <p>If class A uses class B, then A <em>knows</em> something about B: its name, its methods, maybe its insides. The more A knows, the more likely a change to B forces a change to A. In Lesson 01 the remote knew the exact class <code>Lamp</code>, so a fan forced a new remote method. How strongly one piece of code depends on another, measured by how many changes in one force changes in the other, is called <strong>coupling</strong>. Little knowledge is <em>loose</em> coupling; a lot is <em>tight</em> coupling.</p>
+
+  <p>Coupling comes in degrees. You have already met every one of them in this course:</p>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>A knows about B…</th><th>Example from the course</th><th>Coupling</th></tr></thead>
+      <tbody>
+        <tr><td>B's private data, and changes it directly</td><td><code>leaky.balance = -500</code> (Lesson 01 naive)</td><td>Tightest</td></tr>
+        <tr><td>How B's methods call each other inside</td><td>Counting subclass vs <code>Playlist</code>'s self-use (Lesson 03)</td><td>Very tight</td></tr>
+        <tr><td>B's exact concrete class</td><td><code>pressPower(Lamp lamp)</code>; <code>OrderManager</code> → <code>System.out</code></td><td>Tight</td></tr>
+        <tr><td>Only an interface B keeps</td><td>The hub's loop → <code>Device</code>; <code>Checkout</code> → <code>Notifier</code></td><td>Loose</td></tr>
+        <tr><td>Only a value B passes in, used briefly</td><td><code>checkout.place(order)</code> reads two numbers</td><td>Loosest</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>Zero coupling is not the goal. Classes that work together must know <em>something</em> about each other. The goal is that each knows <em>as little as possible</em>, through the narrowest door.</p>
+
+  <h3>3.2 Cohesion: how well the insides of one piece belong together</h3>
+
+  <p>Look inside a single class and ask: do all of its fields and methods serve one purpose? <code>ActivityLog</code> from Lesson 03 records and returns entries, nothing else; every line serves "keep the history." <code>OrderManager</code> mixes menu prices, order totals and console output, which are three purposes that change for three different reasons. How strongly the parts inside one class belong to a single, clear purpose is called <strong>cohesion</strong>. One purpose is <em>high</em> cohesion; a grab-bag is <em>low</em> cohesion.</p>
+
+  <p>A quick test: describe the class in one sentence without using "and." "An <code>Order</code> keeps its lines and adds them up" passes (adding up <em>is</em> keeping an order). "<code>OrderManager</code> knows prices <em>and</em> totals orders <em>and</em> prints announcements" fails three times. Classes named <code>Utils</code>, <code>Helper</code> or <code>Manager</code> often fail it; the vague name hides that there is no single purpose.</p>
+
+  <h3>3.3 Why "loose coupling, high cohesion" is the goal of every pattern</h3>
+
+  <p>Put the two together and you get the property that matters: <strong>a change stays local</strong>. High cohesion means each kind of change has <em>one</em> obvious place to go. Loose coupling means that change does not ripple out to other classes. In the cured kata, a new dessert is a new <code>MenuItem</code>, a text message is a new <code>Notifier</code>, and the test plugs in a recording <code>Notifier</code>. Each change touches one small place.</p>
+  <p>Every principle and pattern ahead is a specific move toward this goal, aimed at a specific kind of change. And every one has the same price: <strong>indirection</strong>, an extra interface or class between the caller and the work. The cured kata has nine small classes where the naive one had one. That trade is worth it only when the changes really come. Section 7 says when they don't.</p>
+
+  <details class="check">
+    <summary>Lesson 03's <code>LoggedDevice</code> holds an <code>ActivityLog</code> (a concrete class) and a <code>Device</code> (an interface). Which link is tighter, and does it matter?</summary>
+    <p>The link to <code>ActivityLog</code> is tighter: <code>LoggedDevice</code> names its exact class, so a different kind of log would mean editing <code>LoggedDevice</code>. The link to <code>Device</code> is loose, since any device fits. Does it matter? Not yet. There is one kind of log, and no request to vary it. Loosening it now would be indirection with no pain to cure. If a second kind of log ever appears, that is the moment to put an interface there.</p>
+  </details>
+
+  <h3>3.4 The vocabulary of rot: smells</h3>
+
+  <p>Bad design rarely announces itself. It shows up as small signs on the surface: a long if-else ladder, a class you dread opening, a fix that keeps needing repeating. A surface sign in code that <em>usually</em> points to a deeper design problem is called a <strong>code smell</strong>. Like a real smell, it is a hint to investigate, not proof. Robert C. Martin collected the bigger, design-wide versions into seven <em>design smells</em>. You have met every one already:</p>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Smell</th><th>In plain words</th><th>Where you saw it</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Rigidity</strong></td><td>Hard to change: one change forces a cascade of others</td><td>Every new device needing a new <code>pressPower</code> (Lesson 01)</td></tr>
+        <tr><td><strong>Fragility</strong></td><td>A change breaks something in an unrelated place</td><td>The counting subclass breaking when only <code>Playlist</code> changed (Lesson 03)</td></tr>
+        <tr><td><strong>Immobility</strong></td><td>A useful part can't be reused elsewhere, because it is tangled with the rest</td><td><code>OrderManager</code>'s prices can't be reused by a menu screen</td></tr>
+        <tr><td><strong>Viscosity</strong></td><td>Doing it the right way is harder than hacking</td><td>Easier to add one more <code>else if</code> than to restructure the menu</td></tr>
+        <tr><td><strong>Needless complexity</strong></td><td>Structure built for a future that never comes</td><td>An interface over <code>ActivityLog</code> "just in case" (the check above)</td></tr>
+        <tr><td><strong>Needless repetition</strong></td><td>The same code copied, so fixes must be copied too</td><td>Naive <code>Dog</code> and <code>Cat</code> (Lesson 02)</td></tr>
+        <tr><td><strong>Opacity</strong></td><td>Hard to understand what the code means</td><td>A class named <code>Manager</code> that does three things</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>Notice that "needless complexity" is on the list. Over-designing is rot too. From here on, every pattern lesson starts by naming the smell it cures.</p>
+
+  <h3>3.5 Reading a UML class diagram</h3>
+
+  <p>Teams need to talk about designs without pasting code. In the 1990s, several competing diagram styles were merged into one standard picture language for software. That language is <strong>UML</strong> (Unified Modeling Language). Of its many diagram kinds, two matter for this course. A picture of the classes and how they are linked is a <strong>class diagram</strong>. A picture of which object calls which, in time order, is a <strong>sequence diagram</strong> (3.6).</p>
+
+  <h4>One box = one class</h4>
+  <p>A class box has up to three stacked compartments: the name, then the fields, then the methods. Each member starts with a symbol for who may use it: <code>+</code> public, <code>-</code> private, <code>#</code> protected, <code>~</code> <em>package-private</em>. Package-private is Java's access level when you write <em>no</em> keyword: only classes in the same package can use the member. <code>OrderLine</code>'s constructor uses it, so only <code>Order</code> can create lines. Types come after a colon: <code>- price : int</code>, <code>+ total() : int</code>. Three more marks: an <em>italic</em> name (often with «abstract») means an abstract class; «interface» above the name means an interface; an <u>underlined</u> member is <code>static</code>. Diagrams usually show only the members that matter to the point being made.</p>
+
+  <h4>The six relationship lines</h4>
+  <p>The lines say how classes know each other. Each has its own line style and arrowhead. Read them as sentences, and remember the code each one comes from:</p>
+
+  <figure class="fig">
+    <svg viewBox="0 0 720 375" role="img" aria-label="Legend of the six UML relationships. Inheritance: solid line, hollow triangle at the parent. Implementation: dashed line, hollow triangle at the interface. Association: solid line, open arrowhead at the class referenced. Aggregation: hollow diamond at the whole. Composition: filled diamond at the whole. Dependency: dashed line, open arrowhead at the class used.">
+      <defs>
+        <marker id="f1-hollow" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="12" markerHeight="12" orient="auto-start-reverse">
+          <path d="M1,1 L11,6 L1,11 z" class="uml-head-hollow"/>
+        </marker>
+        <marker id="f1-open" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="10" markerHeight="10" orient="auto-start-reverse">
+          <path d="M0,0 L10,5 L0,10" class="uml-head-open"/>
+        </marker>
+      </defs>
+      <!-- 1 inheritance -->
+      <rect x="10" y="15" width="140" height="38" rx="6" class="fig-code"/>
+      <text x="80" y="39" class="fig-label fig-center fig-mono">Pizza</text>
+      <line x1="150" y1="34" x2="286" y2="34" class="uml-line" marker-end="url(#f1-hollow)"/>
+      <rect x="290" y="15" width="130" height="38" rx="6" class="fig-contract"/>
+      <text x="355" y="39" class="fig-label fig-center fig-mono uml-abstract">MenuItem</text>
+      <text x="440" y="30" class="fig-label"><tspan font-weight="700">Inheritance</tspan> — "is a"</text>
+      <text x="440" y="48" class="fig-small fig-mono">extends MenuItem</text>
+      <!-- 2 implementation -->
+      <rect x="10" y="75" width="140" height="38" rx="6" class="fig-code"/>
+      <text x="80" y="99" class="fig-label fig-center fig-mono">ConsoleNotifier</text>
+      <line x1="150" y1="94" x2="286" y2="94" class="uml-dashed" marker-end="url(#f1-hollow)"/>
+      <rect x="290" y="75" width="130" height="38" rx="6" class="fig-contract"/>
+      <text x="355" y="99" class="fig-label fig-center fig-mono">«i» Notifier</text>
+      <text x="440" y="90" class="fig-label"><tspan font-weight="700">Implementation</tspan> — "keeps the contract"</text>
+      <text x="440" y="108" class="fig-small fig-mono">implements Notifier</text>
+      <!-- 3 association -->
+      <rect x="10" y="135" width="140" height="38" rx="6" class="fig-code"/>
+      <text x="80" y="159" class="fig-label fig-center fig-mono">OrderLine</text>
+      <line x1="150" y1="154" x2="286" y2="154" class="uml-line" marker-end="url(#f1-open)"/>
+      <rect x="290" y="135" width="130" height="38" rx="6" class="fig-contract"/>
+      <text x="355" y="159" class="fig-label fig-center fig-mono uml-abstract">MenuItem</text>
+      <text x="440" y="150" class="fig-label"><tspan font-weight="700">Association</tspan> — "holds a reference to"</text>
+      <text x="440" y="168" class="fig-small fig-mono">field: MenuItem item</text>
+      <!-- 4 aggregation -->
+      <rect x="10" y="195" width="140" height="38" rx="6" class="fig-code"/>
+      <text x="80" y="219" class="fig-label fig-center fig-mono">Menu</text>
+      <polygon points="150,214 160,208 170,214 160,220" class="uml-head-diamond-hollow"/>
+      <line x1="170" y1="214" x2="290" y2="214" class="uml-line"/>
+      <rect x="290" y="195" width="130" height="38" rx="6" class="fig-contract"/>
+      <text x="355" y="219" class="fig-label fig-center fig-mono uml-abstract">MenuItem</text>
+      <text x="440" y="210" class="fig-label"><tspan font-weight="700">Aggregation</tspan> — "gathers shared parts"</text>
+      <text x="440" y="228" class="fig-small fig-mono">items handed in, can outlive it</text>
+      <!-- 5 composition -->
+      <rect x="10" y="255" width="140" height="38" rx="6" class="fig-code"/>
+      <text x="80" y="279" class="fig-label fig-center fig-mono">Order</text>
+      <polygon points="150,274 160,268 170,274 160,280" class="uml-head-diamond-filled"/>
+      <line x1="170" y1="274" x2="290" y2="274" class="uml-line"/>
+      <rect x="290" y="255" width="130" height="38" rx="6" class="fig-code"/>
+      <text x="355" y="279" class="fig-label fig-center fig-mono">OrderLine</text>
+      <text x="440" y="270" class="fig-label"><tspan font-weight="700">Composition</tspan> — "owns its parts"</text>
+      <text x="440" y="288" class="fig-small fig-mono">lines created inside, die with it</text>
+      <!-- 6 dependency -->
+      <rect x="10" y="315" width="140" height="38" rx="6" class="fig-code"/>
+      <text x="80" y="339" class="fig-label fig-center fig-mono">Checkout</text>
+      <line x1="150" y1="334" x2="286" y2="334" class="uml-dashed" marker-end="url(#f1-open)"/>
+      <rect x="290" y="315" width="130" height="38" rx="6" class="fig-code"/>
+      <text x="355" y="339" class="fig-label fig-center fig-mono">Order</text>
+      <text x="440" y="330" class="fig-label"><tspan font-weight="700">Dependency</tspan> — "uses briefly"</text>
+      <text x="440" y="348" class="fig-small fig-mono">parameter: place(Order order)</text>
+    </svg>
+    <figcaption>The six lines, each taken from this lesson's kata. Triangles point at the parent or contract. Diamonds sit at the <em>whole</em> end (hollow = shared parts, filled = owned parts). Open arrowheads point at the class being known or used. Solid means a lasting link; dashed means "implements" or "uses briefly." («i» abbreviates «interface» to fit.)</figcaption>
+  </figure>
+
+  <p>The arrow always points <strong>from the class that knows to the class that is known</strong>. <code>Pizza</code> knows its parent; <code>MenuItem</code> has no idea which children exist. So the arrows show the direction of dependency, and therefore which way a change can ripple: a change at the arrowhead end can force a change at the tail. Numbers at a line's end give the <em>multiplicity</em>, how many objects take part: <code>1</code> (exactly one), <code>0..1</code> (none or one), <code>*</code> (any number), <code>1..*</code> (at least one).</p>
+
+  <div class="callout note">
+    <p>Aggregation versus plain association is famously fuzzy. The UML standard itself leaves "shared aggregation" loosely defined, and many teams never draw the hollow diamond. This course uses it only when "a whole gathering independent parts" is the point. Composition's filled diamond, by contrast, is precise: the whole creates the parts and they die with it.</p>
+  </div>
+
+  <h4>Reading a whole diagram</h4>
+  <p>Here is the cured kata as one diagram. Read it aloud, one line at a time, before reading the code in Section 4. If the sentences match the code, you can read UML.</p>
+
+  <figure class="fig">
+    <svg viewBox="0 0 720 480" role="img" aria-label="Kata class diagram. Menu aggregates many MenuItems. MenuItem is abstract with Pizza and Drink extending it. OrderLine has an association to one MenuItem. Order is composed of many OrderLines. Checkout depends on Order and has an association to the Notifier interface, which ConsoleNotifier implements.">
+      <defs>
+        <marker id="f2-hollow" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="12" markerHeight="12" orient="auto-start-reverse">
+          <path d="M1,1 L11,6 L1,11 z" class="uml-head-hollow"/>
+        </marker>
+        <marker id="f2-open" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="10" markerHeight="10" orient="auto-start-reverse">
+          <path d="M0,0 L10,5 L0,10" class="uml-head-open"/>
+        </marker>
+      </defs>
+      <!-- Menu -->
+      <rect x="20" y="40" width="170" height="64" rx="6" class="fig-code"/>
+      <text x="105" y="62" class="uml-name">Menu</text>
+      <line x1="20" y1="72" x2="190" y2="72" class="uml-divider"/>
+      <text x="30" y="92" class="uml-member">+ find(String)</text>
+      <!-- MenuItem -->
+      <rect x="270" y="30" width="200" height="110" rx="6" class="fig-contract"/>
+      <text x="370" y="48" class="uml-stereo">«abstract»</text>
+      <text x="370" y="66" class="uml-name uml-abstract">MenuItem</text>
+      <line x1="270" y1="74" x2="470" y2="74" class="uml-divider"/>
+      <text x="282" y="92" class="uml-member">- name : String</text>
+      <text x="282" y="109" class="uml-member">- price : int</text>
+      <text x="282" y="126" class="uml-member">+ category() : String</text>
+      <!-- aggregation Menu -> MenuItem -->
+      <polygon points="190,72 200,66 210,72 200,78" class="uml-head-diamond-hollow"/>
+      <line x1="210" y1="72" x2="270" y2="72" class="uml-line"/>
+      <text x="258" y="64" class="uml-mult">*</text>
+      <!-- Pizza, Drink -->
+      <rect x="230" y="190" width="120" height="44" rx="6" class="fig-code"/>
+      <text x="290" y="217" class="uml-name">Pizza</text>
+      <rect x="390" y="190" width="120" height="44" rx="6" class="fig-code"/>
+      <text x="450" y="217" class="uml-name">Drink</text>
+      <line x1="290" y1="190" x2="330" y2="144" class="uml-line" marker-end="url(#f2-hollow)"/>
+      <line x1="450" y1="190" x2="410" y2="144" class="uml-line" marker-end="url(#f2-hollow)"/>
+      <!-- OrderLine -->
+      <rect x="540" y="30" width="170" height="72" rx="6" class="fig-code"/>
+      <text x="625" y="50" class="uml-name">OrderLine</text>
+      <line x1="540" y1="58" x2="710" y2="58" class="uml-divider"/>
+      <text x="552" y="76" class="uml-member">- quantity : int</text>
+      <text x="552" y="93" class="uml-member">~ subtotal() : int</text>
+      <!-- association OrderLine -> MenuItem -->
+      <line x1="540" y1="88" x2="474" y2="88" class="uml-line" marker-end="url(#f2-open)"/>
+      <text x="507" y="80" class="uml-mult" text-anchor="middle">item</text>
+      <text x="480" y="104" class="uml-mult">1</text>
+      <!-- Order -->
+      <rect x="540" y="170" width="170" height="90" rx="6" class="fig-code"/>
+      <text x="625" y="190" class="uml-name">Order</text>
+      <line x1="540" y1="198" x2="710" y2="198" class="uml-divider"/>
+      <text x="552" y="216" class="uml-member">+ add(item, qty)</text>
+      <text x="552" y="233" class="uml-member">+ itemCount() : int</text>
+      <text x="552" y="250" class="uml-member">+ total() : int</text>
+      <!-- composition Order -> OrderLine -->
+      <polygon points="625,170 619,160 625,150 631,160" class="uml-head-diamond-filled"/>
+      <line x1="625" y1="150" x2="625" y2="102" class="uml-line"/>
+      <text x="634" y="118" class="uml-mult">*</text>
+      <text x="634" y="166" class="uml-mult">1</text>
+      <!-- Checkout -->
+      <rect x="540" y="300" width="170" height="70" rx="6" class="fig-code"/>
+      <text x="625" y="320" class="uml-name">Checkout</text>
+      <line x1="540" y1="328" x2="710" y2="328" class="uml-divider"/>
+      <text x="552" y="346" class="uml-member">- notifier : Notifier</text>
+      <text x="552" y="363" class="uml-member">+ place(Order)</text>
+      <!-- dependency Checkout -> Order -->
+      <line x1="625" y1="300" x2="625" y2="264" class="uml-dashed" marker-end="url(#f2-open)"/>
+      <text x="634" y="287" class="uml-mult">uses</text>
+      <!-- Notifier -->
+      <rect x="270" y="304" width="180" height="56" rx="6" class="fig-contract"/>
+      <text x="360" y="324" class="uml-stereo">«interface»</text>
+      <text x="360" y="344" class="uml-name">Notifier</text>
+      <!-- association Checkout -> Notifier -->
+      <line x1="540" y1="332" x2="454" y2="332" class="uml-line" marker-end="url(#f2-open)"/>
+      <text x="497" y="324" class="uml-mult" text-anchor="middle">notifier</text>
+      <!-- ConsoleNotifier -->
+      <rect x="270" y="420" width="180" height="44" rx="6" class="fig-code"/>
+      <text x="360" y="447" class="uml-name">ConsoleNotifier</text>
+      <line x1="360" y1="420" x2="360" y2="364" class="uml-dashed" marker-end="url(#f2-hollow)"/>
+    </svg>
+    <figcaption>The cured kata, read aloud. A Menu gathers many MenuItems. Pizza and Drink are MenuItems. An OrderLine refers to one MenuItem. An Order owns many OrderLines. A Checkout briefly uses an Order, and holds a Notifier, which ConsoleNotifier implements. Violet boxes are contracts. Every arrow into Checkout's world points at a contract or a parameter, and none points at the console.</figcaption>
+  </figure>
+
+  <details class="check">
+    <summary>In the diagram, why is the line from <code>Checkout</code> to <code>Order</code> dashed, but the line from <code>Checkout</code> to <code>Notifier</code> solid?</summary>
+    <p><code>Checkout</code> only receives an <code>Order</code> as a parameter of <code>place</code> and forgets it afterwards, which is a <em>dependency</em> (dashed, "uses briefly"). It keeps the <code>Notifier</code> in a field for its whole life, which is an <em>association</em> (solid, "holds a reference to"). Same class, two different strengths of knowing.</p>
+  </details>
+
+  <h3>3.6 Reading a UML sequence diagram</h3>
+
+  <p>A class diagram shows <em>structure</em>, which is frozen. It cannot show what happens when <code>checkout.place(order)</code> runs: who calls whom, in what order. A sequence diagram can. Its parts:</p>
+  <ul>
+    <li>Each object taking part gets a box at the top, written <code>name : Class</code>, with a dashed line dropping down from it. That line is the object's <strong>lifeline</strong>. Time flows <em>downward</em>.</li>
+    <li>A solid arrow with a filled head is a <strong>message</strong>: one object calling a method on another, labelled with the call.</li>
+    <li>A dashed arrow back is a <strong>return</strong>, labelled with the value that comes back.</li>
+    <li>A thin bar on a lifeline shows when that object is busy running a method. It is called an <strong>activation</strong>.</li>
+    <li>A labelled box drawn around some messages, such as <code>loop [each line]</code>, means "these repeat." It is called a <strong>frame</strong>. Other frames include <code>alt</code> (if/else) and <code>opt</code> (if).</li>
+  </ul>
+
+  <figure class="fig">
+    <svg viewBox="0 0 720 430" role="img" aria-label="Sequence diagram for checkout.place(order). Main calls place on checkout. Checkout calls itemCount on order, which returns 3. Checkout calls total on order; inside a loop over each line, order calls subtotal on the line, which returns the line's subtotal; total returns 21. Checkout calls send on the notifier with the message. Place returns to main.">
+      <defs>
+        <marker id="f3-call" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+          <path d="M0,0 L10,5 L0,10 z" class="seq-head"/>
+        </marker>
+        <marker id="f3-ret" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+          <path d="M0,0 L10,5 L0,10" class="seq-return-h"/>
+        </marker>
+      </defs>
+      <!-- heads -->
+      <rect x="15" y="10" width="110" height="44" rx="6" class="fig-generic"/>
+      <text x="70" y="30" class="uml-name">main</text>
+      <text x="70" y="47" class="uml-stereo">: Main</text>
+      <rect x="155" y="10" width="110" height="44" rx="6" class="fig-code"/>
+      <text x="210" y="30" class="uml-name">checkout</text>
+      <text x="210" y="47" class="uml-stereo">: Checkout</text>
+      <rect x="305" y="10" width="110" height="44" rx="6" class="fig-code"/>
+      <text x="360" y="30" class="uml-name">order</text>
+      <text x="360" y="47" class="uml-stereo">: Order</text>
+      <rect x="455" y="10" width="110" height="44" rx="6" class="fig-code"/>
+      <text x="510" y="30" class="uml-name">line</text>
+      <text x="510" y="47" class="uml-stereo">: OrderLine</text>
+      <rect x="595" y="10" width="110" height="44" rx="6" class="fig-contract"/>
+      <text x="650" y="30" class="uml-name">notifier</text>
+      <text x="650" y="47" class="uml-stereo">: Notifier</text>
+      <!-- lifelines -->
+      <line x1="70" y1="54" x2="70" y2="420" class="seq-life"/>
+      <line x1="210" y1="54" x2="210" y2="420" class="seq-life"/>
+      <line x1="360" y1="54" x2="360" y2="420" class="seq-life"/>
+      <line x1="510" y1="54" x2="510" y2="420" class="seq-life"/>
+      <line x1="650" y1="54" x2="650" y2="420" class="seq-life"/>
+      <!-- activations -->
+      <rect x="204" y="76" width="12" height="320" class="seq-act"/>
+      <rect x="354" y="104" width="12" height="30" class="seq-act"/>
+      <rect x="354" y="164" width="12" height="138" class="seq-act"/>
+      <rect x="504" y="216" width="12" height="34" class="seq-act"/>
+      <rect x="644" y="336" width="12" height="30" class="seq-act"/>
+      <!-- 1 place -->
+      <line x1="70" y1="80" x2="202" y2="80" class="seq-msg" marker-end="url(#f3-call)"/>
+      <text x="136" y="73" class="seq-label" text-anchor="middle">1: place(order)</text>
+      <!-- 2 itemCount -->
+      <line x1="216" y1="108" x2="352" y2="108" class="seq-msg" marker-end="url(#f3-call)"/>
+      <text x="284" y="101" class="seq-label" text-anchor="middle">2: itemCount()</text>
+      <line x1="354" y1="132" x2="218" y2="132" class="seq-return" marker-end="url(#f3-ret)"/>
+      <text x="284" y="126" class="seq-label" text-anchor="middle">3</text>
+      <!-- 3 total -->
+      <line x1="216" y1="168" x2="352" y2="168" class="seq-msg" marker-end="url(#f3-call)"/>
+      <text x="284" y="161" class="seq-label" text-anchor="middle">3: total()</text>
+      <!-- loop frame -->
+      <rect x="330" y="186" width="230" height="84" class="seq-frame"/>
+      <path d="M330,186 L432,186 L432,198 L424,206 L330,206 z" class="seq-frame-tab"/>
+      <text x="336" y="200" class="seq-frame-label">loop [each line]</text>
+      <!-- 4 subtotal -->
+      <line x1="366" y1="220" x2="502" y2="220" class="seq-msg" marker-end="url(#f3-call)"/>
+      <text x="440" y="214" class="seq-label" text-anchor="middle">4: subtotal()</text>
+      <line x1="504" y1="248" x2="368" y2="248" class="seq-return" marker-end="url(#f3-ret)"/>
+      <text x="440" y="242" class="seq-label" text-anchor="middle">18, then 3</text>
+      <!-- total return -->
+      <line x1="354" y1="300" x2="218" y2="300" class="seq-return" marker-end="url(#f3-ret)"/>
+      <text x="284" y="294" class="seq-label" text-anchor="middle">21</text>
+      <!-- 5 send -->
+      <line x1="216" y1="340" x2="642" y2="340" class="seq-msg" marker-end="url(#f3-call)"/>
+      <text x="430" y="333" class="seq-label" text-anchor="middle">5: send("Order placed: 3 items, total 21")</text>
+      <!-- return to main -->
+      <line x1="204" y1="394" x2="72" y2="394" class="seq-return" marker-end="url(#f3-ret)"/>
+      <text x="136" y="388" class="seq-label" text-anchor="middle">done</text>
+    </svg>
+    <figcaption>What <code>checkout.place(order)</code> does, top to bottom. Solid arrows with filled heads are calls; dashed arrows are returns. Bars show who is busy. The violet frame repeats once per order line: the first pass returns 18, the second returns 3. <code>checkout</code> never talks to an <code>OrderLine</code>: it only knows <code>Order</code> and <code>Notifier</code>, exactly as the class diagram promised.</figcaption>
+  </figure>
+
+  <p>Read it aloud. Main asks checkout to place the order. Checkout asks the order for its item count (3), then its total. To work out the total, the order asks each line for its subtotal (18, then 3) and returns 21. Checkout then sends one message to the notifier, and returns. Notice what the picture proves: <code>checkout</code>'s only arrows go to <code>order</code> and <code>notifier</code>. Low coupling is visible as <em>few arrows leaving each lifeline</em>.</p>
+</section>
+
+<!-- ============================== SECTION 4 ============================== -->
+<section id="s4">
+  <h2><span class="sec-num">4</span>The kata</h2>
+
+  <p>Package <code>com.katas.coupling</code>: the naive <code>OrderManager</code> split into small classes that each do one job and know each other through the narrowest door. Here are the files, and the diagram arrow each one stands for:</p>
+
+  <ul>
+    <li><span class="filepath">Saved: katas/src/main/java/com/katas/coupling/MenuItem.java</span> Abstract parent: private <code>name</code> and <code>price</code>, getters, abstract <code>category()</code>.</li>
+    <li><span class="filepath">Saved: katas/src/main/java/com/katas/coupling/Pizza.java</span> and <span class="filepath">Drink.java</span>: <code>extends MenuItem</code>, returning <code>"pizza"</code> / <code>"drink"</code>. These are the <em>inheritance</em> lines.</li>
+    <li><span class="filepath">Saved: katas/src/main/java/com/katas/coupling/Menu.java</span> Receives a <code>List&lt;MenuItem&gt;</code> in its constructor and keeps a <code>List.copyOf</code>; <code>find(name)</code> returns the match or throws. The items were made elsewhere: <em>aggregation</em>.</li>
+    <li><span class="filepath">Saved: katas/src/main/java/com/katas/coupling/Notifier.java</span> and <span class="filepath">ConsoleNotifier.java</span>: the one-method contract <code>send(String)</code>, and the only class in the kata that touches <code>System.out</code>. This is the <em>implementation</em> line.</li>
+  </ul>
+
+  <p class="filepath">Saved: katas/src/main/java/com/katas/coupling/OrderLine.java</p>
+  <pre class="code" data-title="OrderLine.java"><code><span class="cmt">// One line of an order: "2 x Margherita".</span>
+<span class="kw">package</span> com.katas.coupling;
+
+<span class="cmt">// An OrderLine HOLDS A REFERENCE to a MenuItem (it needs its price), but the</span>
+<span class="cmt">// item is not part of the line; it belongs to the menu. That plain "knows</span>
+<span class="cmt">// about" link is an ASSOCIATION in the diagram.</span>
+<span class="kw">public class</span> <span class="ty">OrderLine</span> {
+
+    <span class="cmt">// Which item was ordered: the association.</span>
+    <span class="kw">private final</span> <span class="ty">MenuItem</span> item;
+
+    <span class="cmt">// How many of it.</span>
+    <span class="kw">private final int</span> quantity;
+
+    <span class="cmt">// Package-private constructor (no access keyword): only classes in this</span>
+    <span class="cmt">// package, in practice Order, can create lines.</span>
+    <span class="ty">OrderLine</span>(<span class="ty">MenuItem</span> item, <span class="kw">int</span> quantity) {
+        <span class="cmt">// Refuse nonsense quantities, so every line is valid from birth.</span>
+        <span class="kw">if</span> (quantity &lt;= <span class="num">0</span>) {
+            <span class="cmt">// Loud refusal naming the bad value.</span>
+            <span class="kw">throw new</span> <span class="ty">IllegalArgumentException</span>(<span class="str">"Quantity must be positive: "</span> + quantity);
+        }
+        <span class="cmt">// Remember the item.</span>
+        <span class="kw">this</span>.item = item;
+        <span class="cmt">// Remember the quantity.</span>
+        <span class="kw">this</span>.quantity = quantity;
+    }
+
+    <span class="cmt">// How many items this line contributes to the order.</span>
+    <span class="kw">int</span> <span class="fn">quantity</span>() {
+        <span class="cmt">// Hand back the quantity.</span>
+        <span class="kw">return</span> quantity;
+    }
+
+    <span class="cmt">// This line's cost: price times quantity.</span>
+    <span class="kw">int</span> <span class="fn">subtotal</span>() {
+        <span class="cmt">// Ask the associated item for its price.</span>
+        <span class="kw">return</span> item.<span class="fn">getPrice</span>() * quantity;
+    }
+}</code></pre>
+
+  <p class="filepath">Saved: katas/src/main/java/com/katas/coupling/Order.java</p>
+  <pre class="code" data-title="Order.java"><code><span class="cmt">// An order: one job, keeping its lines and adding them up. High cohesion.</span>
+<span class="kw">package</span> com.katas.coupling;
+
+<span class="cmt">// The JDK's growable list.</span>
+<span class="kw">import</span> java.util.<span class="ty">ArrayList</span>;
+<span class="cmt">// The JDK's list interface.</span>
+<span class="kw">import</span> java.util.<span class="ty">List</span>;
+
+<span class="cmt">// An Order CREATES its OrderLines itself and never hands them out, so the</span>
+<span class="cmt">// lines live and die with the order. That strong ownership is COMPOSITION</span>
+<span class="cmt">// in the diagram (the filled diamond).</span>
+<span class="kw">public class</span> <span class="ty">Order</span> {
+
+    <span class="cmt">// The lines, created and owned by this order alone.</span>
+    <span class="kw">private final</span> <span class="ty">List</span>&lt;<span class="ty">OrderLine</span>&gt; lines = <span class="kw">new</span> <span class="ty">ArrayList</span>&lt;&gt;();
+
+    <span class="cmt">// Add an item: the ORDER builds the line, so nobody else owns it.</span>
+    <span class="kw">public void</span> <span class="fn">add</span>(<span class="ty">MenuItem</span> item, <span class="kw">int</span> quantity) {
+        <span class="cmt">// Create the part inside the whole.</span>
+        lines.<span class="fn">add</span>(<span class="kw">new</span> <span class="ty">OrderLine</span>(item, quantity));
+    }
+
+    <span class="cmt">// Total number of items across all lines.</span>
+    <span class="kw">public int</span> <span class="fn">itemCount</span>() {
+        <span class="cmt">// Start from zero...</span>
+        <span class="kw">int</span> count = <span class="num">0</span>;
+        <span class="cmt">// ...and add each line's quantity.</span>
+        <span class="kw">for</span> (<span class="ty">OrderLine</span> line : lines) {
+            <span class="cmt">// Accumulate.</span>
+            count += line.<span class="fn">quantity</span>();
+        }
+        <span class="cmt">// The total item count.</span>
+        <span class="kw">return</span> count;
+    }
+
+    <span class="cmt">// Total price across all lines.</span>
+    <span class="kw">public int</span> <span class="fn">total</span>() {
+        <span class="cmt">// Start from zero...</span>
+        <span class="kw">int</span> sum = <span class="num">0</span>;
+        <span class="cmt">// ...and ask each line for its subtotal.</span>
+        <span class="kw">for</span> (<span class="ty">OrderLine</span> line : lines) {
+            <span class="cmt">// Accumulate.</span>
+            sum += line.<span class="fn">subtotal</span>();
+        }
+        <span class="cmt">// The order's total.</span>
+        <span class="kw">return</span> sum;
+    }
+}</code></pre>
+
+  <p class="filepath">Saved: katas/src/main/java/com/katas/coupling/Checkout.java</p>
+  <pre class="code" data-title="Checkout.java"><code><span class="cmt">// Placing an order: one job, announcing it. High cohesion.</span>
+<span class="kw">package</span> com.katas.coupling;
+
+<span class="cmt">// Checkout HOLDS a Notifier for its whole life (an ASSOCIATION to an</span>
+<span class="cmt">// interface: loose coupling) and only BRIEFLY USES an Order passed into one</span>
+<span class="cmt">// method call (a DEPENDENCY: the weakest link of all).</span>
+<span class="kw">public class</span> <span class="ty">Checkout</span> {
+
+    <span class="cmt">// The channel to announce on. Typed by the interface, handed in from</span>
+    <span class="cmt">// outside, so Checkout never knows or cares which channel it is.</span>
+    <span class="kw">private final</span> <span class="ty">Notifier</span> notifier;
+
+    <span class="cmt">// The caller chooses the channel.</span>
+    <span class="kw">public</span> <span class="fn">Checkout</span>(<span class="ty">Notifier</span> notifier) {
+        <span class="cmt">// Remember it.</span>
+        <span class="kw">this</span>.notifier = notifier;
+    }
+
+    <span class="cmt">// Announce an order. The Order is only a parameter: Checkout does not</span>
+    <span class="cmt">// keep it after this method returns.</span>
+    <span class="kw">public void</span> <span class="fn">place</span>(<span class="ty">Order</span> order) {
+        <span class="cmt">// Ask the order for its numbers and send one message.</span>
+        notifier.<span class="fn">send</span>(<span class="str">"Order placed: "</span> + order.<span class="fn">itemCount</span>() + <span class="str">" items, total "</span> + order.<span class="fn">total</span>());
+    }
+}</code></pre>
+
+  <p class="filepath">Saved: katas/src/main/java/com/katas/coupling/Main.java</p>
+  <pre class="code" data-title="Main.java (coupling)"><code><span class="cmt">// The runnable demo for Lesson 04's kata.</span>
+<span class="kw">package</span> com.katas.coupling;
+
+<span class="cmt">// List.of for building the menu's item list.</span>
+<span class="kw">import</span> java.util.<span class="ty">List</span>;
+
+<span class="cmt">// Builds the same order twice: once through the naive all-in-one class, once</span>
+<span class="cmt">// through the small cohesive classes. The output is identical; the structure</span>
+<span class="cmt">// is what differs, and that is what the lesson measures.</span>
+<span class="kw">public class</span> <span class="ty">Main</span> {
+
+    <span class="cmt">// The JVM starts here when you run this class.</span>
+    <span class="kw">public static void</span> <span class="fn">main</span>(<span class="ty">String</span>[] args) {
+        <span class="cmt">// NAIVE: one class does everything. Full name, because the class lives</span>
+        <span class="cmt">// in the naive sub-package.</span>
+        com.katas.coupling.naive.<span class="ty">OrderManager</span> manager = <span class="kw">new</span> com.katas.coupling.naive.<span class="ty">OrderManager</span>();
+        <span class="cmt">// Two margheritas...</span>
+        manager.<span class="fn">add</span>(<span class="str">"Margherita"</span>, <span class="num">2</span>);
+        <span class="cmt">// ...and one cola...</span>
+        manager.<span class="fn">add</span>(<span class="str">"Cola"</span>, <span class="num">1</span>);
+        <span class="cmt">// ...announced straight to the console.</span>
+        manager.<span class="fn">placeOrder</span>();
+
+        <span class="cmt">// COHESIVE AND LOOSELY COUPLED: each class does one job.</span>
+        <span class="cmt">// The items exist on their own, before any menu or order.</span>
+        <span class="ty">MenuItem</span> margherita = <span class="kw">new</span> <span class="ty">Pizza</span>(<span class="str">"Margherita"</span>, <span class="num">9</span>);
+        <span class="cmt">// A drink item.</span>
+        <span class="ty">MenuItem</span> cola = <span class="kw">new</span> <span class="ty">Drink</span>(<span class="str">"Cola"</span>, <span class="num">3</span>);
+        <span class="cmt">// The menu gathers existing items (aggregation).</span>
+        <span class="ty">Menu</span> menu = <span class="kw">new</span> <span class="ty">Menu</span>(<span class="ty">List</span>.<span class="fn">of</span>(margherita, cola));
+        <span class="cmt">// A fresh order.</span>
+        <span class="ty">Order</span> order = <span class="kw">new</span> <span class="ty">Order</span>();
+        <span class="cmt">// The order creates its own lines (composition).</span>
+        order.<span class="fn">add</span>(menu.<span class="fn">find</span>(<span class="str">"Margherita"</span>), <span class="num">2</span>);
+        <span class="cmt">// A second line.</span>
+        order.<span class="fn">add</span>(menu.<span class="fn">find</span>(<span class="str">"Cola"</span>), <span class="num">1</span>);
+        <span class="cmt">// The channel is chosen HERE, not inside Checkout.</span>
+        <span class="ty">Checkout</span> checkout = <span class="kw">new</span> <span class="ty">Checkout</span>(<span class="kw">new</span> <span class="ty">ConsoleNotifier</span>());
+        <span class="cmt">// Same announcement as the naive version.</span>
+        checkout.<span class="fn">place</span>(order);
+    }
+}</code></pre>
+
+  <h4>What happens when it runs</h4>
+  <ol class="trace">
+    <li>The naive <code>OrderManager</code> walks its if-else ladder twice (9 × 2, then 3 × 1). Its total is 21 with 3 items, and it prints straight to the console.</li>
+    <li>The cohesive version builds two items, then a menu that gathers them, then an empty order.</li>
+    <li><code>menu.find("Margherita")</code> loops the menu's items and returns the pizza. <code>order.add(pizza, 2)</code> makes the order create an <code>OrderLine</code>. The same happens for the cola.</li>
+    <li><code>new Checkout(new ConsoleNotifier())</code>: the output channel is chosen in <code>Main</code>.</li>
+    <li><code>checkout.place(order)</code> runs exactly the sequence diagram in 3.6: item count 3, total 18 + 3 = 21, then one <code>send</code>, which <code>ConsoleNotifier</code> prints.</li>
+  </ol>
+  <p class="pred-label">Prediction — the program's own lines (identical on purpose)</p>
+  <pre class="output"><code>Order placed: 3 items, total 21
+Order placed: 3 items, total 21</code></pre>
+
+  <h4>The tests: where loose coupling pays</h4>
+  <p>Remember the test team's request from Section 1? With the naive class it was impossible. Now <code>Checkout</code> depends only on the <code>Notifier</code> contract, so a test can hand it a stand-in that just remembers messages:</p>
+
+  <p class="filepath">Saved: katas/src/test/java/com/katas/coupling/RecordingNotifier.java</p>
+  <pre class="code" data-title="RecordingNotifier.java (test helper)"><code><span class="cmt">// A test-only helper, living under src/test so it never ships.</span>
+<span class="kw">package</span> com.katas.coupling;
+
+<span class="cmt">// The JDK's growable list.</span>
+<span class="kw">import</span> java.util.<span class="ty">ArrayList</span>;
+<span class="cmt">// The JDK's list interface.</span>
+<span class="kw">import</span> java.util.<span class="ty">List</span>;
+
+<span class="cmt">// A Notifier that delivers nowhere: it just remembers every message, so a</span>
+<span class="cmt">// test can check exactly what Checkout "sent". This is possible ONLY because</span>
+<span class="cmt">// Checkout depends on the Notifier interface rather than on the console.</span>
+<span class="kw">class</span> <span class="ty">RecordingNotifier</span> <span class="kw">implements</span> <span class="ty">Notifier</span> {
+
+    <span class="cmt">// Every message received, in order.</span>
+    <span class="kw">private final</span> <span class="ty">List</span>&lt;<span class="ty">String</span>&gt; messages = <span class="kw">new</span> <span class="ty">ArrayList</span>&lt;&gt;();
+
+    <span class="cmt">// "Deliver" by remembering.</span>
+    <span class="anno">@Override</span>
+    <span class="kw">public void</span> <span class="fn">send</span>(<span class="ty">String</span> message) {
+        <span class="cmt">// Store it for the test to inspect.</span>
+        messages.<span class="fn">add</span>(message);
+    }
+
+    <span class="cmt">// What has been sent so far, as an unmodifiable snapshot.</span>
+    <span class="ty">List</span>&lt;<span class="ty">String</span>&gt; <span class="fn">messages</span>() {
+        <span class="cmt">// A read-only copy.</span>
+        <span class="kw">return</span> <span class="ty">List</span>.<span class="fn">copyOf</span>(messages);
+    }
+}</code></pre>
+
+  <p class="filepath">Saved: katas/src/test/java/com/katas/coupling/CheckoutTest.java</p>
+  <pre class="code" data-title="CheckoutTest.java (key test)"><code>    <span class="cmt">// Placing an order sends exactly one message with the right numbers.</span>
+    <span class="anno">@Test</span>
+    <span class="kw">void</span> <span class="fn">placingAnOrderSendsOneMessage</span>() {
+        <span class="cmt">// The recorder stands in for any real channel.</span>
+        <span class="ty">RecordingNotifier</span> notifier = <span class="kw">new</span> <span class="ty">RecordingNotifier</span>();
+        <span class="cmt">// Checkout cannot tell it is talking to a recorder.</span>
+        <span class="ty">Checkout</span> checkout = <span class="kw">new</span> <span class="ty">Checkout</span>(notifier);
+        <span class="cmt">// An order of 2 x 9 + 1 x 3.</span>
+        <span class="ty">Order</span> order = <span class="kw">new</span> <span class="ty">Order</span>();
+        order.<span class="fn">add</span>(<span class="kw">new</span> <span class="ty">Pizza</span>(<span class="str">"Margherita"</span>, <span class="num">9</span>), <span class="num">2</span>);
+        order.<span class="fn">add</span>(<span class="kw">new</span> <span class="ty">Drink</span>(<span class="str">"Cola"</span>, <span class="num">3</span>), <span class="num">1</span>);
+        <span class="cmt">// Place it.</span>
+        checkout.<span class="fn">place</span>(order);
+        <span class="cmt">// Exactly one message, with count 3 and total 21.</span>
+        <span class="fn">assertEquals</span>(<span class="ty">List</span>.<span class="fn">of</span>(<span class="str">"Order placed: 3 items, total 21"</span>), notifier.<span class="fn">messages</span>());
+    }</code></pre>
+  <p>Its second test, <code>emptyOrderIsAnnouncedWithZeros</code>, expects <code>"Order placed: 0 items, total 0"</code>. <span class="filepath">Saved: katas/src/test/java/com/katas/coupling/OrderTest.java</span> has three tests: <code>orderTotalsItsLines</code> (3 items, 21), <code>zeroQuantityIsRefused</code>, and <code>menuRefusesUnknownItems</code>.</p>
+
+  <h4>Run it, and compare</h4>
+  <pre class="terminal" data-title="terminal — from design-patterns-learning/"><code>cd katas
+mvn test
+mvn compile exec:java <span class="str">"-Dexec.mainClass=com.katas.coupling.Main"</span></code></pre>
+  <p class="pred-label">Prediction — mvn test summary</p>
+  <pre class="output"><code><span class="out">[INFO] Tests run: 23, Failures: 0, Errors: 0, Skipped: 0</span>
+<span class="out">[INFO] BUILD SUCCESS</span></code></pre>
+  <div class="callout tryit">
+    <p>Expect <strong>23 tests</strong> (18 earlier + 5 new) and two identical demo lines. If anything differs, the machine is right. Tell me what you saw. Then, as an exercise, open each kata file next to the class diagram in 3.5 and match every field and constructor to its arrow.</p>
+  </div>
+</section>
+
+<!-- ============================== SECTION 5 ============================== -->
+<section id="s5">
+  <h2><span class="sec-num">5</span>Applied to the Smart Home Hub</h2>
+
+  <p><strong>No code changes this lesson, on purpose.</strong> Coupling and cohesion are <em>measures</em>, not features. Nothing in the hub hurts yet, and changing working code just to "score better" would be exactly the needless complexity smell from 3.4. Instead we use today's tools on the hub: draw it, read it, and measure it.</p>
+
+  <h4>The hub's main call, as a sequence diagram</h4>
+  <figure class="fig">
+    <svg viewBox="0 0 720 330" role="img" aria-label="Sequence diagram for device.turnOn in the hub. Main calls turnOn on a LoggedDevice. The LoggedDevice calls turnOn on the Light, then status on the Light, which returns the status text, then record on the ActivityLog with that text. turnOn returns to main.">
+      <defs>
+        <marker id="f4-call" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+          <path d="M0,0 L10,5 L0,10 z" class="seq-head"/>
+        </marker>
+        <marker id="f4-ret" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+          <path d="M0,0 L10,5 L0,10" class="seq-return-h"/>
+        </marker>
+      </defs>
+      <rect x="20" y="10" width="120" height="44" rx="6" class="fig-generic"/>
+      <text x="80" y="30" class="uml-name">main</text>
+      <text x="80" y="47" class="uml-stereo">: Main</text>
+      <rect x="200" y="10" width="140" height="44" rx="6" class="fig-code"/>
+      <text x="270" y="30" class="uml-name">device</text>
+      <text x="270" y="47" class="uml-stereo">: LoggedDevice</text>
+      <rect x="400" y="10" width="120" height="44" rx="6" class="fig-code"/>
+      <text x="460" y="30" class="uml-name">inner</text>
+      <text x="460" y="47" class="uml-stereo">: Light</text>
+      <rect x="570" y="10" width="130" height="44" rx="6" class="fig-code"/>
+      <text x="635" y="30" class="uml-name">log</text>
+      <text x="635" y="47" class="uml-stereo">: ActivityLog</text>
+      <line x1="80" y1="54" x2="80" y2="320" class="seq-life"/>
+      <line x1="270" y1="54" x2="270" y2="320" class="seq-life"/>
+      <line x1="460" y1="54" x2="460" y2="320" class="seq-life"/>
+      <line x1="635" y1="54" x2="635" y2="320" class="seq-life"/>
+      <rect x="264" y="76" width="12" height="216" class="seq-act"/>
+      <rect x="454" y="104" width="12" height="30" class="seq-act"/>
+      <rect x="454" y="164" width="12" height="34" class="seq-act"/>
+      <rect x="629" y="234" width="12" height="30" class="seq-act"/>
+      <line x1="80" y1="80" x2="262" y2="80" class="seq-msg" marker-end="url(#f4-call)"/>
+      <text x="171" y="73" class="seq-label" text-anchor="middle">1: turnOn()</text>
+      <line x1="276" y1="108" x2="452" y2="108" class="seq-msg" marker-end="url(#f4-call)"/>
+      <text x="364" y="101" class="seq-label" text-anchor="middle">2: turnOn()</text>
+      <text x="364" y="128" class="fig-small fig-center">(runs AbstractDevice's code)</text>
+      <line x1="276" y1="168" x2="452" y2="168" class="seq-msg" marker-end="url(#f4-call)"/>
+      <text x="364" y="161" class="seq-label" text-anchor="middle">3: status()</text>
+      <line x1="454" y1="196" x2="278" y2="196" class="seq-return" marker-end="url(#f4-ret)"/>
+      <text x="364" y="190" class="seq-label" text-anchor="middle">"Living Room Light: ON"</text>
+      <line x1="276" y1="238" x2="627" y2="238" class="seq-msg" marker-end="url(#f4-call)"/>
+      <text x="452" y="231" class="seq-label" text-anchor="middle">4: record("Living Room Light: ON")</text>
+      <line x1="264" y1="290" x2="82" y2="290" class="seq-return" marker-end="url(#f4-ret)"/>
+      <text x="171" y="284" class="seq-label" text-anchor="middle">done</text>
+    </svg>
+    <figcaption>One pass of the hub's loop. <code>main</code> has a single arrow, to the wrapper. It cannot tell a logged light from a plain one. That is Lesson 01's contract and Lesson 03's wrapper, seen as a picture.</figcaption>
+  </figure>
+
+  <h4>Measuring the hub</h4>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Class</th><th>Cohesion: one sentence, no "and"?</th><th>Coupling: what it knows</th></tr></thead>
+      <tbody>
+        <tr><td><code>Device</code></td><td>Yes: "what every device can do"</td><td>Nothing</td></tr>
+        <tr><td><code>AbstractDevice</code></td><td>Yes: "the shared name and on/off state"</td><td>Only <code>Device</code></td></tr>
+        <tr><td><code>Light</code>, <code>Thermostat</code></td><td>Yes: each describes one device kind</td><td>Only their parent</td></tr>
+        <tr><td><code>ActivityLog</code></td><td>Yes: "keeps the history"</td><td>Only JDK lists</td></tr>
+        <tr><td><code>LoggedDevice</code></td><td>Yes: "logs a device's switching"</td><td><code>Device</code> (loose) and <code>ActivityLog</code> (concrete, acceptable for now, see 3.3)</td></tr>
+        <tr><td><code>Main</code></td><td><strong>Getting shaky:</strong> "builds the devices <em>and</em> wraps them <em>and</em> runs them <em>and</em> prints the log"</td><td>Every concrete class in the hub</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>The measurement found something real. <code>Main</code> is the one place that names every concrete class, which is fine for an assembly point. But it also keeps gaining jobs. It is the hub's first low-cohesion smell, and it is exactly the pain the next lesson opens with.</p>
+
+  <pre class="terminal" data-title="terminal — confirm nothing changed"><code>cd smarthome
+mvn test</code></pre>
+  <p class="pred-label">Prediction</p>
+  <pre class="output"><code><span class="out">[INFO] Tests run: 13, Failures: 0, Errors: 0, Skipped: 0</span>
+<span class="out">[INFO] BUILD SUCCESS</span></code></pre>
+  <p>Same 13 tests as Lesson 03, because no hub file changed. If it differs, the machine is right. Tell me what you saw.</p>
+</section>
+
+<!-- ============================== SECTION 6 ============================== -->
+<section id="s6">
+  <h2><span class="sec-num">6</span>In the wild</h2>
+
+  <p><strong>JDBC, Java's database access, is loose coupling at industrial scale.</strong> Your code asks <code>DriverManager.getConnection(url)</code> for a connection and gets back a <code>java.sql.Connection</code>, which is an <em>interface</em>. The real class behind it comes from whichever database vendor's driver is on the classpath: PostgreSQL, MySQL, Oracle. Your code knows only the interface, so switching databases changes a URL and a driver dependency, not your queries' Java code. That is <code>Checkout</code> → <code>Notifier</code>, with a database in place of the console.</p>
+
+  <p><strong>Cohesion in the JDK.</strong> <code>java.lang.Math</code> holds only mathematical functions (<code>max</code>, <code>abs</code>, <code>sqrt</code>…): one purpose, one sentence. Compare it with the <code>Utils</code> class every project eventually grows, which holds date parsing and string padding and file helpers. That is a grab-bag that changes for every reason at once.</p>
+
+  <div class="callout realworld">
+    <p>In design interviews, "draw the classes" means a UML class diagram, and "walk me through what happens when…" means a sequence diagram, even if no one says "UML." In code review, "this class does too much" is a cohesion complaint, and "this is hard to test" is very often a coupling complaint. You now have the words for both.</p>
+  </div>
+</section>
+
+<!-- ============================== SECTION 7 ============================== -->
+<section id="s7">
+  <h2><span class="sec-num">7</span>When NOT to, and gotchas</h2>
+
+  <h3>When not to decouple</h3>
+  <p>Loose coupling costs indirection: every interface is another file to read and another hop when tracing a bug. Decouple at the joints that actually change, or that tests need to swap (like <code>Notifier</code>). Do not decouple every class from every other "for flexibility." A one-off script, a class with one obvious implementation forever, or a value like <code>String</code> needs no interface. Splitting a class into ten one-line classes does not raise cohesion either. It just scatters one purpose across ten files. That trap gets its own section in Lesson 05.</p>
+
+  <h3>Gotchas</h3>
+  <ul>
+    <li><strong>Arrow direction.</strong> Arrows point <em>toward</em> the thing depended on: child → parent, implementer → interface, user → used. Drawing them backwards reverses the meaning of the whole diagram.</li>
+    <li><strong>Diamonds sit at the whole.</strong> <code>Order ◆— OrderLine</code>: the diamond touches the owner, not the part.</li>
+    <li><strong>A diagram is not the code.</strong> Show what matters to the point you are making. A diagram listing every getter is as hard to read as the code it replaced. Keep it honest, though: every arrow you do draw must exist in the code.</li>
+    <li><strong>Sequence diagrams show one scenario.</strong> The one in 3.6 is <em>this</em> order with two lines. A different order means a different run, even though the classes are the same.</li>
+    <li><strong>Cohesion is not size.</strong> A big class can be cohesive (one deep purpose); a tiny class can be a grab-bag. Use the one-sentence test, not the line count.</li>
+  </ul>
+</section>
+
+<!-- ============================== SECTION 8 ============================== -->
+<section id="s8">
+  <h2><span class="sec-num">8</span>Key takeaways</h2>
+  <ul class="takeaways">
+    <li>Coupling measures how much one class knows about another, from reaching into its data (tightest) down to using only an interface or a passed-in value (loosest). Less knowledge means fewer ripples when things change.</li>
+    <li>Cohesion measures how well the parts inside one class serve a single purpose. A class you cannot describe in one sentence without "and" usually has low cohesion.</li>
+    <li>Loose coupling plus high cohesion keeps each change local. Every pattern ahead buys that at the price of indirection, which is worth paying only where change really happens.</li>
+    <li>Design smells (rigidity, fragility, immobility, viscosity, needless complexity, needless repetition, opacity) are the vocabulary of rot, and over-design is on that list too.</li>
+    <li>A UML class diagram shows structure through six relationship lines (inheritance, implementation, association, aggregation, composition, dependency). A sequence diagram shows one scenario's calls in time order, top to bottom.</li>
+  </ul>
+</section>
+
+<!-- ============================== SECTION 9 ============================== -->
+<section id="s9">
+  <h2><span class="sec-num">9</span>Challenge</h2>
+  <p>Read this code and (a) name every relationship it creates, the UML line you would draw, and which end gets the arrowhead or diamond; (b) say which relationship is the tightest coupling, and how to loosen it if a test needed a fake gate.</p>
+  <pre class="code" data-title="Garage.java and friends"><code><span class="kw">class</span> <span class="ty">Car</span> <span class="kw">extends</span> <span class="ty">Vehicle</span> { }
+<span class="kw">class</span> <span class="ty">Gate</span> <span class="kw">implements</span> <span class="ty">Openable</span> { <span class="kw">public void</span> <span class="fn">open</span>() { } }
+
+<span class="kw">class</span> <span class="ty">Garage</span> {
+    <span class="kw">private final</span> <span class="ty">List</span>&lt;<span class="ty">Car</span>&gt; cars = <span class="kw">new</span> <span class="ty">ArrayList</span>&lt;&gt;();    <span class="cmt">// cars arrive via park()</span>
+    <span class="kw">private final</span> <span class="ty">Gate</span> gate = <span class="kw">new</span> <span class="ty">Gate</span>();                  <span class="cmt">// created right here</span>
+    <span class="kw">public void</span> <span class="fn">park</span>(<span class="ty">Car</span> car) { gate.<span class="fn">open</span>(); cars.<span class="fn">add</span>(car); }
+    <span class="kw">public void</span> <span class="fn">report</span>(<span class="ty">Printer</span> printer) { printer.<span class="fn">print</span>(cars.<span class="fn">size</span>() + <span class="str">" cars"</span>); }
+}</code></pre>
+
+  <details class="answer">
+    <summary>Click to reveal the answer</summary>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Relationship</th><th>UML line</th><th>Why</th></tr></thead>
+        <tbody>
+          <tr><td><code>Car</code> → <code>Vehicle</code></td><td>Inheritance: solid, hollow triangle at <code>Vehicle</code></td><td><code>extends</code></td></tr>
+          <tr><td><code>Gate</code> → <code>Openable</code></td><td>Implementation: dashed, hollow triangle at <code>Openable</code></td><td><code>implements</code></td></tr>
+          <tr><td><code>Garage</code> ◇— <code>Car</code>, multiplicity <code>*</code></td><td>Aggregation: hollow diamond at <code>Garage</code></td><td>Cars are created elsewhere, handed in, and drive away (they outlive the garage's interest)</td></tr>
+          <tr><td><code>Garage</code> ◆— <code>Gate</code>, multiplicity <code>1</code></td><td>Composition: filled diamond at <code>Garage</code></td><td>The garage creates its gate and nobody else holds it; it lives and dies with the garage</td></tr>
+          <tr><td><code>Garage</code> ⇢ <code>Printer</code></td><td>Dependency: dashed, open arrowhead at <code>Printer</code></td><td>Only a parameter of <code>report</code>, used briefly</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p><strong>(b) The tightest coupling is <code>new Gate()</code> inside <code>Garage</code>.</strong> <code>Garage</code> names a concrete class <em>and</em> creates it itself, so no other gate can ever be used. A test cannot substitute a fake gate that, say, records that <code>open()</code> was called. To loosen it, depend on the contract and let the caller choose, exactly like <code>Checkout</code> and <code>Notifier</code>:</p>
+    <pre class="code" data-title="loosened"><code><span class="kw">private final</span> <span class="ty">Openable</span> gate;                           <span class="cmt">// the contract, not the class</span>
+<span class="kw">public</span> <span class="fn">Garage</span>(<span class="ty">Openable</span> gate) { <span class="kw">this</span>.gate = gate; }      <span class="cmt">// the caller chooses</span></code></pre>
+    <p>Notice how the diagram changes: the filled diamond to <code>Gate</code> becomes a plain association to the <code>Openable</code> interface, because <code>Garage</code> no longer creates or owns a specific gate. This exact move, "depend on an abstraction handed in from outside," becomes a named principle in Lesson 09.</p>
+  </details>
+</section>
+
+<!-- ============================== SECTION 10 ============================== -->
+<section id="s10">
+  <h2><span class="sec-num">10</span>Catalog update</h2>
+  <p>No entry this lesson. Coupling and cohesion are the <em>yardstick</em> every entry will be measured against, not entries themselves. The first entry arrives in Lesson 05, the Single Responsibility Principle, which is cohesion turned into a rule. From then on, every catalog entry's "The cost" field is, at heart, the indirection described in 3.3.</p>
+</section>
+
+<div class="nextup">
+  <p><a href="chapter-01-summary.html">Chapter 01 summary — The Object-Oriented Toolbox.</a> Everything from Lessons 01–04 on one page: what we built, the hub's full class diagram, how the ideas connect, a self-check, and a chapter boss challenge. Then Phase 1 begins with the Single Responsibility Principle.</p>
+</div>
+<p class="position">Lesson 04 · the fifth of 45 lessons (00–44) · Phase 0, Chapter 01 · lesson 4 of 4 in this chapter</p>
+
+</main>
+</div>
+</body>
+</html>

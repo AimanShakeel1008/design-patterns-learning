@@ -149,6 +149,16 @@ This page decodes the errors that actually come up while working through the cou
 
 ---
 
+## Coupling and UML (Lesson 04)
+
+### `error: OrderLine(MenuItem,int) is not public in OrderLine; cannot be accessed from outside package`
+
+**Why:** `OrderLine`'s constructor is package-private on purpose (no access keyword), so only classes in `com.katas.coupling` — in practice `Order` — can create lines. That is how the composition ("Order owns its lines") is enforced.
+
+**Fix:** create lines through `order.add(item, quantity)` instead of `new OrderLine(...)`.
+
+---
+
 ## Lesson pages
 
 ### A lesson page opens with no colours or layout (plain black text)

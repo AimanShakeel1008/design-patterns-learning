@@ -117,3 +117,25 @@ Terms are grouped by first-appearance lesson so the list reads in learning order
 - **`List<String>` / `ArrayList` / `List.of` / `List.copyOf`** — the JDK's ordered-list interface (holding text), its everyday implementation, a one-line fixed list, and an unmodifiable snapshot copy. (Lesson 03)
 - **`UnsupportedOperationException`** — Java's standard exception for "this object does not allow that operation" (e.g. adding to an unmodifiable list). (Lesson 03)
 - **`final` class** — a class that cannot be extended; one way for a class author to rule out fragile subclasses. (Lesson 03)
+
+---
+
+## Lesson 04 — Coupling, Cohesion, and Reading UML
+
+- **Coupling** — how strongly one piece of code depends on another, measured by how many changes in one force changes in the other; loose is good. (Lesson 04)
+- **Cohesion** — how strongly the parts inside one class serve a single, clear purpose; high is good. Test: one sentence, no "and". (Lesson 04)
+- **Indirection** — an extra interface or class between a caller and the work; the price every principle and pattern charges for looser coupling. (Lesson 04)
+- **Code smell** — a surface sign in code that usually points to a deeper design problem; a hint to investigate, not proof. (Lesson 04)
+- **Design smells (rigidity, fragility, immobility, viscosity, needless complexity, needless repetition, opacity)** — Robert C. Martin's seven names for design-wide rot. (Lesson 04)
+- **UML (Unified Modeling Language)** — the standard picture language for software designs. (Lesson 04)
+- **Class diagram** — a UML picture of classes (name / fields / methods) and the lines linking them. (Lesson 04)
+- **Visibility markers** — `+` public, `-` private, `#` protected, `~` package-private; italic = abstract, «interface» = interface, underline = static. (Lesson 04)
+- **Package-private** — Java's access level when no keyword is written: usable only by classes in the same package. (Lesson 04)
+- **Association** — solid line, open arrowhead: a class holds a lasting reference to another (a field). (Lesson 04)
+- **Aggregation** — hollow diamond at the whole: a whole gathers parts created elsewhere that can outlive it. (Lesson 04)
+- **Composition (UML)** — filled diamond at the whole: the whole creates and owns its parts, which die with it. (Lesson 04)
+- **Dependency (UML)** — dashed line, open arrowhead: a class uses another briefly (parameter, local variable). (Lesson 04)
+- **Realization / implementation (UML)** — dashed line, hollow triangle at the interface: "implements". (Lesson 04)
+- **Multiplicity** — numbers at a line's end saying how many objects take part: `1`, `0..1`, `*`, `1..*`. (Lesson 04)
+- **Sequence diagram** — a UML picture of one scenario's calls between objects, in time order from top to bottom. (Lesson 04)
+- **Lifeline / message / return / activation / frame** — an object's dashed timeline; a call (solid, filled head); a returned value (dashed); the bar while a method runs; a labelled box such as `loop` around repeated messages. (Lesson 04)
