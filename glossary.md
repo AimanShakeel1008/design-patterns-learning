@@ -77,3 +77,25 @@ Terms are grouped by first-appearance lesson so the list reads in learning order
 - **Lambda (first look)** — a small bundle of code handed to something else to run later, e.g. `() -> account.withdraw(500)`. Full story in the Strategy lesson. (Lesson 01)
 - **`final` (field)** — a field that can be given a value only once, in the constructor. (Lesson 01)
 - **Constant (`static final`)** — one fixed value shared by the whole class, written in CAPITALS (e.g. `MIN_CELSIUS`). (Lesson 01)
+
+---
+
+## Lesson 02 — Inheritance and Polymorphism
+
+- **Inheritance (`extends`)** — a class receiving all of another class's fields and methods, so shared code is written once. (Lesson 02)
+- **Superclass (parent)** — the class that is extended and gives its members. (Lesson 02)
+- **Subclass (child)** — the class that extends another and receives its members. (Lesson 02)
+- **Is-a** — the plain-English test for inheritance: "a Dog is an Animal" sounds true, "a Thermostat is a Light" does not. (Lesson 02)
+- **`super`** — "my parent's version": `super(name)` runs the parent's constructor; `super.speak()` runs the parent's method. (Lesson 02)
+- **`protected`** — access keyword: usable by the class, its subclasses, and its package, but not the outside world. (Lesson 02)
+- **Abstract method** — a method with a signature and no body; every concrete subclass must supply one. (Lesson 02)
+- **Abstract class** — a class marked `abstract` that cannot be built with `new` and exists to be extended; may hold fields, constructors and code. (Lesson 02)
+- **`Object`** — the root class every Java class silently extends; it supplies `toString()` and a few other methods. (Lesson 02)
+- **`toString()`** — the method that turns an object into text; `println` calls it automatically. (Lesson 02)
+- **Overriding** — a subclass writing a method with the same signature as an inherited one, replacing it for its objects; chosen at run time. (Lesson 02)
+- **Overloading** — several same-named methods told apart by parameter types; chosen at compile time from declared types. (Lesson 02)
+- **Declared (static) type** — the type written on a variable; all the compiler can see. (Lesson 02)
+- **Actual (runtime) type** — the class an object was really built from; known only while the program runs. (Lesson 02)
+- **Dynamic dispatch** — choosing which method body runs from the object's actual type at run time: search upward from the actual class. (Lesson 02)
+- **Refactoring** — improving code's internal structure while keeping its behaviour exactly the same, with tests as the safety net. (Lesson 02)
+- **Fragile base class (first look)** — a child breaking because its parent changed, even though the child was not touched. Shown in full in Lesson 03. (Lesson 02)

@@ -1,9 +1,10 @@
-// Same package as the Device contract it fulfils.
+// Same package as the Device contract and its shared parent.
 package com.smarthome.devices;
 
 // A device with extra data (a target temperature) and an invariant to guard:
-// the target always stays between MIN_CELSIUS and MAX_CELSIUS.
-public class Thermostat implements Device {
+// the target always stays between MIN_CELSIUS and MAX_CELSIUS. The shared
+// name/on-off behaviour now comes from AbstractDevice.
+public class Thermostat extends AbstractDevice {
 
     // static final: one fixed value shared by every thermostat (a constant).
     // The lowest target we accept, so pipes never freeze.
@@ -12,35 +13,23 @@ public class Thermostat implements Device {
     // The highest target we accept, so nobody cooks the house by typo.
     private static final int MAX_CELSIUS = 30;
 
-    // The thermostat's name, set once and never changed.
-    private final String name;
-
-    // Whether it is regulating. Starts false, like every device.
-    private boolean on;
-
-    // The temperature it aims for. private, so only the guarded methods below
+    // The temperature it aims for. private, so only the guarded code below
     // can change it, and the invariant always holds.
     private int targetCelsius;
 
     // Build a thermostat with a name and a starting target.
     public Thermostat(String name, int targetCelsius) {
-        // Remember the name.
-        this.name = name;
-        // Reuse the guarded setter, so the constructor obeys the SAME rule as
-        // every later change; one rule, written once.
-        setTargetCelsius(targetCelsius);
+        // Build the AbstractDevice part first (name, on/off state).
+        super(name);
+        // Use the PRIVATE check, not the public setter: a constructor should
+        // never call a method a subclass could override (see Lesson 02).
+        this.targetCelsius = checkedTarget(targetCelsius);
     }
 
     // Change the target, but only to a sensible value.
     public void setTargetCelsius(int targetCelsius) {
-        // Refuse anything outside the allowed range...
-        if (targetCelsius < MIN_CELSIUS || targetCelsius > MAX_CELSIUS) {
-            // ...loudly, naming the bad value and the allowed range.
-            throw new IllegalArgumentException("Target must be " + MIN_CELSIUS + "-" + MAX_CELSIUS
-                    + "C, got " + targetCelsius);
-        }
-        // The value is valid, so store it.
-        this.targetCelsius = targetCelsius;
+        // The same single rule as the constructor uses.
+        this.targetCelsius = checkedTarget(targetCelsius);
     }
 
     // Read the target without being able to change it from outside.
@@ -49,38 +38,24 @@ public class Thermostat implements Device {
         return targetCelsius;
     }
 
-    // Fulfils the contract: report the name.
-    @Override
-    public String getName() {
-        // Return the private name.
-        return name;
+    // The invariant, written once. private and static: it cannot be
+    // overridden, and it needs no object, so it is safe to call anywhere,
+    // including from the constructor.
+    private static int checkedTarget(int targetCelsius) {
+        // Refuse anything outside the allowed range...
+        if (targetCelsius < MIN_CELSIUS || targetCelsius > MAX_CELSIUS) {
+            // ...loudly, naming the bad value and the allowed range.
+            throw new IllegalArgumentException("Target must be " + MIN_CELSIUS + "-" + MAX_CELSIUS
+                    + "C, got " + targetCelsius);
+        }
+        // The value passed the check, so hand it back to be stored.
+        return targetCelsius;
     }
 
-    // Fulfils the contract: start regulating.
-    @Override
-    public void turnOn() {
-        // Remember that it is active.
-        on = true;
-    }
-
-    // Fulfils the contract: stop regulating.
-    @Override
-    public void turnOff() {
-        // Remember that it is idle.
-        on = false;
-    }
-
-    // Fulfils the contract: report the state.
-    @Override
-    public boolean isOn() {
-        // Return the current state.
-        return on;
-    }
-
-    // Fulfils the contract in a thermostat-specific way.
+    // The one Device method a thermostat must supply itself.
     @Override
     public String status() {
         // When on, say what it is aiming for; when off, just say OFF.
-        return on ? name + ": regulating to " + targetCelsius + "C" : name + ": OFF";
+        return isOn() ? getName() + ": regulating to " + targetCelsius + "C" : getName() + ": OFF";
     }
 }

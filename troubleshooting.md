@@ -105,6 +105,34 @@ This page decodes the errors that actually come up while working through the cou
 
 ---
 
+## Inheritance (Lesson 02)
+
+### `error: constructor Animal in class Animal cannot be applied to given types`
+
+**Why:** a subclass constructor did not call `super(...)` with the arguments its parent's constructor needs. Without an explicit call, Java tries `super()` with no arguments, and the parent has no such constructor.
+
+**Fix:** make `super(name)` (with the right arguments) the first line of the subclass constructor.
+
+### `error: Animal is abstract; cannot be instantiated`
+
+**Why:** `new` was used on an abstract class. Abstract classes exist only to be extended.
+
+**Fix:** build a concrete subclass instead (`new Dog("Rex")`), typed as the parent if you like: `Animal a = new Dog("Rex")`.
+
+### `error: method does not override or implement a method from a supertype`
+
+**Why:** a method marked `@Override` does not match any inherited method — usually a misspelling (`tostring`) or different parameter types. The annotation caught a bug that would otherwise compile silently.
+
+**Fix:** match the parent's method name and parameter types exactly.
+
+### Printing an object shows `ClassName@1b6d3586`
+
+**Why:** the class has no working `toString()` override, so `Object`'s default runs — often because the override was misspelled without `@Override`.
+
+**Fix:** add `@Override public String toString()` and check the spelling.
+
+---
+
 ## Lesson pages
 
 ### A lesson page opens with no colours or layout (plain black text)
