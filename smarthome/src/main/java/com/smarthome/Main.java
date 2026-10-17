@@ -28,8 +28,11 @@ public class Main {
 
         // One shared history for the whole house.
         ActivityLog log = new ActivityLog();
-        // Ask the setup for this house's devices, wired to the log.
-        Hub hub = new Hub(new HomeSetup().createDevices(log));
+        // Ask the setup for this house's devices, grouped by capability:
+        // switchable ones (wired to the log) and all the others.
+        HomeSetup setup = new HomeSetup();
+        // The hub keeps both groups; routines will only ever see the first.
+        Hub hub = new Hub(setup.createSwitchables(log), setup.createOtherDevices());
 
         // Operate the house by running routines. Which modes exist is chosen
         // HERE, by creating routine objects; the hub never names them.
@@ -39,6 +42,6 @@ public class Main {
         hub.run(new KeepOnly(List.of("Hall Thermostat")));
 
         // Display the result. print, not println: the report ends with its own newline.
-        System.out.print(new HouseReport().render(hub.devices(), log.entries()));
+        System.out.print(new HouseReport().render(hub.devices(), hub.switchables(), log.entries()));
     }
 }

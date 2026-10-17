@@ -175,6 +175,28 @@ This page decodes the errors that actually come up while working through the cou
 
 ---
 
+## Interface segregation (Lesson 08)
+
+### `error: cannot find symbol ... class AbstractDevice` (or `AbstractDeviceTest`)
+
+**Why:** Lesson 08 renamed `AbstractDevice` to `SwitchableDevice` (and its test to `SwitchableDeviceTest`), because not every device switches any more. An old copy, a stale IDE cache, or your own experiment still refers to the old name.
+
+**Fix:** use `SwitchableDevice`. If the error names a file you did not write, delete stale build output with `mvn clean test` from `smarthome/`.
+
+### `error: cannot find symbol ... method turnOn()` on a `Device`
+
+**Why:** since Lesson 08, `Device` only promises `getName()` and `status()`. Switching lives in `Switchable`.
+
+**Fix:** type the variable as `Switchable` (e.g. `Switchable light = new Light("x");`).
+
+### `incompatible types: ... List<Device> cannot be converted to List<Switchable>`
+
+**Why:** routines take `List<Switchable>`, and a list of plain devices may contain things that cannot switch (a smoke alarm, a lock). The compiler is protecting the routine.
+
+**Fix:** pass the switchable devices (`hub.switchables()`, or a `List.of(...)` of switchable objects).
+
+---
+
 ## Lesson pages
 
 ### A lesson page opens with no colours or layout (plain black text)

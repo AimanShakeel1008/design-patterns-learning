@@ -1,8 +1,9 @@
 // One routine: keep a chosen few devices on, everything else off.
 package com.smarthome.routines;
 
-// The device contract.
-import com.smarthome.devices.Device;
+// The only capability this routine uses (it also reads getName(), which
+// every Switchable has, because Switchable extends Device).
+import com.smarthome.devices.Switchable;
 
 // The JDK's list interface.
 import java.util.List;
@@ -22,9 +23,9 @@ public class KeepOnly implements Routine {
 
     // Kept devices on, all others off, switching only what must change.
     @Override
-    public void applyTo(List<Device> devices) {
-        // Visit every device.
-        for (Device device : devices) {
+    public void applyTo(List<Switchable> devices) {
+        // Visit every switchable device.
+        for (Switchable device : devices) {
             // Is this one on the keep list?
             boolean keep = namesToKeepOn.contains(device.getName());
             // Kept but off: switch it on.

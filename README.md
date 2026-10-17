@@ -74,7 +74,12 @@ mvn compile exec:java "-Dexec.mainClass=com.katas.<pattern>.Main"
 
 *(Both projects pin Java 21, JUnit 5.14.4, Surefire 3.5.5, and exec-maven-plugin 3.6.1.)*
 
-**What the hub can do so far:** it defines a `Device` contract (`com.smarthome.devices.Device`), a shared `AbstractDevice` parent holding the common name/on-off code, and two devices — a `Light` and a `Thermostat` that refuses targets outside 5–30 °C — and its `Main` switches them all on through one loop that talks only to the `Device` interface. New device kinds will not require changing that loop. It also keeps a house-wide **activity log** (`com.smarthome.activity`): any device can be wrapped in a `LoggedDevice` that records every switch, without any device class knowing logging exists. Its responsibilities are split by who asks for changes: `home.HomeSetup` decides which devices exist, `home.Hub` operates them (runs any **routine**, such as `AllOn`, `AllOff` or `KeepOnly` from `com.smarthome.routines`, where new house modes are added as new classes without editing the hub; also switch off by name), and `report.HouseReport` prints a **house report** (device count, how many are on, each status, and the numbered activity history).
+**What the hub can do so far:**
+
+- **Devices with honest contracts** (`com.smarthome.devices`): every device is a `Device` (name + status); capabilities are separate small contracts (`Switchable`, `Dimmable`, `Lockable`). The house has a dimmable `Light`, a `Thermostat` that refuses targets outside 5–30 °C, an always-armed `SmokeAlarm`, and a `DoorLock`. Contract tests check every implementation keeps its promises.
+- **Activity log** (`com.smarthome.activity`): any switchable device can be wrapped in a `LoggedDevice` that records every switch, without any device class knowing logging exists.
+- **House modes** (`com.smarthome.routines`): `AllOn`, `AllOff` and `KeepOnly` routines; new modes are added as new classes without editing the hub, and routines can only ever be handed switchable devices.
+- **One class per responsibility** (`com.smarthome.home`, `com.smarthome.report`): `HomeSetup` decides which devices exist, `Hub` operates them, and `HouseReport` prints a **house report** (device count, how many are on, each status, and the numbered activity history).
 
 ---
 

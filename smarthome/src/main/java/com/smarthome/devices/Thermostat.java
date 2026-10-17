@@ -1,10 +1,10 @@
-// Same package as the Device contract and its shared parent.
+// Same package as the contracts and its shared parent.
 package com.smarthome.devices;
 
-// A device with extra data (a target temperature) and an invariant to guard:
-// the target always stays between MIN_CELSIUS and MAX_CELSIUS. The shared
-// name/on-off behaviour now comes from AbstractDevice.
-public class Thermostat extends AbstractDevice {
+// A switchable device with extra data (a target temperature) and an
+// invariant to guard: the target always stays between MIN_CELSIUS and
+// MAX_CELSIUS. The shared name/on-off behaviour comes from SwitchableDevice.
+public class Thermostat extends SwitchableDevice {
 
     // static final: one fixed value shared by every thermostat (a constant).
     // The lowest target we accept, so pipes never freeze.
@@ -19,7 +19,7 @@ public class Thermostat extends AbstractDevice {
 
     // Build a thermostat with a name and a starting target.
     public Thermostat(String name, int targetCelsius) {
-        // Build the AbstractDevice part first (name, on/off state).
+        // Build the SwitchableDevice part first (name, on/off state).
         super(name);
         // Use the PRIVATE check, not the public setter: a constructor should
         // never call a method a subclass could override (see Lesson 02).

@@ -1,9 +1,9 @@
 // Same package as LoggedDevice.
 package com.smarthome.activity;
 
-// The device contract and two real devices to wrap.
-import com.smarthome.devices.Device;
+// The switching contract and two real devices to wrap.
 import com.smarthome.devices.Light;
+import com.smarthome.devices.Switchable;
 import com.smarthome.devices.Thermostat;
 // The @Test marker.
 import org.junit.jupiter.api.Test;
@@ -24,7 +24,7 @@ class LoggedDeviceTest {
     void switchingIsDelegatedAndRecorded() {
         // A log and a wrapped light, held through the contract.
         ActivityLog log = new ActivityLog();
-        Device light = new LoggedDevice(new Light("Porch Light"), log);
+        Switchable light = new LoggedDevice(new Light("Porch Light"), log);
         // On, then off.
         light.turnOn();
         light.turnOff();
@@ -36,7 +36,7 @@ class LoggedDeviceTest {
     @Test
     void wrapperIsInvisibleToClients() {
         // A wrapped thermostat.
-        Device thermostat = new LoggedDevice(new Thermostat("Hall", 21), new ActivityLog());
+        Switchable thermostat = new LoggedDevice(new Thermostat("Hall", 21), new ActivityLog());
         // Switch it on through the wrapper.
         thermostat.turnOn();
         // Name, state and status all come straight from the real thermostat.
@@ -50,8 +50,8 @@ class LoggedDeviceTest {
     void sharedLogKeepsTheOrderAcrossDevices() {
         // One log, two different devices wrapped around it.
         ActivityLog log = new ActivityLog();
-        Device light = new LoggedDevice(new Light("Desk Lamp"), log);
-        Device thermostat = new LoggedDevice(new Thermostat("Office", 20), log);
+        Switchable light = new LoggedDevice(new Light("Desk Lamp"), log);
+        Switchable thermostat = new LoggedDevice(new Thermostat("Office", 20), log);
         // Interleaved events.
         light.turnOn();
         thermostat.turnOn();

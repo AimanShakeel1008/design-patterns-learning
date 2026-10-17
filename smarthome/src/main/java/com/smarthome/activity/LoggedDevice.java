@@ -2,17 +2,18 @@
 package com.smarthome.activity;
 
 // The contract this wrapper both keeps and holds.
-import com.smarthome.devices.Device;
+import com.smarthome.devices.Switchable;
 
-// Adds activity logging to ANY device by composition. A LoggedDevice IS a
-// Device (it keeps the contract, so the hub cannot tell the difference) and
-// HAS a Device inside it (the real one), to which it delegates every call.
-// One class covers lights, thermostats, and every device kind still to come.
-public class LoggedDevice implements Device {
+// Adds activity logging to ANY switchable device by composition. A
+// LoggedDevice IS a Switchable (it keeps the contract, so the hub cannot tell
+// the difference) and HAS a Switchable inside it (the real one), to which it
+// delegates every call. Since Lesson 08 it wraps Switchable rather than
+// Device, because what it logs is switching: a smoke alarm has nothing to log.
+public class LoggedDevice implements Switchable {
 
     // The real device doing the real work. Typed by the contract, so any
-    // device (even another wrapper) can be wrapped.
-    private final Device inner;
+    // switchable device (even another wrapper) can be wrapped.
+    private final Switchable inner;
 
     // Where switch events are written. Shared, so many devices can log to
     // one history in the order things actually happened.
@@ -20,7 +21,7 @@ public class LoggedDevice implements Device {
 
     // Both parts are handed in from outside: the caller decides which
     // device gets logged, and to which log.
-    public LoggedDevice(Device inner, ActivityLog log) {
+    public LoggedDevice(Switchable inner, ActivityLog log) {
         // Remember the device to delegate to.
         this.inner = inner;
         // Remember the log to write to.

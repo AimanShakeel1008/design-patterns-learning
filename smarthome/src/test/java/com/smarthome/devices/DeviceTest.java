@@ -13,14 +13,15 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 // Fails unless the condition is true.
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-// Proves each device keeps the Device contract and guards its own data.
+// Proves each device behaves as its contracts say and guards its own data.
+// (Since Lesson 08, switching lives in the Switchable contract.)
 class DeviceTest {
 
     // A light switches on and off and reports it in its status line.
     @Test
     void lightTurnsOnAndOff() {
-        // Typed as the contract, the way the hub uses it.
-        Device light = new Light("Porch Light");
+        // Typed as the switching contract, the way routines use it.
+        Switchable light = new Light("Porch Light");
         // On: status says ON.
         light.turnOn();
         assertEquals("Porch Light: ON", light.status());
@@ -33,8 +34,8 @@ class DeviceTest {
     // A thermostat's status shows its target only while it is on.
     @Test
     void thermostatReportsItsTargetWhenOn() {
-        // Typed as the contract.
-        Device thermostat = new Thermostat("Hall Thermostat", 21);
+        // Typed as the switching contract.
+        Switchable thermostat = new Thermostat("Hall Thermostat", 21);
         // Before switching on, it reports OFF.
         assertEquals("Hall Thermostat: OFF", thermostat.status());
         // After switching on, it reports the target.
@@ -60,13 +61,13 @@ class DeviceTest {
         assertEquals(21, thermostat.getTargetCelsius());
     }
 
-    // One loop drives every kind of device: the payoff of the contract.
+    // One loop drives every kind of switchable device: the payoff of the contract.
     @Test
     void everyDeviceStartsOffAndTurnsOnThroughTheContract() {
         // Two different classes, one array typed by the interface.
-        Device[] devices = { new Light("Desk Lamp"), new Thermostat("Office", 20) };
+        Switchable[] devices = { new Light("Desk Lamp"), new Thermostat("Office", 20) };
         // The loop never names a concrete class.
-        for (Device device : devices) {
+        for (Switchable device : devices) {
             // Every device starts off...
             assertFalse(device.isOn());
             // ...and every device honours turnOn.

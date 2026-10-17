@@ -12,16 +12,17 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 // Proves the shared parent works for every subclass, and that calls through
-// the parent type still run each subclass's own status().
-class AbstractDeviceTest {
+// the parent type still run each subclass's own status(). (This was
+// AbstractDeviceTest until Lesson 08 renamed the class it tests.)
+class SwitchableDeviceTest {
 
     // The inherited switching code behaves identically for every subclass.
     @Test
     void inheritedSwitchingWorksForEverySubclass() {
         // Two different subclasses, held through the shared parent type.
-        AbstractDevice[] devices = { new Light("Hall Light"), new Thermostat("Hall", 21) };
+        SwitchableDevice[] devices = { new Light("Hall Light"), new Thermostat("Hall", 21) };
         // Every device must run the SAME inherited code...
-        for (AbstractDevice device : devices) {
+        for (SwitchableDevice device : devices) {
             // ...on...
             device.turnOn();
             assertTrue(device.isOn());
@@ -34,8 +35,8 @@ class AbstractDeviceTest {
     // Declared as the parent, the call still runs the child's override.
     @Test
     void callThroughTheParentTypeRunsTheSubclassStatus() {
-        // Declared type AbstractDevice; actual object Thermostat.
-        AbstractDevice device = new Thermostat("Hall", 21);
+        // Declared type SwitchableDevice; actual object Thermostat.
+        SwitchableDevice device = new Thermostat("Hall", 21);
         // Inherited turnOn() from the parent...
         device.turnOn();
         // ...then Thermostat's own status(), chosen at run time.

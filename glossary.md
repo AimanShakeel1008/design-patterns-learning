@@ -184,3 +184,15 @@ Terms are grouped by first-appearance lesson so the list reads in learning order
 - **Contract test** — one test suite, written against a contract, that every implementation must pass (an abstract JUnit class with one small subclass per implementation). (Lesson 07)
 - **Design by Contract** — Bertrand Meyer's practice of stating pre- and postconditions as part of the code. (Lesson 07)
 - **`||`** — Java's "or": true if either condition is true. (Lesson 07)
+
+---
+
+## Lesson 08 — I: Interface Segregation Principle
+
+- **Interface Segregation Principle (ISP)** — no client should be forced to depend on methods it does not use; split fat interfaces into small role interfaces. (Lesson 08)
+- **Fat interface** — one contract bundling several unrelated jobs, so implementers must promise too much and clients depend on too much. (Lesson 08)
+- **Role interface** — a small interface named after one role a client needs (`Printer`, `Switchable`). (Lesson 08)
+- **Implementing several interfaces** — `class X implements A, B, C`: a class may sign many contracts, though it may extend only one class. (Lesson 08)
+- **Interface inheritance** — `interface Switchable extends Device`: every Switchable is also a Device; drawn in UML as a solid line with a hollow triangle. (Lesson 08)
+- **Capability** — the hub's word for a role interface a device may or may not have: switching, dimming, locking. (Lesson 08)
+- **`AutoCloseable` / try-with-resources** — the JDK's one-method role (`close()`) and the statement that closes such a resource automatically. (Lesson 08)

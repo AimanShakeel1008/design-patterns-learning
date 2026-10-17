@@ -17,12 +17,13 @@
     <li><a href="#srp">Single Responsibility</a></li>
     <li><a href="#ocp">Open/Closed</a></li>
     <li><a href="#lsp">Liskov Substitution</a></li>
+    <li><a href="#isp">Interface Segregation</a></li>
   </ol>
   <nav class="toc-nav" aria-label="Course navigation">
     <a class="navmap" href="index.html">↑ Course map</a>
-    <a class="navcard" href="phase-1-solid/chapter-02-solid/lesson-07-liskov-substitution.html">
-      <span class="navkicker">Latest entry · Lesson 07</span>
-      <span class="navtitle">L — Liskov Substitution Principle</span>
+    <a class="navcard" href="phase-1-solid/chapter-02-solid/lesson-08-interface-segregation.html">
+      <span class="navkicker">Latest entry · Lesson 08</span>
+      <span class="navtitle">I — Interface Segregation Principle</span>
     </a>
   </nav>
 </aside>
@@ -61,6 +62,7 @@
         <tr><td>1</td><td><a href="#srp">Single Responsibility Principle</a></td><td><span class="family-badge principle">principle</span></td><td><a href="phase-1-solid/chapter-02-solid/lesson-05-single-responsibility.html">05</a></td></tr>
         <tr><td>2</td><td><a href="#ocp">Open/Closed Principle</a></td><td><span class="family-badge principle">principle</span></td><td><a href="phase-1-solid/chapter-02-solid/lesson-06-open-closed.html">06</a></td></tr>
         <tr><td>3</td><td><a href="#lsp">Liskov Substitution Principle</a></td><td><span class="family-badge principle">principle</span></td><td><a href="phase-1-solid/chapter-02-solid/lesson-07-liskov-substitution.html">07</a></td></tr>
+        <tr><td>4</td><td><a href="#isp">Interface Segregation Principle</a></td><td><span class="family-badge principle">principle</span></td><td><a href="phase-1-solid/chapter-02-solid/lesson-08-interface-segregation.html">08</a></td></tr>
       </tbody>
     </table>
   </div>
@@ -175,7 +177,42 @@
   </dl>
 </article>
 
-<p class="position">Pattern catalog · 3 entries · updated by every principle and pattern lesson</p>
+<article class="catalog-entry" id="isp">
+  <h2>Interface Segregation Principle (ISP) <span class="family-badge principle">principle</span></h2>
+  <p class="catalog-intent">No client should be forced to depend on methods it does not use, so split fat interfaces into small role interfaces, each signed only by classes that can keep it.</p>
+  <dl class="catalog-fields">
+    <dt>The pain it cures</dt>
+    <dd>A fat interface hurts from both sides: implementers are forced to "implement" methods they cannot honour (refused bequests, which are LSP violations), and clients are coupled to methods they never call, so unrelated changes ripple into them and their test fakes must implement everything.</dd>
+    <dt>Use it when…</dt>
+    <dd><ul>
+      <li>An implementer cannot keep part of a contract and is tempted to throw or do nothing (an old printer that can't scan; a smoke alarm that must never switch off).</li>
+      <li>Different clients clearly use different subsets of an interface's methods.</li>
+      <li>Test fakes for a client must implement many methods the client never calls.</li>
+      <li>A shared interface keeps growing to serve one more kind of client.</li>
+    </ul></dd>
+    <dt class="not">Do NOT use it when…</dt>
+    <dd><ul>
+      <li>The methods are always used together by the same clients (<code>turnOn</code>, <code>turnOff</code> and <code>isOn</code> stay together).</li>
+      <li>One implementation and one client fit the interface perfectly: there is nothing to segregate.</li>
+      <li>It would produce one interface per method, which scatters a concept into fragments nobody can see whole.</li>
+      <li>You are splitting by what implementers happen to do rather than by what clients actually call.</li>
+    </ul></dd>
+    <dt>The cost</dt>
+    <dd>More types to name and navigate; classes that list several interfaces; code that must route the right objects to the right clients (e.g. separate typed lists); wrappers that expose only the contract they wrap, hiding other capabilities; and a wide edit when an interface many classes depend on is split late.</dd>
+    <dt>Relatives</dt>
+    <dd><ul>
+      <li><strong>SRP</strong> (Lesson 05): splits classes by who asks for changes; ISP splits interfaces by who calls them.</li>
+      <li><strong>LSP</strong> (Lesson 07): ISP is the usual cure for refused bequests. A contract small enough to keep leaves nothing to refuse.</li>
+      <li><strong>Cohesion</strong> (Lesson 04): a well-segregated interface is a cohesive one.</li>
+    </ul></dd>
+    <dt>Seen in the wild</dt>
+    <dd><code>java.lang.AutoCloseable</code>: one method, <code>close()</code>, and all that try-with-resources needs. Files, sockets and database connections sign it beside their other contracts. Also <code>Runnable</code>, <code>Comparable</code>, and <code>Iterable</code> (all the for-each loop needs).</dd>
+    <dt>Where it lives</dt>
+    <dd>Kata: <code>com.katas.isp</code> (<code>Printer</code>, <code>Scanner</code>, <code>Fax</code>, <code>OldPrinter</code>, <code>MultiFunctionMachine</code>, <code>ReportPrinter</code>; fat <code>Machine</code> in <code>naive/</code>). Hub: <code>Device</code> (name, status) + <code>Switchable</code> / <code>Lockable</code> (both extend <code>Device</code>) + <code>Dimmable</code>; <code>SmokeAlarm</code>, <code>DoorLock</code>; routines take <code>List&lt;Switchable&gt;</code>; contract tests split per capability. Lesson: <a href="phase-1-solid/chapter-02-solid/lesson-08-interface-segregation.html">08</a>.</dd>
+  </dl>
+</article>
+
+<p class="position">Pattern catalog · 4 entries · updated by every principle and pattern lesson</p>
 
 </main>
 </div>
