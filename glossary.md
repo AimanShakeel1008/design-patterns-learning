@@ -196,3 +196,20 @@ Terms are grouped by first-appearance lesson so the list reads in learning order
 - **Interface inheritance** — `interface Switchable extends Device`: every Switchable is also a Device; drawn in UML as a solid line with a hollow triangle. (Lesson 08)
 - **Capability** — the hub's word for a role interface a device may or may not have: switching, dimming, locking. (Lesson 08)
 - **`AutoCloseable` / try-with-resources** — the JDK's one-method role (`close()`) and the statement that closes such a resource automatically. (Lesson 08)
+
+---
+
+## Lesson 09 — D: Dependency Inversion Principle
+
+- **High-level policy** — code expressing what the program is for (rules like "alert when too hot"); stable and valuable. (Lesson 09)
+- **Low-level detail** — code expressing how one mechanism works (email, a sensor chip, a database); volatile and replaceable. (Lesson 09)
+- **Dependency Inversion Principle (DIP)** — policy should not depend on details; both depend on abstractions owned by the policy, and details depend on those abstractions. (Lesson 09)
+- **Inversion (of the dependency)** — the source-code arrow points from detail up to the policy's interface, against the run-time flow of control. (Lesson 09)
+- **Dependency injection (DI)** — handing an object its dependencies from outside instead of letting it create them. (Lesson 09)
+- **Constructor injection** — DI through constructor parameters; the object can never exist without what it needs. (Lesson 09)
+- **Composition root** — the one place at the program's start that creates concrete objects and wires them together (`Main` + `HomeSetup`). (Lesson 09)
+- **Manual (pure) DI** — doing the composition root by hand with plain `new` calls, without a framework. (Lesson 09)
+- **Inversion of Control (IoC)** — the broad idea of a framework calling your code rather than the reverse; DI containers are one example. (Lesson 09)
+- **DI container** — a framework (e.g. Spring) that automates the composition root: creates objects and passes constructor arguments. (Lesson 09)
+- **`assertSame`** — JUnit check that two references point at the very same object (not just equal ones). (Lesson 09)
+- **`List<Integer>` / `Integer`** — a list of whole numbers; `Integer` is the object form of `int`, converted automatically. (Lesson 09)

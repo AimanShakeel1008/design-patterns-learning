@@ -1,5 +1,5 @@
-// Same package as HomeSetup.
-package com.smarthome.home;
+// Same package as HomeSetup (the composition root, since Lesson 09).
+package com.smarthome;
 
 // The log the setup wires devices to, and the contracts.
 import com.smarthome.activity.ActivityLog;

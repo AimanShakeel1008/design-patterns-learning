@@ -18,12 +18,13 @@
     <li><a href="#ocp">Open/Closed</a></li>
     <li><a href="#lsp">Liskov Substitution</a></li>
     <li><a href="#isp">Interface Segregation</a></li>
+    <li><a href="#dip">Dependency Inversion</a></li>
   </ol>
   <nav class="toc-nav" aria-label="Course navigation">
     <a class="navmap" href="index.html">↑ Course map</a>
-    <a class="navcard" href="phase-1-solid/chapter-02-solid/lesson-08-interface-segregation.html">
-      <span class="navkicker">Latest entry · Lesson 08</span>
-      <span class="navtitle">I — Interface Segregation Principle</span>
+    <a class="navcard" href="phase-1-solid/chapter-02-solid/lesson-09-dependency-inversion.html">
+      <span class="navkicker">Latest entry · Lesson 09</span>
+      <span class="navtitle">D — Dependency Inversion Principle</span>
     </a>
   </nav>
 </aside>
@@ -63,6 +64,7 @@
         <tr><td>2</td><td><a href="#ocp">Open/Closed Principle</a></td><td><span class="family-badge principle">principle</span></td><td><a href="phase-1-solid/chapter-02-solid/lesson-06-open-closed.html">06</a></td></tr>
         <tr><td>3</td><td><a href="#lsp">Liskov Substitution Principle</a></td><td><span class="family-badge principle">principle</span></td><td><a href="phase-1-solid/chapter-02-solid/lesson-07-liskov-substitution.html">07</a></td></tr>
         <tr><td>4</td><td><a href="#isp">Interface Segregation Principle</a></td><td><span class="family-badge principle">principle</span></td><td><a href="phase-1-solid/chapter-02-solid/lesson-08-interface-segregation.html">08</a></td></tr>
+        <tr><td>5</td><td><a href="#dip">Dependency Inversion Principle</a></td><td><span class="family-badge principle">principle</span></td><td><a href="phase-1-solid/chapter-02-solid/lesson-09-dependency-inversion.html">09</a></td></tr>
       </tbody>
     </table>
   </div>
@@ -212,7 +214,43 @@
   </dl>
 </article>
 
-<p class="position">Pattern catalog · 4 entries · updated by every principle and pattern lesson</p>
+<article class="catalog-entry" id="dip">
+  <h2>Dependency Inversion Principle (DIP) <span class="family-badge principle">principle</span></h2>
+  <p class="catalog-intent">High-level policy should not depend on low-level details; both should depend on abstractions owned by the policy, with the details injected from one composition root.</p>
+  <dl class="catalog-fields">
+    <dt>The pain it cures</dt>
+    <dd>A valuable, stable rule names and creates a volatile mechanism (<code>new EmailSender()</code> inside the alert policy), so the mechanism can't be swapped without editing the rule, the rule can't be tested without the real mechanism, and the rule can't be reused elsewhere.</dd>
+    <dt>Use it when…</dt>
+    <dd><ul>
+      <li>Policy code depends on something that genuinely varies: devices, sensors, networks, storage, clocks, third-party services.</li>
+      <li>You need to test a rule without its real collaborators (a recording channel, a fixed sensor).</li>
+      <li>A second implementation of a detail has arrived or is clearly coming.</li>
+      <li>You want the core of an application to stay free of vendor and infrastructure names.</li>
+    </ul></dd>
+    <dt class="not">Do NOT use it when…</dt>
+    <dd><ul>
+      <li>The dependency is stable and will never be swapped: <code>String</code>, <code>List</code>, <code>java.time</code>, your own small value classes.</li>
+      <li>There is one implementation and no testing pain. Plain <code>new</code> is simpler until the second one arrives.</li>
+      <li>You would be wrapping the detail in an interface shaped like the detail (<code>sendEmail(to, subject, body)</code>). That is not inversion; write it in the policy's terms or don't bother.</li>
+      <li>A class needs so many injected dependencies that the real problem is too many responsibilities (fix with SRP first).</li>
+    </ul></dd>
+    <dt>The cost</dt>
+    <dd>An interface per inverted boundary; wiring code in the composition root that grows with the program; an extra hop when reading ("which implementation is this at run time?"), answered only in the composition root; and, with frameworks, the risk of wiring that feels like magic.</dd>
+    <dt>Relatives</dt>
+    <dd><ul>
+      <li><strong>Dependency Injection</strong>: the technique (hand dependencies in from outside) usually used to achieve DIP. You can inject a concrete class, which is DI without DIP.</li>
+      <li><strong>Inversion of Control</strong>: the broad idea of a framework calling your code; DI containers are one example.</li>
+      <li><strong>OCP</strong> (Lesson 06) and <strong>ISP</strong> (Lesson 08): the policy-owned abstraction is the variation point, and it should be small.</li>
+      <li><strong>Factories</strong> (Lessons 14–15) and <strong>Service Locator</strong> (Lesson 37) deal with the creating side, the latter less cleanly.</li>
+    </ul></dd>
+    <dt>Seen in the wild</dt>
+    <dd>Spring's constructor injection: a class with a constructor taking an interface gets a matching bean passed in by the container. That is the composition root, automated. Logging facades such as SLF4J let libraries depend on an interface while the application plugs in the real logging engine.</dd>
+    <dt>Where it lives</dt>
+    <dd>Kata: <code>com.katas.dip</code> (<code>AlertChannel</code> owned by the policy, <code>TemperatureMonitor</code>, <code>Main</code> as composition root) + <code>com.katas.dip.channels</code> (<code>EmailChannel</code>, <code>SmsChannel</code>); welded version in <code>naive/</code>. Hub: <code>climate.TemperatureSensor</code> (policy-owned) + <code>climate.ClimateControl</code>, implemented by <code>sensors.SimulatedThermometer</code>; composition root <code>com.smarthome.Main</code> + <code>HomeSetup</code>; core packages import only device contracts. Lesson: <a href="phase-1-solid/chapter-02-solid/lesson-09-dependency-inversion.html">09</a>.</dd>
+  </dl>
+</article>
+
+<p class="position">Pattern catalog · 5 entries · updated by every principle and pattern lesson</p>
 
 </main>
 </div>

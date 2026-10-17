@@ -21,6 +21,8 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 // Fails unless the condition is false.
 import static org.junit.jupiter.api.Assertions.assertFalse;
+// Fails unless both references point at the very same object.
+import static org.junit.jupiter.api.Assertions.assertSame;
 // Fails unless running the code throws the named exception type.
 import static org.junit.jupiter.api.Assertions.assertThrows;
 // Fails unless the condition is true.
@@ -58,6 +60,16 @@ class HubTest {
         // Only the named one changed.
         assertTrue(desk.isOn());
         assertFalse(porch.isOn());
+    }
+
+    // switchableNamed hands back the very device, typed as a Switchable.
+    @Test
+    void switchableNamedFindsTheDevice() {
+        // One thermostat among two devices.
+        Switchable thermostat = new Thermostat("Hall Thermostat", 21);
+        Hub hub = new Hub(List.of(new Light("Desk Lamp"), thermostat), List.of());
+        // The same object comes back (assertSame: identical, not just equal).
+        assertSame(thermostat, hub.switchableNamed("Hall Thermostat"));
     }
 
     // An unknown name is refused loudly.

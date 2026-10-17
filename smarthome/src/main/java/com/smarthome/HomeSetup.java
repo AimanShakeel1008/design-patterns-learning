@@ -1,5 +1,7 @@
-// Code about the house as a whole lives in the "home" package.
-package com.smarthome.home;
+// Since Lesson 09 this lives beside Main, in the COMPOSITION ROOT: the one
+// place allowed to name concrete classes. The core packages (home, routines,
+// report, climate) never import a concrete device or sensor.
+package com.smarthome;
 
 // The logging wrapper and the log it writes to.
 import com.smarthome.activity.ActivityLog;
@@ -16,9 +18,9 @@ import com.smarthome.devices.Thermostat;
 import java.util.List;
 
 // ONE responsibility: "which devices does this house have, and how are they
-// wired?" It answers to whoever installs the house. Since Lesson 08 it hands
-// over devices grouped by capability, so the hub never has to ask an object
-// what it can do.
+// wired?" It answers to whoever installs the house. It hands over devices
+// grouped by capability (Lesson 08), typed by their contracts, so everything
+// it builds can be injected into the core without the core knowing the classes.
 public class HomeSetup {
 
     // The devices that can be switched, each wrapped so its switching is logged.

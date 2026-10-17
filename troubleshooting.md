@@ -197,6 +197,22 @@ This page decodes the errors that actually come up while working through the cou
 
 ---
 
+## Dependency inversion (Lesson 09)
+
+### `error: package com.smarthome.home does not contain HomeSetup` (or `cannot find symbol ... HomeSetup`)
+
+**Why:** Lesson 09 moved `HomeSetup` (and `HomeSetupTest`) from `com.smarthome.home` to `com.smarthome`, the composition root beside `Main`. An old import or an old copy of the file still uses the former location.
+
+**Fix:** import `com.smarthome.HomeSetup` (or none at all inside `com.smarthome`). Make sure no stale `home/HomeSetup.java` remains, then run `mvn clean test` from `smarthome/`.
+
+### The climate line never appears, or says "no change" unexpectedly
+
+**Why:** `ClimateControl.regulate()` reads the simulated sensor once. Within the 18–24°C range (edges included) it does nothing by design.
+
+**Fix:** check the reading passed to `new SimulatedThermometer("Hall", …)` in `Main`.
+
+---
+
 ## Lesson pages
 
 ### A lesson page opens with no colours or layout (plain black text)

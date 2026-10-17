@@ -79,7 +79,9 @@ mvn compile exec:java "-Dexec.mainClass=com.katas.<pattern>.Main"
 - **Devices with honest contracts** (`com.smarthome.devices`): every device is a `Device` (name + status); capabilities are separate small contracts (`Switchable`, `Dimmable`, `Lockable`). The house has a dimmable `Light`, a `Thermostat` that refuses targets outside 5–30 °C, an always-armed `SmokeAlarm`, and a `DoorLock`. Contract tests check every implementation keeps its promises.
 - **Activity log** (`com.smarthome.activity`): any switchable device can be wrapped in a `LoggedDevice` that records every switch, without any device class knowing logging exists.
 - **House modes** (`com.smarthome.routines`): `AllOn`, `AllOff` and `KeepOnly` routines; new modes are added as new classes without editing the hub, and routines can only ever be handed switchable devices.
-- **One class per responsibility** (`com.smarthome.home`, `com.smarthome.report`): `HomeSetup` decides which devices exist, `Hub` operates them, and `HouseReport` prints a **house report** (device count, how many are on, each status, and the numbered activity history).
+- **One class per responsibility** (`com.smarthome.home`, `com.smarthome.report`): `Hub` operates the devices, and `HouseReport` prints a **house report** (device count, how many are on, each status, and the numbered activity history).
+- **Climate control** (`com.smarthome.climate`, `com.smarthome.sensors`): `ClimateControl` keeps the hall between 18 and 24 °C by switching the heating, reading any `TemperatureSensor` (a `SimulatedThermometer` for now).
+- **Dependency rule:** the core packages depend only on contracts; the composition root (`com.smarthome.Main` + `HomeSetup`) is the one place that creates concrete devices and sensors and wires everything by hand.
 
 ---
 

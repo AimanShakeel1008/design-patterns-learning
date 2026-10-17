@@ -1,0 +1,687 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lesson 09 — D: Dependency Inversion Principle · Design Patterns in Java</title>
+<link rel="stylesheet" href="../../assets/lesson.css">
+</head>
+<body>
+<div class="page">
+
+<aside class="toc" aria-label="Table of contents">
+  <p class="toc-title">Lesson 09 · Contents</p>
+  <ol>
+    <li><a href="#s1">1 · The pain</a></li>
+    <li><a href="#s2">2 · Real-world analogy</a></li>
+    <li><a href="#s3">3 · The principle explained</a></li>
+    <li><a href="#s4">4 · The kata</a></li>
+    <li><a href="#s5">5 · Applied to the hub</a></li>
+    <li><a href="#s6">6 · In the wild</a></li>
+    <li><a href="#s7">7 · When NOT to use it</a></li>
+    <li><a href="#s8">8 · Key takeaways</a></li>
+    <li><a href="#s9">9 · Challenge</a></li>
+    <li><a href="#s10">10 · Catalog update</a></li>
+  </ol>
+  <nav class="toc-nav" aria-label="Course navigation">
+    <a class="navcard" href="lesson-08-interface-segregation.html">
+      <span class="navkicker">← Prev · Lesson 08</span>
+      <span class="navtitle">I — Interface Segregation Principle</span>
+    </a>
+    <a class="navmap" href="../../index.html">↑ Course map</a>
+    <a class="navcatalog" href="../../pattern-catalog.html">◆ Pattern catalog</a>
+    <span class="navcard disabled">
+      <span class="navkicker">Next · Lesson 10 →</span>
+      <span class="navtitle">SOLID Together</span>
+      <span class="navnote">not yet written</span>
+    </span>
+  </nav>
+</aside>
+
+<main>
+
+<header class="banner">
+  <p class="kicker">Phase 1 · Chapter 02 · Lesson 09</p>
+  <h1>D — Dependency Inversion Principle</h1>
+  <p class="subtitle">The important rules of a program must not depend on its replaceable nuts and bolts. Both depend on an abstraction owned by the rules, and the pieces are plugged together by hand in one place.</p>
+  <p class="meta">
+    <strong>Kata package:</strong> <code>com.katas.dip</code> + <code>com.katas.dip.channels</code> (wrong way in <code>com.katas.dip.naive</code>).<br>
+    <strong>Smart Home Hub:</strong> created <code>climate/TemperatureSensor</code>, <code>climate/ClimateControl</code>, <code>sensors/SimulatedThermometer</code> and tests; moved <code>HomeSetup</code> (and its test) from <code>home</code> to the composition root beside <code>Main</code>; <code>Hub.switchableNamed</code> made public; <code>Main</code> rewritten as the composition root.<br>
+    <strong>Prerequisites:</strong> <a href="lesson-08-interface-segregation.html">Lesson 08</a>; coupling from <a href="../../phase-0-oop-foundations/chapter-01-oop/lesson-04-coupling-cohesion-uml.html">Lesson 04</a>.
+  </p>
+</header>
+
+<!-- ============================== SECTION 1 ============================== -->
+<section id="s1">
+  <h2><span class="sec-num">1</span>The pain</h2>
+
+  <p class="lead">A rule worth protecting ("alert someone when the server room is too hot") is welded to one particular way of delivering the alert.</p>
+
+  <pre class="code" data-title="naive/TemperatureMonitor.java (key lines)"><code><span class="kw">public class</span> <span class="ty">TemperatureMonitor</span> {
+    <span class="kw">private final</span> <span class="ty">EmailSender</span> email = <span class="kw">new</span> <span class="ty">EmailSender</span>();   <span class="cmt">// names AND creates the detail</span>
+
+    <span class="kw">public void</span> <span class="fn">check</span>(<span class="kw">int</span> celsius) {
+        <span class="kw">if</span> (celsius &gt; <span class="num">30</span>) {
+            email.<span class="fn">sendEmail</span>(<span class="str">"ops@example.com"</span>, <span class="str">"Too hot"</span>, <span class="str">"Server room at "</span> + celsius + <span class="str">"C"</span>);
+        }
+    }
+}</code></pre>
+
+  <p>Three ordinary requests now hurt. The night shift wants alerts by <strong>SMS</strong>: you must edit the monitor, the class holding the rule, to change how a message travels. You want to <strong>test</strong> the rule ("does 31°C alert? does 30°C not?"), but every test fires off a real email, because the monitor builds its own sender and nothing can be swapped in. Another team wants to <strong>reuse</strong> the monitor for its freezers, and can't, because it comes welded to <code>EmailSender</code>.</p>
+
+  <p class="pred-label">Predicted symptom</p>
+  <pre class="output"><code><span class="err">EMAIL to ops@example.com [Too hot]: Server room at 35C   &lt;- and no way to send anything else</span></code></pre>
+
+  <p>The pain, named: <strong>the important rule depends on the replaceable detail</strong>. The dependency arrow points the wrong way: from the stable, valuable code down to the volatile, swappable code. Every change in the detail threatens the rule.</p>
+
+  <p class="filepath">Full wrong-way code: katas/src/main/java/com/katas/dip/naive/ (EmailSender, TemperatureMonitor)</p>
+</section>
+
+<!-- ============================== SECTION 2 ============================== -->
+<section id="s2">
+  <h2><span class="sec-num">2</span>Real-world analogy</h2>
+
+  <p><strong>A laptop and its USB port.</strong> The laptop's makers decided what a USB port is: its shape, its voltages, the messages it sends. Mouse, keyboard and webcam makers build to <em>that</em> standard. The laptop was never redesigned for a new mouse, and a mouse can be swapped in seconds, because the plugging happens at your desk. Now imagine a laptop with one particular mouse soldered onto its motherboard. That is our naive monitor.</p>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>The laptop</th><th>In code</th></tr></thead>
+      <tbody>
+        <tr><td>The laptop (what you actually care about)</td><td>High-level policy (<code>TemperatureMonitor</code>, <code>ClimateControl</code>)</td></tr>
+        <tr><td>The USB standard, defined by the laptop side</td><td>An abstraction owned by the policy (<code>AlertChannel</code>, <code>TemperatureSensor</code>)</td></tr>
+        <tr><td>Mice, keyboards, webcams</td><td>Low-level details (<code>EmailChannel</code>, <code>SimulatedThermometer</code>)</td></tr>
+        <tr><td>Plugging in at your desk</td><td>The composition root (<code>Main</code>) injecting details</td></tr>
+        <tr><td>A mouse soldered onto the motherboard</td><td><code>new EmailSender()</code> inside the policy</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ============================== SECTION 3 ============================== -->
+<section id="s3">
+  <h2><span class="sec-num">3</span>The principle explained</h2>
+
+  <h3>3.1 High level and low level</h3>
+  <p>Some code expresses <em>what the program is for</em>: "alert when too hot," "keep the room comfortable," "run the goodnight routine." It changes only when the business changes its mind, and it is what you would most like to keep and reuse. That is <strong>high-level policy</strong>. Other code expresses <em>how a particular mechanism works</em>: sending an email, talking to a sensor chip, writing to a database. It changes whenever a vendor, protocol or device changes. That is a <strong>low-level detail</strong>. In the naive monitor the rule is the policy and <code>EmailSender</code> is the detail.</p>
+
+  <h3>3.2 The principle</h3>
+  <p>Robert C. Martin stated it in two parts. In plain words:</p>
+  <ol>
+    <li><strong>High-level policy should not depend on low-level details. Both should depend on abstractions.</strong></li>
+    <li><strong>Abstractions should not depend on details. Details should depend on abstractions.</strong></li>
+  </ol>
+  <p>That is the <strong>Dependency Inversion Principle (DIP)</strong>, the "D" in SOLID. The cure has three moves: (1) the policy declares an interface describing <em>what it needs</em>, in its own words; (2) the details implement that interface; (3) something outside both plugs a detail into the policy.</p>
+
+  <h3>3.3 What exactly is "inverted"?</h3>
+  <p>Two different arrows were pointing the same way in the naive code, and DIP separates them:</p>
+  <ul>
+    <li><strong>The flow of control</strong>, meaning who calls whom at run time, still goes <em>down</em>: the monitor calls the channel, which sends the message. Nothing changes there.</li>
+    <li><strong>The source-code dependency</strong>, meaning which file imports and names which, now points <em>up</em>. <code>EmailChannel</code> imports <code>AlertChannel</code>, which belongs to the policy. The monitor imports nothing from the channels.</li>
+  </ul>
+  <p>The dependency now runs <em>against</em> the flow of control, from the detail up to the policy. That reversal is the inversion.</p>
+
+  <figure class="fig">
+    <svg viewBox="0 0 720 300" role="img" aria-label="Before: in the high-level policy band, TemperatureMonitor depends down on EmailSender in the low-level detail band, which it creates. After: TemperatureMonitor uses the AlertChannel interface in the same high-level band; EmailChannel and SmsChannel in the low-level band implement it, so their arrows point up.">
+      <defs>
+        <marker id="f1-smell" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+          <path d="M0,0 L10,5 L0,10 z" class="fig-arrow-smell-h"/>
+        </marker>
+        <marker id="f1-open" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="10" markerHeight="10" orient="auto-start-reverse">
+          <path d="M0,0 L10,5 L0,10" class="uml-head-open"/>
+        </marker>
+        <marker id="f1-hollow" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="12" markerHeight="12" orient="auto-start-reverse">
+          <path d="M1,1 L11,6 L1,11 z" class="uml-head-hollow"/>
+        </marker>
+      </defs>
+      <text x="175" y="18" class="fig-heading fig-center fig-smell-text">Before: policy → detail</text>
+      <rect x="20" y="34" width="300" height="90" rx="8" class="fig-box fig-dashed"/>
+      <text x="30" y="50" class="fig-small">HIGH-LEVEL POLICY</text>
+      <rect x="90" y="60" width="160" height="44" rx="6" class="fig-smell"/>
+      <text x="170" y="87" class="uml-name">TemperatureMonitor</text>
+      <rect x="20" y="170" width="300" height="90" rx="8" class="fig-box fig-dashed"/>
+      <text x="30" y="186" class="fig-small">LOW-LEVEL DETAIL</text>
+      <rect x="90" y="196" width="160" height="44" rx="6" class="fig-smell"/>
+      <text x="170" y="223" class="uml-name">EmailSender</text>
+      <line x1="170" y1="104" x2="170" y2="192" class="fig-arrow-smell" marker-end="url(#f1-smell)"/>
+      <text x="180" y="150" class="fig-small fig-mono fig-smell-text">new EmailSender()</text>
+      <text x="175" y="288" class="fig-small fig-center fig-smell-text">the rule names and creates the detail</text>
+
+      <circle cx="352" cy="150" r="17" class="fig-vs"/>
+      <text x="352" y="155" class="fig-vs-text">vs</text>
+
+      <text x="545" y="18" class="fig-heading fig-center fig-code-text">After: both → abstraction</text>
+      <rect x="380" y="34" width="330" height="90" rx="8" class="fig-box fig-dashed"/>
+      <text x="390" y="50" class="fig-small">HIGH-LEVEL POLICY (owns the interface)</text>
+      <rect x="388" y="60" width="150" height="44" rx="6" class="fig-code"/>
+      <text x="463" y="86" class="fig-label fig-center fig-mono">TemperatureMonitor</text>
+      <rect x="566" y="56" width="134" height="52" rx="6" class="fig-contract"/>
+      <text x="633" y="74" class="uml-stereo">«interface»</text>
+      <text x="633" y="94" class="uml-name">AlertChannel</text>
+      <line x1="538" y1="82" x2="562" y2="82" class="uml-dashed" marker-end="url(#f1-open)"/>
+      <rect x="380" y="170" width="330" height="90" rx="8" class="fig-box fig-dashed"/>
+      <text x="390" y="186" class="fig-small">LOW-LEVEL DETAIL</text>
+      <rect x="400" y="196" width="140" height="44" rx="6" class="fig-code"/>
+      <text x="470" y="223" class="uml-name">EmailChannel</text>
+      <rect x="560" y="196" width="140" height="44" rx="6" class="fig-code"/>
+      <text x="630" y="223" class="uml-name">SmsChannel</text>
+      <line x1="470" y1="196" x2="605" y2="112" class="uml-dashed" marker-end="url(#f1-hollow)"/>
+      <line x1="630" y1="196" x2="630" y2="112" class="uml-dashed" marker-end="url(#f1-hollow)"/>
+      <text x="545" y="288" class="fig-small fig-center">control still flows down; source arrows now point UP</text>
+    </svg>
+    <figcaption>Left (red): the policy's arrow points down into the detail, and it even creates it. Right: the policy uses an interface that lives in its <em>own</em> band. The details' arrows cross the boundary upward to implement it. Swapping email for SMS changes only the bottom band and the place where things are plugged in.</figcaption>
+  </figure>
+
+  <h3>3.4 Who owns the interface matters</h3>
+  <p>Putting <em>any</em> interface between the two is not enough. Suppose we wrote <code>interface EmailService { void sendEmail(String to, String subject, String body); }</code>. The policy would still think in email terms (subjects, addresses), and SMS could not fit. The abstraction must be written in the <strong>policy's terms</strong> (<code>send(String message)</code>) and live in the <strong>policy's package</strong>. In the kata, <code>AlertChannel</code> sits in <code>com.katas.dip</code> beside the monitor, and the channels live in <code>com.katas.dip.channels</code> and import it. Check the imports: the policy package never imports the channels package.</p>
+
+  <h3>3.5 Plugging it together: dependency injection</h3>
+  <p>If the monitor no longer creates its channel, someone must hand it one. Every <code>new SomeConcreteClass()</code> written inside a class glues that class to that concrete detail. So instead the object receives what it depends on from outside, usually as constructor parameters: <code>new TemperatureMonitor(new SmsChannel("555-0100"), 30)</code>. Handing an object its dependencies from outside, instead of letting it create them, is called <strong>dependency injection (DI)</strong>. Passing them through the constructor, as here, is <strong>constructor injection</strong>. It is the preferred form, because the object can never exist without what it needs.</p>
+  <p>All that creating and plugging has to happen <em>somewhere</em>. The best place is one spot at the very start of the program, which is the only code that names concrete classes. That spot is called the <strong>composition root</strong>. In the kata it is <code>Main</code>; in the hub, <code>Main</code> plus <code>HomeSetup</code>. Doing it by hand with plain <code>new</code> calls, as this course does, is called <em>manual</em> (or "pure") DI. Frameworks such as Spring automate the composition root: they create the objects and pass constructor arguments for you (Section 6). They automate exactly what you are now writing by hand.</p>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Term</th><th>What it is</th><th>Kind of thing</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Dependency Inversion (DIP)</strong></td><td>Point source dependencies at abstractions owned by the policy</td><td>A design <em>principle</em> (which way the arrows go)</td></tr>
+        <tr><td><strong>Dependency Injection (DI)</strong></td><td>Hand an object its dependencies from outside</td><td>A <em>technique</em> (how the pieces get connected)</td></tr>
+        <tr><td><strong>Inversion of Control (IoC)</strong></td><td>A framework calls your code, rather than your code calling the framework</td><td>A broad <em>idea</em>; DI containers are one example</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>They are often confused because they work together: DI is the usual way to <em>achieve</em> DIP. You can inject a concrete class, though (<code>new Monitor(new EmailSender())</code>), which is DI without DIP.</p>
+
+  <details class="check">
+    <summary>A class takes <code>EmailSender</code> (a concrete class) as a constructor parameter instead of creating it. Has it applied DIP?</summary>
+    <p>Only half. It uses dependency injection, so a test could pass in a subclass, but its source code still names and depends on the email detail. SMS still can't be plugged in without editing it. DIP also needs the parameter's type to be an abstraction <em>owned by the policy</em>: <code>AlertChannel</code>.</p>
+  </details>
+</section>
+
+<!-- ============================== SECTION 4 ============================== -->
+<section id="s4">
+  <h2><span class="sec-num">4</span>The kata</h2>
+
+  <p>Package <code>com.katas.dip</code> (policy plus its abstraction) and <code>com.katas.dip.channels</code> (details).</p>
+
+  <p class="filepath">Saved: katas/src/main/java/com/katas/dip/AlertChannel.java</p>
+  <pre class="code" data-title="AlertChannel.java"><code><span class="cmt">// The RIGHT WAY, part 1: the abstraction, OWNED by the policy side.</span>
+<span class="kw">package</span> com.katas.dip;
+
+<span class="cmt">// Written in the POLICY's terms ("send this alert"), not in any channel's</span>
+<span class="cmt">// terms (no email subjects, no phone numbers). It lives in the policy's</span>
+<span class="cmt">// package; the low-level channels come to IT and implement it. That reversal</span>
+<span class="cmt">// of who depends on whom is the "inversion".</span>
+<span class="kw">public interface</span> <span class="ty">AlertChannel</span> {
+
+    <span class="cmt">// Deliver one alert message, however this channel does it.</span>
+    <span class="kw">void</span> <span class="fn">send</span>(<span class="ty">String</span> message);
+}</code></pre>
+
+  <p class="filepath">Saved: katas/src/main/java/com/katas/dip/TemperatureMonitor.java</p>
+  <pre class="code" data-title="TemperatureMonitor.java (right way)"><code><span class="cmt">// The RIGHT WAY, part 2: the high-level policy, depending only on its abstraction.</span>
+<span class="kw">package</span> com.katas.dip;
+
+<span class="cmt">// The same rule as the naive version, but it never names or creates a</span>
+<span class="cmt">// channel. The channel is INJECTED: handed in through the constructor by</span>
+<span class="cmt">// whoever assembles the program. Notice this file imports nothing from the</span>
+<span class="cmt">// channels package.</span>
+<span class="kw">public class</span> <span class="ty">TemperatureMonitor</span> {
+
+    <span class="cmt">// The abstraction the policy needs; which channel it is, is not its business.</span>
+    <span class="kw">private final</span> <span class="ty">AlertChannel</span> channel;
+
+    <span class="cmt">// The highest temperature that is still fine.</span>
+    <span class="kw">private final int</span> maxCelsius;
+
+    <span class="cmt">// CONSTRUCTOR INJECTION: every dependency arrives as a parameter.</span>
+    <span class="kw">public</span> <span class="fn">TemperatureMonitor</span>(<span class="ty">AlertChannel</span> channel, <span class="kw">int</span> maxCelsius) {
+        <span class="cmt">// Remember the channel we were given.</span>
+        <span class="kw">this</span>.channel = channel;
+        <span class="cmt">// Remember the limit we were given.</span>
+        <span class="kw">this</span>.maxCelsius = maxCelsius;
+    }
+
+    <span class="cmt">// The policy: above the limit, raise the alarm. Returns whether it alerted.</span>
+    <span class="kw">public boolean</span> <span class="fn">check</span>(<span class="kw">int</span> celsius) {
+        <span class="cmt">// Within the limit: nothing to do.</span>
+        <span class="kw">if</span> (celsius &lt;= maxCelsius) {
+            <span class="cmt">// No alert.</span>
+            <span class="kw">return false</span>;
+        }
+        <span class="cmt">// Too hot: send the alert in the policy's own terms.</span>
+        channel.<span class="fn">send</span>(<span class="str">"Server room at "</span> + celsius + <span class="str">"C (max "</span> + maxCelsius + <span class="str">"C)"</span>);
+        <span class="cmt">// An alert went out.</span>
+        <span class="kw">return true</span>;
+    }
+}</code></pre>
+
+  <p class="filepath">Saved: katas/src/main/java/com/katas/dip/channels/EmailChannel.java</p>
+  <pre class="code" data-title="EmailChannel.java"><code><span class="cmt">// Low-level details live in their own package.</span>
+<span class="kw">package</span> com.katas.dip.channels;
+
+<span class="cmt">// The detail depends UP on the policy's abstraction: this import points from</span>
+<span class="cmt">// the channels package to the policy package, never the other way round.</span>
+<span class="kw">import</span> com.katas.dip.<span class="ty">AlertChannel</span>;
+
+<span class="cmt">// Email, as one way of keeping the AlertChannel contract.</span>
+<span class="kw">public class</span> <span class="ty">EmailChannel</span> <span class="kw">implements</span> <span class="ty">AlertChannel</span> {
+
+    <span class="cmt">// Where to send; an email-specific detail the policy never sees.</span>
+    <span class="kw">private final</span> <span class="ty">String</span> address;
+
+    <span class="cmt">// The address is chosen by whoever assembles the program.</span>
+    <span class="kw">public</span> <span class="fn">EmailChannel</span>(<span class="ty">String</span> address) {
+        <span class="cmt">// Remember it.</span>
+        <span class="kw">this</span>.address = address;
+    }
+
+    <span class="cmt">// Translate the policy's request into email terms.</span>
+    <span class="anno">@Override</span>
+    <span class="kw">public void</span> <span class="fn">send</span>(<span class="ty">String</span> message) {
+        <span class="cmt">// Show what would be sent (prints instead of really emailing).</span>
+        <span class="ty">System</span>.out.<span class="fn">println</span>(<span class="str">"EMAIL to "</span> + address + <span class="str">": "</span> + message);
+    }
+}</code></pre>
+  <p><span class="filepath">Saved: channels/SmsChannel.java</span> is the same shape, with a phone number, printing <code>"SMS to " + number + ": " + message</code>. It was added without touching the monitor.</p>
+
+  <p class="filepath">Saved: katas/src/main/java/com/katas/dip/Main.java (the composition root)</p>
+  <pre class="code" data-title="Main.java (dip)"><code><span class="cmt">// The runnable demo for Lesson 09's kata, and its COMPOSITION ROOT.</span>
+<span class="kw">package</span> com.katas.dip;
+
+<span class="cmt">// The ONE place allowed to know the concrete channels: here they are chosen</span>
+<span class="cmt">// and plugged into the policy.</span>
+<span class="kw">import</span> com.katas.dip.channels.<span class="ty">EmailChannel</span>;
+<span class="kw">import</span> com.katas.dip.channels.<span class="ty">SmsChannel</span>;
+
+<span class="cmt">// Builds the object graph by hand (manual dependency injection) and runs it.</span>
+<span class="kw">public class</span> <span class="ty">Main</span> {
+
+    <span class="cmt">// The JVM starts here when you run this class.</span>
+    <span class="kw">public static void</span> <span class="fn">main</span>(<span class="ty">String</span>[] args) {
+        <span class="cmt">// NAIVE: the policy builds its own email sender; nothing can be swapped.</span>
+        <span class="kw">new</span> com.katas.dip.naive.<span class="ty">TemperatureMonitor</span>().<span class="fn">check</span>(<span class="num">35</span>);
+
+        <span class="cmt">// INVERTED: choose a channel HERE and inject it into the policy.</span>
+        <span class="ty">TemperatureMonitor</span> byEmail = <span class="kw">new</span> <span class="ty">TemperatureMonitor</span>(<span class="kw">new</span> <span class="ty">EmailChannel</span>(<span class="str">"ops@example.com"</span>), <span class="num">30</span>);
+        <span class="cmt">// 25C is fine: nothing is sent, nothing is printed.</span>
+        byEmail.<span class="fn">check</span>(<span class="num">25</span>);
+        <span class="cmt">// 35C is too hot: the alert goes out by email.</span>
+        byEmail.<span class="fn">check</span>(<span class="num">35</span>);
+
+        <span class="cmt">// The SAME policy class, wired to a different detail. Zero edits to it.</span>
+        <span class="ty">TemperatureMonitor</span> bySms = <span class="kw">new</span> <span class="ty">TemperatureMonitor</span>(<span class="kw">new</span> <span class="ty">SmsChannel</span>(<span class="str">"555-0100"</span>), <span class="num">30</span>);
+        <span class="cmt">// The alert goes out by SMS.</span>
+        bySms.<span class="fn">check</span>(<span class="num">35</span>);
+    }
+}</code></pre>
+
+  <h4>What happens when it runs</h4>
+  <ol class="trace">
+    <li>The naive monitor creates its own <code>EmailSender</code> during construction. <code>check(35)</code> exceeds 30, so it calls <code>sendEmail</code>, which prints the email-shaped line.</li>
+    <li><code>Main</code> creates an <code>EmailChannel</code>, then a monitor, and injects the channel through the constructor.</li>
+    <li><code>byEmail.check(25)</code>: 25 ≤ 30, so it returns <code>false</code>. No call to the channel, no output.</li>
+    <li><code>byEmail.check(35)</code>: too hot, so it calls <code>channel.send(...)</code>. Dynamic dispatch runs <code>EmailChannel.send</code>.</li>
+    <li>A second monitor, the very same class, gets an <code>SmsChannel</code>. <code>check(35)</code> now dispatches to <code>SmsChannel.send</code>.</li>
+  </ol>
+  <p class="pred-label">Prediction — the program's own lines</p>
+  <pre class="output"><code><span class="err">EMAIL to ops@example.com [Too hot]: Server room at 35C</span>
+EMAIL to ops@example.com: Server room at 35C (max 30C)
+<span class="out">SMS to 555-0100: Server room at 35C (max 30C)</span></code></pre>
+
+  <h4>The tests: the policy, alone</h4>
+  <p><span class="filepath">Saved: katas/src/test/java/com/katas/dip/RecordingChannel.java</span> is a test-only <code>AlertChannel</code> that just remembers messages. <span class="filepath">Saved: TemperatureMonitorTest.java</span> injects it and checks three things: an alert above the limit with the exact message, silence at exactly 30 and below, and an injected stricter limit (22°C). No email and no console are involved. This was impossible in the naive version.</p>
+
+  <pre class="terminal" data-title="terminal — from design-patterns-learning/"><code>cd katas
+mvn test
+mvn compile exec:java <span class="str">"-Dexec.mainClass=com.katas.dip.Main"</span></code></pre>
+  <p class="pred-label">Prediction — mvn test summary</p>
+  <pre class="output"><code><span class="out">[INFO] Tests run: 43, Failures: 0, Errors: 0, Skipped: 0</span>
+<span class="out">[INFO] BUILD SUCCESS</span></code></pre>
+  <div class="callout tryit">
+    <p>Expect <strong>43 tests</strong> (40 earlier + 3 new) and the three demo lines. If anything differs, the machine is right. Tell me what you saw. Then open <code>TemperatureMonitor.java</code> and <code>EmailChannel.java</code> side by side and read only their <code>import</code> lines. The arrow of dependency is right there in text: details import the policy, never the reverse.</p>
+  </div>
+</section>
+
+<!-- ============================== SECTION 5 ============================== -->
+<section id="s5">
+  <h2><span class="sec-num">5</span>Applied to the Smart Home Hub</h2>
+
+  <h4>The audit: the hub's core already obeys DIP</h4>
+  <p>Look back and you'll see we have been pointing arrows at contracts since <a href="../../phase-0-oop-foundations/chapter-01-oop/lesson-01-objects-encapsulation-interfaces.html">Lesson 01</a>. Today we check it package by package:</p>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Package</th><th>Role</th><th>Imports from <code>devices</code></th></tr></thead>
+      <tbody>
+        <tr><td><code>home</code> (Hub)</td><td>Policy: operate the house</td><td><code>Device</code>, <code>Switchable</code>: contracts only</td></tr>
+        <tr><td><code>routines</code></td><td>Policy: house modes</td><td><code>Switchable</code> only</td></tr>
+        <tr><td><code>report</code></td><td>Policy: what the house looks like</td><td><code>Device</code>, <code>Switchable</code> only</td></tr>
+        <tr><td><code>home.HomeSetup</code> (until today)</td><td><strong>Wiring</strong></td><td><code>Light</code>, <code>Thermostat</code>, <code>SmokeAlarm</code>, <code>DoorLock</code>: <strong>concrete</strong></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>One file breaks the pattern, and for a good reason: <code>HomeSetup</code> <em>is</em> wiring code, the installer's choice of devices. It simply lived in the wrong place. Wiring belongs in the composition root, not inside a core package. So <span class="filepath">HomeSetup.java (and HomeSetupTest.java) moved from <code>com.smarthome.home</code> to <code>com.smarthome</code>, beside <code>Main</code></span>. The rule now holds without exception: <strong>the core packages never import a concrete device</strong>, only <code>Main</code> and <code>HomeSetup</code> do.</p>
+
+  <h4>A new feature, built inverted from the start: climate control</h4>
+  <p><strong>The requirement:</strong> the hall has a temperature sensor, and the hub should keep the hall between 18°C and 24°C by switching the heating. The sensor will be a cheap simulated one for now, and a real third-party device later. The <em>rule</em> must survive that swap untouched.</p>
+
+  <figure class="fig">
+    <svg viewBox="0 0 720 300" role="img" aria-label="Package dependencies after Lesson 09. The composition root (Main, HomeSetup) creates and wires everything. The core packages home, routines, report and climate depend only on the contracts in devices. The sensors package depends upward on climate, implementing its TemperatureSensor interface.">
+      <defs>
+        <marker id="f2-open" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="10" markerHeight="10" orient="auto-start-reverse">
+          <path d="M0,0 L10,5 L0,10" class="uml-head-open"/>
+        </marker>
+        <marker id="f2-acc" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+          <path d="M0,0 L10,5 L0,10 z" class="fig-arrow-accent-h"/>
+        </marker>
+      </defs>
+      <rect x="200" y="12" width="320" height="50" rx="6" class="fig-generic"/>
+      <text x="360" y="34" class="fig-heading fig-center fig-mono">com.smarthome</text>
+      <text x="360" y="52" class="fig-small fig-center">Main + HomeSetup: the composition root</text>
+      <line x1="360" y1="62" x2="360" y2="104" class="uml-dashed" marker-end="url(#f2-open)"/>
+      <text x="368" y="88" class="fig-small">creates &amp; wires everything</text>
+
+      <rect x="20" y="110" width="150" height="50" rx="6" class="fig-code"/>
+      <text x="95" y="132" class="fig-label fig-center fig-mono">home</text>
+      <text x="95" y="150" class="fig-small fig-center">Hub</text>
+      <rect x="190" y="110" width="150" height="50" rx="6" class="fig-code"/>
+      <text x="265" y="132" class="fig-label fig-center fig-mono">routines</text>
+      <text x="265" y="150" class="fig-small fig-center">AllOn, KeepOnly…</text>
+      <rect x="360" y="110" width="150" height="50" rx="6" class="fig-code"/>
+      <text x="435" y="132" class="fig-label fig-center fig-mono">report</text>
+      <text x="435" y="150" class="fig-small fig-center">HouseReport</text>
+      <rect x="530" y="110" width="170" height="50" rx="6" class="fig-code"/>
+      <text x="615" y="132" class="fig-label fig-center fig-mono">climate</text>
+      <text x="615" y="150" class="fig-small fig-center">ClimateControl + Sensor «i»</text>
+
+      <rect x="40" y="220" width="400" height="56" rx="6" class="fig-contract"/>
+      <text x="240" y="242" class="fig-label fig-center fig-mono">devices</text>
+      <text x="240" y="262" class="fig-small fig-center">Device · Switchable · Lockable · Dimmable (core uses only these)</text>
+      <line x1="95" y1="160" x2="120" y2="216" class="uml-dashed" marker-end="url(#f2-open)"/>
+      <line x1="265" y1="160" x2="240" y2="216" class="uml-dashed" marker-end="url(#f2-open)"/>
+      <line x1="435" y1="160" x2="360" y2="216" class="uml-dashed" marker-end="url(#f2-open)"/>
+      <line x1="590" y1="160" x2="436" y2="230" class="uml-dashed" marker-end="url(#f2-open)"/>
+
+      <rect x="490" y="226" width="210" height="50" rx="6" class="fig-code"/>
+      <text x="595" y="248" class="fig-label fig-center fig-mono">sensors</text>
+      <text x="595" y="266" class="fig-small fig-center">SimulatedThermometer</text>
+      <line x1="640" y1="226" x2="640" y2="164" class="fig-arrow-accent" marker-end="url(#f2-acc)"/>
+      <text x="648" y="200" class="fig-small fig-contract-text">inverted ↑</text>
+    </svg>
+    <figcaption>The hub's packages after Lesson 09. Every core package (blue) points only at contracts (violet). The violet arrow is the inversion: <code>sensors</code>, a low-level detail, depends <em>up</em> on <code>climate</code>, because it implements the <code>TemperatureSensor</code> interface that the climate policy owns. Only the composition root (grey) knows every concrete class.</figcaption>
+  </figure>
+
+  <p class="filepath">Saved: smarthome/src/main/java/com/smarthome/climate/TemperatureSensor.java</p>
+  <pre class="code" data-title="TemperatureSensor.java"><code><span class="cmt">// The climate POLICY package. It owns this abstraction, so it lives here,</span>
+<span class="cmt">// not in the sensors package that implements it.</span>
+<span class="kw">package</span> com.smarthome.climate;
+
+<span class="cmt">// What the climate policy needs from "a thermometer", in the policy's own</span>
+<span class="cmt">// terms. Real sensor hardware (and the simulated one in com.smarthome.sensors)</span>
+<span class="cmt">// implements THIS interface, so the low-level detail depends on the</span>
+<span class="cmt">// high-level policy, not the other way round: the Dependency Inversion</span>
+<span class="cmt">// Principle.</span>
+<span class="kw">public interface</span> <span class="ty">TemperatureSensor</span> {
+
+    <span class="cmt">// Where the sensor is, e.g. "Hall"; used in messages.</span>
+    <span class="ty">String</span> <span class="fn">location</span>();
+
+    <span class="cmt">// The current temperature, in whole degrees Celsius.</span>
+    <span class="kw">int</span> <span class="fn">readCelsius</span>();
+}</code></pre>
+
+  <p class="filepath">Saved: smarthome/src/main/java/com/smarthome/climate/ClimateControl.java</p>
+  <pre class="code" data-title="ClimateControl.java"><code><span class="cmt">// The climate POLICY: high-level rules about comfort.</span>
+<span class="kw">package</span> com.smarthome.climate;
+
+<span class="cmt">// The only device capability the policy needs: switching the heating.</span>
+<span class="kw">import</span> com.smarthome.devices.<span class="ty">Switchable</span>;
+
+<span class="cmt">// Keeps a room between a minimum and a maximum temperature by switching the</span>
+<span class="cmt">// heating on or off. It depends ONLY on abstractions (TemperatureSensor,</span>
+<span class="cmt">// Switchable), both injected through the constructor; it never names or</span>
+<span class="cmt">// creates a sensor class or a thermostat class.</span>
+<span class="kw">public class</span> <span class="ty">ClimateControl</span> {
+
+    <span class="cmt">// Where the readings come from: any sensor keeping the contract.</span>
+    <span class="kw">private final</span> <span class="ty">TemperatureSensor</span> sensor;
+
+    <span class="cmt">// What heats the room: any switchable device (in the hub, the thermostat).</span>
+    <span class="kw">private final</span> <span class="ty">Switchable</span> heating;
+
+    <span class="cmt">// The lowest comfortable temperature.</span>
+    <span class="kw">private final int</span> minCelsius;
+
+    <span class="cmt">// The highest comfortable temperature.</span>
+    <span class="kw">private final int</span> maxCelsius;
+
+    <span class="cmt">// CONSTRUCTOR INJECTION: every dependency and setting arrives from outside.</span>
+    <span class="kw">public</span> <span class="fn">ClimateControl</span>(<span class="ty">TemperatureSensor</span> sensor, <span class="ty">Switchable</span> heating, <span class="kw">int</span> minCelsius, <span class="kw">int</span> maxCelsius) {
+        <span class="cmt">// A range upside down can never be satisfied: refuse it.</span>
+        <span class="kw">if</span> (minCelsius &gt; maxCelsius) {
+            <span class="cmt">// Loud refusal naming both values.</span>
+            <span class="kw">throw new</span> <span class="ty">IllegalArgumentException</span>(<span class="str">"Range is upside down: "</span> + minCelsius + <span class="str">"-"</span> + maxCelsius + <span class="str">"C"</span>);
+        }
+        <span class="cmt">// Remember the sensor.</span>
+        <span class="kw">this</span>.sensor = sensor;
+        <span class="cmt">// Remember the heating.</span>
+        <span class="kw">this</span>.heating = heating;
+        <span class="cmt">// Remember the lower bound.</span>
+        <span class="kw">this</span>.minCelsius = minCelsius;
+        <span class="cmt">// Remember the upper bound.</span>
+        <span class="kw">this</span>.maxCelsius = maxCelsius;
+    }
+
+    <span class="cmt">// Read the sensor once, act if needed, and describe what happened.</span>
+    <span class="kw">public</span> <span class="ty">String</span> <span class="fn">regulate</span>() {
+        <span class="cmt">// One reading through the abstraction.</span>
+        <span class="kw">int</span> celsius = sensor.<span class="fn">readCelsius</span>();
+        <span class="cmt">// What we decided to do, in words.</span>
+        <span class="ty">String</span> action;
+        <span class="cmt">// Too cold: heating must be on.</span>
+        <span class="kw">if</span> (celsius &lt; minCelsius) {
+            <span class="cmt">// Switch only if it is not already on (no duplicate log entries).</span>
+            <span class="kw">if</span> (!heating.<span class="fn">isOn</span>()) {
+                <span class="cmt">// On, through the Switchable contract.</span>
+                heating.<span class="fn">turnOn</span>();
+            }
+            <span class="cmt">// Describe the decision.</span>
+            action = <span class="str">"heating ON"</span>;
+        } <span class="kw">else if</span> (celsius &gt; maxCelsius) {
+            <span class="cmt">// Too hot: heating must be off. Switch only if needed.</span>
+            <span class="kw">if</span> (heating.<span class="fn">isOn</span>()) {
+                <span class="cmt">// Off, through the Switchable contract.</span>
+                heating.<span class="fn">turnOff</span>();
+            }
+            <span class="cmt">// Describe the decision.</span>
+            action = <span class="str">"heating OFF"</span>;
+        } <span class="kw">else</span> {
+            <span class="cmt">// Comfortable: leave everything as it is.</span>
+            action = <span class="str">"no change"</span>;
+        }
+        <span class="cmt">// e.g. "Climate: 26C in Hall (allowed 18-24C) -&gt; heating OFF".</span>
+        <span class="kw">return</span> <span class="str">"Climate: "</span> + celsius + <span class="str">"C in "</span> + sensor.<span class="fn">location</span>()
+                + <span class="str">" (allowed "</span> + minCelsius + <span class="str">"-"</span> + maxCelsius + <span class="str">"C) -&gt; "</span> + action;
+    }
+}</code></pre>
+
+  <p><span class="filepath">Saved: smarthome/src/main/java/com/smarthome/sensors/SimulatedThermometer.java</span> <code>implements TemperatureSensor</code> by importing it from <code>climate</code>; that import is the upward arrow in the figure. It reports a location and whatever reading it was last given (<code>setCelsius</code> simulates the room warming). <span class="filepath">Modified: home/Hub.java</span> makes its name lookup public as <code>switchableNamed(String)</code>, so the composition root can hand the thermostat to the policy typed as a <code>Switchable</code>, never as a <code>Thermostat</code>.</p>
+
+  <p class="filepath">Saved: smarthome/src/main/java/com/smarthome/Main.java (rewritten as the composition root)</p>
+  <pre class="code" data-title="Main.java (smarthome, the body)"><code>        <span class="cmt">// --- Build the object graph ---</span>
+        <span class="cmt">// One shared history for the whole house.</span>
+        <span class="ty">ActivityLog</span> log = <span class="kw">new</span> <span class="ty">ActivityLog</span>();
+        <span class="cmt">// The installer's choice of devices (HomeSetup is part of this root).</span>
+        <span class="ty">HomeSetup</span> setup = <span class="kw">new</span> <span class="ty">HomeSetup</span>();
+        <span class="cmt">// Inject both device groups into the hub.</span>
+        <span class="ty">Hub</span> hub = <span class="kw">new</span> <span class="ty">Hub</span>(setup.<span class="fn">createSwitchables</span>(log), setup.<span class="fn">createOtherDevices</span>());
+        <span class="cmt">// A concrete sensor detail, reading 26C in the hall.</span>
+        <span class="ty">SimulatedThermometer</span> hallSensor = <span class="kw">new</span> <span class="ty">SimulatedThermometer</span>(<span class="str">"Hall"</span>, <span class="num">26</span>);
+        <span class="cmt">// Inject the sensor and the thermostat (as a Switchable) into the policy.</span>
+        <span class="ty">ClimateControl</span> climate = <span class="kw">new</span> <span class="ty">ClimateControl</span>(hallSensor, hub.<span class="fn">switchableNamed</span>(<span class="str">"Hall Thermostat"</span>), <span class="num">18</span>, <span class="num">24</span>);
+
+        <span class="cmt">// --- Run one scenario ---</span>
+        <span class="cmt">// Morning: everything on.</span>
+        hub.<span class="fn">run</span>(<span class="kw">new</span> <span class="ty">AllOn</span>());
+        <span class="cmt">// Goodnight: keep only the thermostat running.</span>
+        hub.<span class="fn">run</span>(<span class="kw">new</span> <span class="ty">KeepOnly</span>(<span class="ty">List</span>.<span class="fn">of</span>(<span class="str">"Hall Thermostat"</span>)));
+        <span class="cmt">// The hall is 26C, above the 24C maximum: the policy decides, and says so.</span>
+        <span class="ty">System</span>.out.<span class="fn">println</span>(climate.<span class="fn">regulate</span>());
+
+        <span class="cmt">// Display the result. print, not println: the report ends with its own newline.</span>
+        <span class="ty">System</span>.out.<span class="fn">print</span>(<span class="kw">new</span> <span class="ty">HouseReport</span>().<span class="fn">render</span>(hub.<span class="fn">devices</span>(), hub.<span class="fn">switchables</span>(), log.<span class="fn">entries</span>()));</code></pre>
+
+  <h4>The tests</h4>
+  <p><span class="filepath">Saved: climate/ClimateControlTest.java</span> tests the policy alone with a test-only <span class="filepath">FixedSensor</span> and a plain <code>Light</code> standing in as "heating" (any <code>Switchable</code> will do). It has four tests: too cold switches it on, too hot switches it off, exactly 24°C changes nothing, and an upside-down range is refused. <span class="filepath">Saved: sensors/SimulatedThermometerTest.java</span> (2 tests) checks the simulator keeps the <code>TemperatureSensor</code> contract. <span class="filepath">Modified: home/HubTest.java</span> adds <code>switchableNamedFindsTheDevice</code>, using <code>assertSame</code> ("the very same object, not just an equal one").</p>
+
+  <p><strong>What this adds:</strong> automatic climate control for the hall, and a hub where the dependency rule holds everywhere. The core never names a concrete device or sensor, and the composition root is the only place that does. When a real sensor arrives, only the composition root changes.</p>
+
+  <ol class="trace">
+    <li>The composition root builds the log, the devices (via <code>HomeSetup</code>), the hub, a simulated sensor reading 26°C, and the climate policy. The policy receives the sensor and the logged thermostat, both as abstractions.</li>
+    <li><code>AllOn</code> logs entries 1–2. <code>KeepOnly</code> switches the light off, which is entry 3.</li>
+    <li><code>climate.regulate()</code> reads 26 through <code>TemperatureSensor</code>. 26 &gt; 24 and the heating is on, so it calls <code>turnOff()</code> through <code>Switchable</code>. The wrapper switches the real thermostat off and logs entry 4. The policy returns its sentence, which is printed.</li>
+    <li>The report counts 0 of 2 switchables on, lists four statuses, and four activity entries.</li>
+  </ol>
+  <p class="pred-label">Prediction — the hub's own lines</p>
+  <pre class="output"><code>Smart Home Hub is starting up...
+<span class="out">Climate: 26C in Hall (allowed 18-24C) -&gt; heating OFF</span>
+=== House report ===
+Devices: 4 (2 switchable, 0 on)
+  Living Room Light: OFF
+  Hall Thermostat: OFF
+  Hallway Smoke Alarm: ARMED
+  Front Door: LOCKED
+Activity (4 entries):
+  1. Living Room Light: ON
+  2. Hall Thermostat: regulating to 21C
+  3. Living Room Light: OFF
+  4. Hall Thermostat: OFF</code></pre>
+
+  <pre class="terminal" data-title="terminal — from design-patterns-learning/"><code>cd smarthome
+mvn test
+mvn compile exec:java</code></pre>
+  <p class="pred-label">Prediction — mvn test</p>
+  <pre class="output"><code><span class="out">[INFO] Tests run: 60, Failures: 0, Errors: 0, Skipped: 0</span>
+<span class="out">[INFO] BUILD SUCCESS</span></code></pre>
+  <div class="callout tryit">
+    <p>Expect <strong>60 tests</strong> (53 earlier + 7 new) and the thirteen lines above. If what you see differs, your machine is right. Tell me what you saw and we will work out why. Then change the simulated reading in <code>Main</code> from 26 to 15 and run again. The climate line should say "heating ON", and the thermostat should stay on, with one fewer log entry. Notice that you changed only the composition root. Put 26 back afterwards.</p>
+  </div>
+</section>
+
+<!-- ============================== SECTION 6 ============================== -->
+<section id="s6">
+  <h2><span class="sec-num">6</span>In the wild</h2>
+  <p><strong>Spring's dependency injection automates the composition root.</strong> In a Spring application you would not write <code>new TemperatureMonitor(new SmsChannel(...), 30)</code> yourself. You mark classes as components, and Spring's <em>container</em> creates one object of each and calls their constructors with matching objects it has created:</p>
+  <pre class="code" data-title="the same policy, wired by Spring (for illustration)"><code><span class="anno">@Component</span>
+<span class="kw">public class</span> <span class="ty">TemperatureMonitor</span> {
+    <span class="kw">private final</span> <span class="ty">AlertChannel</span> channel;
+    <span class="cmt">// Spring sees one constructor, finds a bean implementing AlertChannel, and passes it in.</span>
+    <span class="kw">public</span> <span class="fn">TemperatureMonitor</span>(<span class="ty">AlertChannel</span> channel) { <span class="kw">this</span>.channel = channel; }
+}</code></pre>
+  <p>The class is exactly our manually-injected one: a constructor that takes the abstraction. Spring only replaces <code>Main</code>'s hand-written <code>new</code> calls. That is why learning manual DI first matters: the framework stops being magic. (Details such as when <code>@Autowired</code> is needed vary by Spring version. Recent versions inject through a single constructor without it. Check the Spring documentation for the version you use. Lesson 37 returns to this.)</p>
+
+  <div class="callout realworld">
+    <p>Logging is DIP in daily use. Many Java libraries depend only on a logging <em>facade</em>, an interface layer such as SLF4J. The application then plugs in the real logging engine at deploy time. The library's authors never chose your logging engine, which is the policy owning the abstraction and the detail plugged in at the composition root. In interviews, "what is the difference between dependency inversion, dependency injection and inversion of control?" is a favourite question. The table in 3.5 is the answer.</p>
+  </div>
+</section>
+
+<!-- ============================== SECTION 7 ============================== -->
+<section id="s7">
+  <h2><span class="sec-num">7</span>When NOT to use it</h2>
+
+  <h3>The over-application trap</h3>
+  <p>DIP is about protecting stable, valuable policy from <em>volatile</em> details. Not every dependency is volatile. Depending directly on <code>String</code>, <code>List</code>, <code>java.time.LocalDate</code> or <code>Math</code> is fine: they are stable, will never be swapped, and wrapping them in your own interfaces would be pure needless complexity. The same goes for small value classes in your own code. Apply the inversion at the boundaries where things <em>really</em> vary or must be faked in tests: networks, devices, storage, clocks, third-party services.</p>
+  <p>Two more failure modes. <strong>Constructor bloat:</strong> a class that needs eight injected dependencies is usually doing several jobs. That is an SRP smell made visible by DI, not a reason to stop injecting. <strong>Container magic:</strong> teams that only ever let a framework wire things can lose sight of what depends on what. Manual DI keeps the graph readable in one file.</p>
+
+  <h3>The simpler alternative, and the cost</h3>
+  <p>For a small program with one implementation of each detail and no testing pain, plain <code>new</code> inside the class is simpler and honest. Introduce the abstraction when a second implementation or a test double is actually needed (OCP's "take the first bullet"). The costs DIP always charges: an extra interface per boundary; wiring code in the composition root that grows with the program; and one more hop when reading ("which <code>AlertChannel</code> is this, at run time?"), answered only by looking at the composition root.</p>
+
+  <h3>Relatives and look-alikes</h3>
+  <ul>
+    <li><strong>OCP</strong> (<a href="lesson-06-open-closed.html">Lesson 06</a>): new channels or sensors are added without editing the policy. DIP is what makes the policy closed at an architectural boundary.</li>
+    <li><strong>ISP</strong> (<a href="lesson-08-interface-segregation.html">Lesson 08</a>): the policy-owned abstraction should be small and shaped by the policy's needs. <code>ClimateControl</code> asks for <code>Switchable</code>, not a whole thermostat.</li>
+    <li><strong>Coupling</strong> (Lesson 04): DIP is the strongest tool for loose coupling between layers. It turns "knows a concrete class" into "knows a contract it owns."</li>
+    <li><strong>Factories</strong> (Lessons 14–15) take over the <em>creating</em> part of the composition root when choosing which concrete class to build becomes its own problem. <strong>Service Locator</strong> (Lesson 37) is an alternative to injection, and an inferior one.</li>
+  </ul>
+</section>
+
+<!-- ============================== SECTION 8 ============================== -->
+<section id="s8">
+  <h2><span class="sec-num">8</span>Key takeaways</h2>
+  <ul class="takeaways">
+    <li>The Dependency Inversion Principle says high-level policy must not depend on low-level details; both depend on abstractions, and the details depend on those abstractions, not the other way round.</li>
+    <li>What is inverted is the source-code dependency: control still flows from policy to detail at run time, but the detail now imports the policy's interface.</li>
+    <li>The abstraction must be owned by the policy, living in its package and written in its terms (<code>send(message)</code>, <code>readCelsius()</code>), or it is just the detail wearing an interface.</li>
+    <li>Dependency injection, preferably through constructors, supplies the details from outside. All creating and wiring happens in one composition root, the only code that names concrete classes, which frameworks like Spring automate.</li>
+    <li>Apply DIP at boundaries that really vary or need test doubles (devices, networks, storage), not to stable things like <code>String</code> or <code>List</code>. Every inverted boundary costs an interface, wiring code and an extra hop when reading.</li>
+  </ul>
+</section>
+
+<!-- ============================== SECTION 9 ============================== -->
+<section id="s9">
+  <h2><span class="sec-num">9</span>Challenge</h2>
+  <p>A reporting module looks like this. (a) Name each dependency and whether it is policy or detail. (b) Redesign it with DIP: what interfaces, in which package, in whose terms? (c) Write the composition root, and a test that needs no database and no printer. (d) Predict the output of your composition root with a fake store returning sales of 120 and 80.</p>
+  <pre class="code" data-title="SalesReport.java (as written)"><code><span class="kw">public class</span> <span class="ty">SalesReport</span> {
+    <span class="kw">private final</span> <span class="ty">MySqlDatabase</span> db = <span class="kw">new</span> <span class="ty">MySqlDatabase</span>(<span class="str">"jdbc:mysql://prod/sales"</span>);
+    <span class="kw">private final</span> <span class="ty">PdfPrinter</span> pdf = <span class="kw">new</span> <span class="ty">PdfPrinter</span>();
+    <span class="kw">public void</span> <span class="fn">run</span>() {
+        <span class="kw">int</span> total = <span class="num">0</span>;
+        <span class="kw">for</span> (<span class="kw">int</span> sale : db.<span class="fn">query</span>(<span class="str">"SELECT amount FROM sales"</span>)) total += sale;
+        pdf.<span class="fn">printPdf</span>(<span class="str">"report.pdf"</span>, <span class="str">"Total sales: "</span> + total);
+    }
+}</code></pre>
+
+  <details class="answer">
+    <summary>Click to reveal the answer</summary>
+    <p><strong>(a)</strong> The policy is "add up the sales and publish the total." <code>MySqlDatabase</code> (with an SQL string and a production URL) and <code>PdfPrinter</code> (with a file name) are details. The policy names and creates both, so it can't be tested without a live database, and it can't publish anything except a PDF.</p>
+    <p><strong>(b)</strong> Two small interfaces, written in the <em>report's</em> terms and living beside <code>SalesReport</code> in its package. The SQL and the PDF filename move into the details.</p>
+    <pre class="code" data-title="the policy and its abstractions (sketch)"><code><span class="cmt">// Owned by the report: "give me the sale amounts", no SQL in sight.</span>
+<span class="kw">public interface</span> <span class="ty">SalesSource</span> { <span class="ty">List</span>&lt;<span class="ty">Integer</span>&gt; <span class="fn">amounts</span>(); }
+<span class="cmt">// Owned by the report: "publish this line", no file formats in sight.</span>
+<span class="kw">public interface</span> <span class="ty">Publisher</span> { <span class="kw">void</span> <span class="fn">publish</span>(<span class="ty">String</span> line); }
+
+<span class="kw">public class</span> <span class="ty">SalesReport</span> {
+    <span class="kw">private final</span> <span class="ty">SalesSource</span> source;
+    <span class="kw">private final</span> <span class="ty">Publisher</span> publisher;
+    <span class="cmt">// Constructor injection: the report never creates its details.</span>
+    <span class="kw">public</span> <span class="fn">SalesReport</span>(<span class="ty">SalesSource</span> source, <span class="ty">Publisher</span> publisher) { <span class="kw">this</span>.source = source; <span class="kw">this</span>.publisher = publisher; }
+    <span class="kw">public void</span> <span class="fn">run</span>() {
+        <span class="kw">int</span> total = <span class="num">0</span>;
+        <span class="kw">for</span> (<span class="kw">int</span> sale : source.<span class="fn">amounts</span>()) total += sale;
+        publisher.<span class="fn">publish</span>(<span class="str">"Total sales: "</span> + total);
+    }
+}
+<span class="cmt">// Details (another package) implement the report's interfaces:</span>
+<span class="cmt">//   class MySqlSalesSource implements SalesSource { ... the SQL lives here ... }</span>
+<span class="cmt">//   class PdfPublisher implements Publisher     { ... "report.pdf" lives here ... }</span></code></pre>
+    <p><code>List&lt;Integer&gt;</code> means "a list of whole numbers." Java lists hold objects, so <code>Integer</code> is the object form of <code>int</code>, and the for-each loop converts back automatically.</p>
+    <p><strong>(c)</strong> The composition root, for production, is <code>new SalesReport(new MySqlSalesSource("jdbc:mysql://prod/sales"), new PdfPublisher("report.pdf")).run();</code>. A test injects fakes, for example a source returning <code>List.of(120, 80)</code> and a publisher that records lines, then asserts the recorded line is <code>"Total sales: 200"</code>. No database and no printer are needed.</p>
+    <p><strong>(d)</strong> With a fake source returning 120 and 80, and a publisher that prints to the console:</p>
+    <p class="pred-label">Prediction</p>
+    <pre class="output"><code>Total sales: 200</code></pre>
+    <p>If you build it in a scratch package, run it and compare. The machine is the judge.</p>
+  </details>
+</section>
+
+<!-- ============================== SECTION 10 ============================== -->
+<section id="s10">
+  <h2><span class="sec-num">10</span>Catalog update</h2>
+  <p>Entry 5 added: <a href="../../pattern-catalog.html#dip">Dependency Inversion Principle, in the pattern catalog</a>. In brief:</p>
+  <ul>
+    <li><strong>Intent:</strong> policy and details both depend on abstractions owned by the policy; details are injected.</li>
+    <li><strong>Pain:</strong> a valuable rule welded to a replaceable mechanism: can't swap it, can't test it, can't reuse it.</li>
+    <li><strong>Use when:</strong> a boundary really varies (devices, networks, storage, clocks) or needs a test double.</li>
+    <li><strong>Do NOT use when:</strong> depending on stable things (<code>String</code>, <code>List</code>, value classes); one implementation and no testing pain.</li>
+    <li><strong>Cost:</strong> an interface per boundary, wiring code in the composition root, an extra hop when reading.</li>
+    <li><strong>Seen in the wild:</strong> Spring constructor injection; logging facades such as SLF4J.</li>
+    <li><strong>Where:</strong> kata <code>com.katas.dip</code>; hub <code>climate.TemperatureSensor</code> + <code>ClimateControl</code>, <code>sensors</code>, composition root <code>Main</code> + <code>HomeSetup</code>.</li>
+  </ul>
+</section>
+
+<div class="nextup">
+  <p><strong>Lesson 10 — SOLID Together.</strong> One deliberately rotten module, refactored end to end, applying all five principles in sequence. We watch how they reinforce each other, and where they honestly pull in different directions.</p>
+</div>
+<p class="position">Lesson 09 · the tenth of 45 lessons (00–44) · Phase 1, Chapter 02 · lesson 5 of 7 in this chapter</p>
+
+</main>
+</div>
+</body>
+</html>

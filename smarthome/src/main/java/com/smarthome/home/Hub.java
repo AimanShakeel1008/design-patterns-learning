@@ -50,7 +50,7 @@ public class Hub {
     // Switch one device off, found by its name among the switchable ones.
     public void turnOff(String name) {
         // Find it (or fail loudly), then switch it off.
-        find(name).turnOff();
+        switchableNamed(name).turnOff();
     }
 
     // Every device, for anyone who needs to read names and statuses.
@@ -65,8 +65,10 @@ public class Hub {
         return switchables;
     }
 
-    // Look a switchable device up by its exact name.
-    private Switchable find(String name) {
+    // Look a switchable device up by its exact name. Public since Lesson 09,
+    // so the composition root can hand one device to a policy (e.g. the
+    // thermostat to ClimateControl) as a Switchable, never as a concrete class.
+    public Switchable switchableNamed(String name) {
         // Check each switchable device in turn...
         for (Switchable device : switchables) {
             // ...and return the first whose name matches.
