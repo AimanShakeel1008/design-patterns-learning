@@ -167,3 +167,20 @@ Terms are grouped by first-appearance lesson so the list reads in learning order
 - **Take the first bullet** — write the simple version first; introduce a variation point when the second real variant arrives. (Lesson 06)
 - **`Comparator`** — the JDK interface that says which of two objects comes first; `List.sort` uses it as its variation point. (Lesson 06)
 - **`&&` / `!`** — Java's "and" (both conditions true) and "not" (flips true/false). (Lesson 06)
+
+---
+
+## Lesson 07 — L: Liskov Substitution Principle
+
+- **Liskov Substitution Principle (LSP)** — code that works with a type must keep working with any subtype or implementation, without knowing the difference; every substitute keeps every promise. (Lesson 07)
+- **Substitute / subtype** — a subclass or implementation used in place of the type it extends or implements. (Lesson 07)
+- **Precondition** — what must be true before a method may be called; the caller's job (e.g. "sides are positive"). (Lesson 07)
+- **Postcondition** — what a method guarantees is true after it returns; the method's job (e.g. "width is w and height is unchanged"). (Lesson 07)
+- **Substitution rule** — a substitute may ask for less and give more, never ask for more or give less. (Lesson 07)
+- **`instanceof`** — Java's check "is this object of that class (or a subclass)?"; in client code it often signals an LSP violation. (Lesson 07)
+- **Refused bequest** — a subclass that inherits a method it cannot honour and throws or does nothing instead. (Lesson 07)
+- **Surprising override** — an override that does something its parent's contract rules out (e.g. `Square.setWidth` changing the height). (Lesson 07)
+- **Immutable** — an object whose state can never change after creation; "changing" it returns a new object. (Lesson 07)
+- **Contract test** — one test suite, written against a contract, that every implementation must pass (an abstract JUnit class with one small subclass per implementation). (Lesson 07)
+- **Design by Contract** — Bertrand Meyer's practice of stating pre- and postconditions as part of the code. (Lesson 07)
+- **`||`** — Java's "or": true if either condition is true. (Lesson 07)

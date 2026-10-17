@@ -159,6 +159,22 @@ This page decodes the errors that actually come up while working through the cou
 
 ---
 
+## Contract tests (Lesson 07)
+
+### Fewer tests run than predicted, and a `*ContractTest` subclass shows `Tests run: 0`
+
+**Why:** JUnit runs a contract test's methods only through its concrete subclasses. If the abstract class's `@Test` methods are not visible to a subclass (for example package-private methods inherited by a subclass in a different package), they may not be discovered.
+
+**Fix:** keep the test methods in `DeviceContractTest` `public` (as written), keep the class `abstract`, and make sure each subclass implements `createDevice(...)`. Expect 5 tests per subclass.
+
+### `error: ... is not abstract and does not override abstract method createDevice(String)`
+
+**Why:** a new `*ContractTest` subclass forgot to supply the device to test.
+
+**Fix:** add `@Override protected Device createDevice(String name) { return new YourDevice(name); }`.
+
+---
+
 ## Lesson pages
 
 ### A lesson page opens with no colours or layout (plain black text)

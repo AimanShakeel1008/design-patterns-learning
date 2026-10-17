@@ -16,12 +16,13 @@
     <li><a href="#index">Index</a></li>
     <li><a href="#srp">Single Responsibility</a></li>
     <li><a href="#ocp">Open/Closed</a></li>
+    <li><a href="#lsp">Liskov Substitution</a></li>
   </ol>
   <nav class="toc-nav" aria-label="Course navigation">
     <a class="navmap" href="index.html">↑ Course map</a>
-    <a class="navcard" href="phase-1-solid/chapter-02-solid/lesson-06-open-closed.html">
-      <span class="navkicker">Latest entry · Lesson 06</span>
-      <span class="navtitle">O — Open/Closed Principle</span>
+    <a class="navcard" href="phase-1-solid/chapter-02-solid/lesson-07-liskov-substitution.html">
+      <span class="navkicker">Latest entry · Lesson 07</span>
+      <span class="navtitle">L — Liskov Substitution Principle</span>
     </a>
   </nav>
 </aside>
@@ -59,6 +60,7 @@
       <tbody>
         <tr><td>1</td><td><a href="#srp">Single Responsibility Principle</a></td><td><span class="family-badge principle">principle</span></td><td><a href="phase-1-solid/chapter-02-solid/lesson-05-single-responsibility.html">05</a></td></tr>
         <tr><td>2</td><td><a href="#ocp">Open/Closed Principle</a></td><td><span class="family-badge principle">principle</span></td><td><a href="phase-1-solid/chapter-02-solid/lesson-06-open-closed.html">06</a></td></tr>
+        <tr><td>3</td><td><a href="#lsp">Liskov Substitution Principle</a></td><td><span class="family-badge principle">principle</span></td><td><a href="phase-1-solid/chapter-02-solid/lesson-07-liskov-substitution.html">07</a></td></tr>
       </tbody>
     </table>
   </div>
@@ -137,7 +139,43 @@
   </dl>
 </article>
 
-<p class="position">Pattern catalog · 2 entries · updated by every principle and pattern lesson</p>
+<article class="catalog-entry" id="lsp">
+  <h2>Liskov Substitution Principle (LSP) <span class="family-badge principle">principle</span></h2>
+  <p class="catalog-intent">Code that works with a type must keep working with any subtype or implementation, without knowing the difference: every substitute keeps every promise of the type it stands in for.</p>
+  <dl class="catalog-fields">
+    <dt>The pain it cures</dt>
+    <dd>Honest client code, written only against a type's promises, breaks or silently gives wrong answers when handed a subclass or implementation that claims the type but breaks one of its promises (Square in place of Rectangle; a device that refuses <code>turnOff()</code>).</dd>
+    <dt>Use it when…</dt>
+    <dd><ul>
+      <li>Designing any class hierarchy or interface that has, or will have, more than one implementation.</li>
+      <li>Reviewing an override: does it demand more, promise less, throw where the parent succeeded, or change state the parent promised to leave alone?</li>
+      <li>You see <code>instanceof</code> checks in client code, or overrides that throw <code>UnsupportedOperationException</code> or do nothing.</li>
+      <li>Others will implement your interface: write the contract down and give them a contract test.</li>
+    </ul></dd>
+    <dt class="not">Do NOT use it when…</dt>
+    <dd><ul>
+      <li>You are tempted to demand <em>identical</em> behaviour. Different behaviour inside the promise is the point of polymorphism.</li>
+      <li>You are writing contracts so detailed that no second implementation could fit them.</li>
+      <li>A type has one implementation and no prospect of more: clear names and ordinary tests are enough, without a formal contract suite.</li>
+      <li>You are tempted to ban inheritance outright out of fear. Fix the contract instead.</li>
+    </ul></dd>
+    <dt>The cost</dt>
+    <dd>Contracts must be written down and kept in sync with the code; contract tests are an extra (abstract) test class per contract; sometimes an "obvious" inheritance must be given up for siblings or immutability, which can feel less natural at first.</dd>
+    <dt>Relatives</dt>
+    <dd><ul>
+      <li><strong>OCP</strong> (Lesson 06): LSP is what makes plugging new classes into closed code safe.</li>
+      <li><strong>Fragile base class</strong> (Lesson 03): the danger from the parent's side; LSP is the danger from the child's side.</li>
+      <li><strong>Interface Segregation</strong> (Lesson 08): the usual cure for refused bequests, contracts small enough for every implementer to keep.</li>
+      <li><strong>Design by Contract</strong> (Meyer): the pre-/postcondition toolset LSP is stated in.</li>
+    </ul></dd>
+    <dt>Seen in the wild</dt>
+    <dd><code>java.util.List.add</code> is documented as an "optional operation" that may throw <code>UnsupportedOperationException</code>, so <code>List.of(...)</code> can refuse it while still being a <code>List</code>. It is a refused bequest made legal by writing it into the contract. <code>java.util.Stack extends Vector</code> is an older misstep; its documentation now points to <code>Deque</code>.</dd>
+    <dt>Where it lives</dt>
+    <dd>Kata: <code>com.katas.lsp</code> (<code>Shape</code>, immutable <code>Rectangle</code> and <code>Square</code> as siblings, <code>AreaTotaller</code>; the broken hierarchy in <code>naive/</code>). Hub: <code>devices.Device</code>'s written contract, checked by <code>DeviceContractTest</code> for <code>Light</code>, <code>Thermostat</code> and <code>LoggedDevice</code>. Lesson: <a href="phase-1-solid/chapter-02-solid/lesson-07-liskov-substitution.html">07</a>.</dd>
+  </dl>
+</article>
+
+<p class="position">Pattern catalog · 3 entries · updated by every principle and pattern lesson</p>
 
 </main>
 </div>
