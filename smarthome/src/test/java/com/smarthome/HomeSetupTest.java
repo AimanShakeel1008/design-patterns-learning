@@ -4,6 +4,7 @@ package com.smarthome;
 // The log the setup wires devices to, and the contracts.
 import com.smarthome.activity.ActivityLog;
 import com.smarthome.devices.Device;
+import com.smarthome.devices.Lockable;
 import com.smarthome.devices.Switchable;
 // The @Test marker.
 import org.junit.jupiter.api.Test;
@@ -13,6 +14,8 @@ import java.util.List;
 
 // Equality check.
 import static org.junit.jupiter.api.Assertions.assertEquals;
+// Fails unless the condition is true.
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 // Proves the setup's one job: the right devices, grouped by capability.
 class HomeSetupTest {
@@ -32,13 +35,25 @@ class HomeSetupTest {
         assertEquals(List.of("Living Room Light: ON"), log.entries());
     }
 
-    // The other devices: an armed smoke alarm and a locked front door.
+    // The lockable devices: the front door, starting locked.
     @Test
-    void createsTheDevicesThatCannotSwitch() {
-        // Build the non-switchable devices.
+    void createsTheLockableDevices() {
+        // Build the lockable devices.
+        List<Lockable> locks = new HomeSetup().createLockables();
+        // One lock, the front door...
+        assertEquals(1, locks.size());
+        assertEquals("Front Door", locks.get(0).getName());
+        // ...locked from the start.
+        assertTrue(locks.get(0).isLocked());
+    }
+
+    // The other devices: an armed smoke alarm.
+    @Test
+    void createsTheDevicesWithOnlyTheBaseContract() {
+        // Build the remaining devices.
         List<Device> others = new HomeSetup().createOtherDevices();
-        // Each reports itself through the base Device contract.
+        // Just the smoke alarm, reporting itself through the base Device contract.
+        assertEquals(1, others.size());
         assertEquals("Hallway Smoke Alarm: ARMED", others.get(0).status());
-        assertEquals("Front Door: LOCKED", others.get(1).status());
     }
 }

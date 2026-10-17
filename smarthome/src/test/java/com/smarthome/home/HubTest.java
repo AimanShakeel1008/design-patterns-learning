@@ -39,7 +39,7 @@ class HubTest {
         Light light = new Light("Desk Lamp");
         Thermostat thermostat = new Thermostat("Office", 20);
         // A hub operating them, with no other devices.
-        Hub hub = new Hub(List.of(light, thermostat), List.of());
+        Hub hub = new Hub(List.of(light, thermostat), List.of(), List.of());
         // Run the "everything on" routine.
         hub.run(new AllOn());
         // Both are on.
@@ -53,7 +53,7 @@ class HubTest {
         // Two lights, both started.
         Switchable desk = new Light("Desk Lamp");
         Switchable porch = new Light("Porch Light");
-        Hub hub = new Hub(List.of(desk, porch), List.of());
+        Hub hub = new Hub(List.of(desk, porch), List.of(), List.of());
         hub.run(new AllOn());
         // Switch one off by name.
         hub.turnOff("Porch Light");
@@ -67,7 +67,7 @@ class HubTest {
     void switchableNamedFindsTheDevice() {
         // One thermostat among two devices.
         Switchable thermostat = new Thermostat("Hall Thermostat", 21);
-        Hub hub = new Hub(List.of(new Light("Desk Lamp"), thermostat), List.of());
+        Hub hub = new Hub(List.of(new Light("Desk Lamp"), thermostat), List.of(), List.of());
         // The same object comes back (assertSame: identical, not just equal).
         assertSame(thermostat, hub.switchableNamed("Hall Thermostat"));
     }
@@ -76,7 +76,7 @@ class HubTest {
     @Test
     void unknownNameIsRefused() {
         // A one-device hub.
-        Hub hub = new Hub(List.of(new Light("Desk Lamp")), List.of());
+        Hub hub = new Hub(List.of(new Light("Desk Lamp")), List.of(), List.of());
         // Asking for a device that does not exist must throw.
         assertThrows(IllegalArgumentException.class, () -> hub.turnOff("Garage Light"));
     }
@@ -88,11 +88,13 @@ class HubTest {
         Light light = new Light("Hall Light");
         Device alarm = new SmokeAlarm("Hallway Smoke Alarm");
         DoorLock door = new DoorLock("Front Door");
-        Hub hub = new Hub(List.of(light), List.of(alarm, door));
+        // Each capability's devices handed over in their own group.
+        Hub hub = new Hub(List.of(light), List.of(door), List.of(alarm));
         // All three are in the house...
         assertEquals(3, hub.devices().size());
-        // ...but only one is switchable.
+        // ...but only one is switchable, and only one is lockable.
         assertEquals(1, hub.switchables().size());
+        assertEquals(1, hub.lockables().size());
         // "Away" runs safely: the alarm and the lock are never handed to it.
         hub.run(new AllOn());
         hub.run(new AllOff());

@@ -213,3 +213,14 @@ Terms are grouped by first-appearance lesson so the list reads in learning order
 - **DI container** — a framework (e.g. Spring) that automates the composition root: creates objects and passes constructor arguments. (Lesson 09)
 - **`assertSame`** — JUnit check that two references point at the very same object (not just equal ones). (Lesson 09)
 - **`List<Integer>` / `Integer`** — a list of whole numbers; `Integer` is the object form of `int`, converted automatically. (Lesson 09)
+
+---
+
+## Lesson 10 — SOLID Together
+
+- **Tangle (of smells)** — several principles broken at once in one module, each smell feeding the others. (Lesson 10)
+- **Small-step refactoring** — a large refactoring done as small steps that each keep behaviour identical, with any deliberate bug fix made as its own named step. (Lesson 10)
+- **Setting instead of subclass** — expressing a variation (e.g. quiet hours) as a constructor parameter rather than a subclass that overrides and refuses. (Lesson 10)
+- **Principle tensions** — SRP vs simplicity, OCP vs YAGNI, ISP vs discoverability, DIP vs readability, LSP vs reuse by inheritance; resolved by asking which option keeps expected changes local at the lowest cost. (Lesson 10)
+- **`continue`** — ends the current pass of a loop early and moves on to the next item. (Lesson 10)
+- **`String.join(sep, list)`** — glues a list's items together with a separator: `["a","b"]` → `"a,b"`. (Lesson 10)

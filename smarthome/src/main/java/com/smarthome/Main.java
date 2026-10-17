@@ -4,6 +4,8 @@ package com.smarthome;
 
 // The shared activity history.
 import com.smarthome.activity.ActivityLog;
+// A concrete alert channel: allowed here, because this is the composition root.
+import com.smarthome.alerts.ConsoleAlerts;
 // The climate policy (Lesson 09).
 import com.smarthome.climate.ClimateControl;
 // How the house is operated.
@@ -13,6 +15,8 @@ import com.smarthome.report.HouseReport;
 // The modes the homeowner can run (Lesson 06).
 import com.smarthome.routines.AllOn;
 import com.smarthome.routines.KeepOnly;
+// The security policy (Lesson 10).
+import com.smarthome.security.LockCheck;
 // A concrete sensor: allowed here, because this is the composition root.
 import com.smarthome.sensors.SimulatedThermometer;
 
@@ -35,12 +39,14 @@ public class Main {
         ActivityLog log = new ActivityLog();
         // The installer's choice of devices (HomeSetup is part of this root).
         HomeSetup setup = new HomeSetup();
-        // Inject both device groups into the hub.
-        Hub hub = new Hub(setup.createSwitchables(log), setup.createOtherDevices());
+        // Inject the three device groups into the hub.
+        Hub hub = new Hub(setup.createSwitchables(log), setup.createLockables(), setup.createOtherDevices());
         // A concrete sensor detail, reading 26C in the hall.
         SimulatedThermometer hallSensor = new SimulatedThermometer("Hall", 26);
         // Inject the sensor and the thermostat (as a Switchable) into the policy.
         ClimateControl climate = new ClimateControl(hallSensor, hub.switchableNamed("Hall Thermostat"), 18, 24);
+        // Inject the locks and a concrete channel into the security policy.
+        LockCheck lockCheck = new LockCheck(hub.lockables(), new ConsoleAlerts());
 
         // --- Run one scenario ---
         // Morning: everything on.
@@ -49,6 +55,10 @@ public class Main {
         hub.run(new KeepOnly(List.of("Hall Thermostat")));
         // The hall is 26C, above the 24C maximum: the policy decides, and says so.
         System.out.println(climate.regulate());
+        // Someone goes out and leaves the front door (the only lock) unlocked...
+        hub.lockables().get(0).unlock();
+        // ...and the security check warns about it.
+        lockCheck.run();
 
         // Display the result. print, not println: the report ends with its own newline.
         System.out.print(new HouseReport().render(hub.devices(), hub.switchables(), log.entries()));

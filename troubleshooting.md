@@ -213,6 +213,22 @@ This page decodes the errors that actually come up while working through the cou
 
 ---
 
+## SOLID together (Lesson 10)
+
+### `error: constructor Hub in class Hub cannot be applied to given types`
+
+**Why:** since Lesson 10 the hub takes THREE device groups: `new Hub(switchables, lockables, otherDevices)`. Code (or your own experiment) still passes two.
+
+**Fix:** add the lockables group, e.g. `new Hub(setup.createSwitchables(log), setup.createLockables(), setup.createOtherDevices())`, or `List.of()` in tests that have no locks.
+
+### The report lists the front door before the smoke alarm
+
+**Why:** expected. The hub lists switchables, then lockables, then the remaining devices.
+
+**Fix:** nothing to fix.
+
+---
+
 ## Lesson pages
 
 ### A lesson page opens with no colours or layout (plain black text)

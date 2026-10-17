@@ -10,6 +10,7 @@ import com.smarthome.activity.LoggedDevice;
 import com.smarthome.devices.Device;
 import com.smarthome.devices.DoorLock;
 import com.smarthome.devices.Light;
+import com.smarthome.devices.Lockable;
 import com.smarthome.devices.SmokeAlarm;
 import com.smarthome.devices.Switchable;
 import com.smarthome.devices.Thermostat;
@@ -34,15 +35,22 @@ public class HomeSetup {
         );
     }
 
-    // The devices that cannot be switched: they promise only the base contract
-    // (and, for the lock, the Lockable capability).
+    // The devices that can be locked (their own group since Lesson 10, so the
+    // security check receives them typed as Lockable).
+    public List<Lockable> createLockables() {
+        // An unmodifiable list.
+        return List.of(
+                // Starts locked.
+                new DoorLock("Front Door")
+        );
+    }
+
+    // The devices that promise only the base Device contract.
     public List<Device> createOtherDevices() {
         // An unmodifiable list.
         return List.of(
                 // Always armed; nobody can switch it off, not even "Away".
-                new SmokeAlarm("Hallway Smoke Alarm"),
-                // Starts locked.
-                new DoorLock("Front Door")
+                new SmokeAlarm("Hallway Smoke Alarm")
         );
     }
 }
