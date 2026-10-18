@@ -99,6 +99,7 @@ Terms are grouped by first-appearance lesson so the list reads in learning order
 - **Dynamic dispatch** — choosing which method body runs from the object's actual type at run time: search upward from the actual class. (Lesson 02)
 - **Refactoring** — improving code's internal structure while keeping its behaviour exactly the same, with tests as the safety net. (Lesson 02)
 - **Fragile base class (first look)** — a child breaking because its parent changed, even though the child was not touched. Shown in full in Lesson 03. (Lesson 02)
+- **Shotgun surgery** — one change forcing small edits in many places; miss one and the program contradicts itself. (Lesson 02)
 
 ---
 
@@ -224,3 +225,22 @@ Terms are grouped by first-appearance lesson so the list reads in learning order
 - **Principle tensions** — SRP vs simplicity, OCP vs YAGNI, ISP vs discoverability, DIP vs readability, LSP vs reuse by inheritance; resolved by asking which option keeps expected changes local at the lowest cost. (Lesson 10)
 - **`continue`** — ends the current pass of a loop early and moves on to the next item. (Lesson 10)
 - **`String.join(sep, list)`** — glues a list's items together with a separator: `["a","b"]` → `"a,b"`. (Lesson 10)
+
+---
+
+## Lesson 11 — The Companion Principles
+
+- **Companion principles** — short rules of thumb that travel alongside SOLID (DRY, KISS, YAGNI, the Law of Demeter), catching rot it misses and stopping it turning into over-design. (Lesson 11)
+- **DRY (Don't Repeat Yourself)** — every piece of knowledge (a rule, a meaningful number, a format) is written down in exactly one place, and everything else asks that place. (Lesson 11)
+- **Single source of truth** — the one place in the code that holds a fact, which every other part asks instead of keeping its own copy. (Lesson 11)
+- **Rule of three** — tolerate a second copy; merge on the third, when you can see what really repeats. (Lesson 11)
+- **Wrong abstraction** — a shared helper that merged look-alike code and then grew flags for each caller's differences; "duplication is far cheaper" (Sandi Metz). (Lesson 11)
+- **KISS (Keep It Simple)** — of the designs that fully do the job, choose the one with the fewest parts and nothing hidden; every extra part must earn its place. (Lesson 11)
+- **YAGNI (You Aren't Gonna Need It)** — don't build a feature, option or extension point until a real need for it arrives; never an excuse to skip quality. (Lesson 11)
+- **Extreme Programming (XP)** — a way of building software in very small steps with constant testing and feedback, where YAGNI comes from. (Lesson 11)
+- **Law of Demeter (principle of least knowledge)** — a method calls methods only on its own object, its parameters, objects it creates, and its own fields, never on objects those friends hand back. (Lesson 11)
+- **Friend / stranger (Demeter sense)** — a friend is `this`, a parameter, a created object or a field; anything a friend returns is a stranger. (Lesson 11)
+- **Train wreck (message chain)** — a chain of calls reaching through objects, like `a.getB().getC().doD()`; couples you to other objects' insides. (Lesson 11)
+- **Tell, Don't Ask** — tell an object what you want done (`customer.pay(2)`) instead of asking for its insides and doing the work yourself. (Lesson 11)
+- **Middle man** — a class whose methods mostly just forward to an object it holds; the smell of following the Law of Demeter mechanically. (Lesson 11)
+- **Generic method / type parameter / bound** — a method with a type placeholder filled in at each call (`<T extends Device> T findNamed(List<T> ...)`); `T` is the type parameter, and `extends Device` is its bound. (Lesson 11)

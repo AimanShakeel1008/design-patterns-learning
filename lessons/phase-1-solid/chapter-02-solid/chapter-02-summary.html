@@ -1,0 +1,489 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Chapter 02 Summary — SOLID · Design Patterns in Java</title>
+<link rel="stylesheet" href="../../assets/lesson.css">
+</head>
+<body>
+<div class="page">
+
+<aside class="toc" aria-label="Table of contents">
+  <p class="toc-title">Chapter 02 · Summary</p>
+  <ol>
+    <li><a href="#s1">1 · What we built</a></li>
+    <li><a href="#s2">2 · The hub, as a diagram</a></li>
+    <li><a href="#s3">3 · The story so far</a></li>
+    <li><a href="#s4">4 · Lessons at a glance</a></li>
+    <li><a href="#s5">5 · How the principles connect</a></li>
+    <li><a href="#s6">6 · Ideas that come back</a></li>
+    <li><a href="#s7">7 · Self-check</a></li>
+    <li><a href="#s8">8 · Boss challenge</a></li>
+  </ol>
+  <nav class="toc-nav" aria-label="Course navigation">
+    <a class="navcard" href="lesson-11-companion-principles.html">
+      <span class="navkicker">← Prev · Lesson 11</span>
+      <span class="navtitle">The Companion Principles</span>
+    </a>
+    <a class="navmap" href="../../index.html">↑ Course map</a>
+    <a class="navcatalog" href="../../pattern-catalog.html">◆ Pattern catalog</a>
+    <span class="navcard disabled">
+      <span class="navkicker">Next · Lesson 12 →</span>
+      <span class="navtitle">Patterns: Named Cures for Named Pains</span>
+      <span class="navnote">not yet written</span>
+    </span>
+  </nav>
+</aside>
+
+<main>
+
+<header class="banner">
+  <p class="kicker">Phase 1 · Chapter 02 · Summary</p>
+  <h1>SOLID</h1>
+  <p class="subtitle">Five principles that keep change local, one full refactoring that used them together, and four companions that stop them turning into over-design.</p>
+  <p class="meta">
+    Lessons: <a href="lesson-05-single-responsibility.html">05</a> · <a href="lesson-06-open-closed.html">06</a> · <a href="lesson-07-liskov-substitution.html">07</a> · <a href="lesson-08-interface-segregation.html">08</a> · <a href="lesson-09-dependency-inversion.html">09</a> · <a href="lesson-10-solid-together.html">10</a> · <a href="lesson-11-companion-principles.html">11</a>.
+    State after this chapter: katas <strong>59 tests</strong>, hub <strong>65 tests</strong> (predicted). Catalog: <a href="../../pattern-catalog.html">10 entries</a>.
+  </p>
+</header>
+
+<!-- ============================== SECTION 1 ============================== -->
+<section id="s1">
+  <h2><span class="sec-num">1</span>What we built</h2>
+
+  <h3>Katas (frozen exhibits)</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Package</th><th>Files</th><th>What it shows</th></tr></thead>
+      <tbody>
+        <tr><td><code>com.katas.srp</code></td><td><code>EmployeeData</code>, <code>PayCalculator</code>, <code>HoursReporter</code>, <code>EmployeeCsv</code>, <code>Main</code>, <code>naive/Employee</code>; tests <code>ResponsibilitiesTest</code>, <code>GodClassTest</code></td><td>A god class serving three actors, split so each actor's change stays in one class</td></tr>
+        <tr><td><code>com.katas.ocp</code></td><td><code>ShippingMethod</code> + <code>Standard</code>/<code>Express</code>/<code>Overnight</code>/<code>DroneShipping</code>, <code>ShippingQuoter</code>, <code>Main</code>, <code>naive/ShippingQuoter</code>; tests <code>ShippingQuoterTest</code>, <code>IfElseChainTest</code> (+ <code>PickupInStore</code>)</td><td>The if-else ladder replaced by a variation point; a new method added with no edit</td></tr>
+        <tr><td><code>com.katas.lsp</code></td><td><code>Shape</code>, <code>Rectangle</code>, <code>Square</code>, <code>AreaTotaller</code>, <code>Main</code>, <code>naive/Rectangle</code>, <code>naive/Square</code>, <code>naive/Resizer</code>; tests <code>ShapeTest</code>, <code>BrokenPromiseTest</code></td><td>Square/Rectangle: a broken promise, cured by immutable siblings</td></tr>
+        <tr><td><code>com.katas.isp</code></td><td><code>Printer</code>, <code>Scanner</code>, <code>Fax</code>, <code>OldPrinter</code>, <code>MultiFunctionMachine</code>, <code>ReportPrinter</code>, <code>Main</code>, <code>naive/Machine</code>, <code>naive/OldPrinter</code>; tests <code>SegregatedRolesTest</code>, <code>FatInterfaceTest</code> (+ <code>RecordingPrinter</code>)</td><td>A fat interface split into role interfaces; nothing refused</td></tr>
+        <tr><td><code>com.katas.dip</code></td><td><code>AlertChannel</code>, <code>TemperatureMonitor</code>, <code>channels/EmailChannel</code>, <code>channels/SmsChannel</code>, <code>Main</code>, <code>naive/</code>; test <code>TemperatureMonitorTest</code> (+ <code>RecordingChannel</code>)</td><td>A policy-owned interface with details injected at a composition root</td></tr>
+        <tr><td><code>com.katas.solid</code></td><td><code>Monitored</code>, <code>DoorLock</code>, <code>SmokeAlarm</code>, <code>AlertChannel</code>, <code>AlertFormatter</code>, <code>SecurityCheck</code>, <code>Main</code>, <code>channels/</code>, <code>naive/</code> (5 rotten files); tests <code>SecurityCheckTest</code>, <code>RottenModuleTest</code></td><td>One rotten module refactored S → O → L → I → D</td></tr>
+        <tr><td><code>com.katas.dry</code></td><td><code>DeliveryPolicy</code>, <code>CartBanner</code>, <code>Checkout</code>, <code>Main</code>, <code>naive/</code>; tests <code>DeliveryPolicyTest</code>, <code>DuplicatedRuleTest</code></td><td>One rule, one home; drifted copies</td></tr>
+        <tr><td><code>com.katas.kiss</code></td><td><code>Greeter</code>, <code>Main</code>, <code>naive/GreetingEngine</code>; tests <code>GreeterTest</code>, <code>EngineShadowingTest</code></td><td>Four plain <code>if</code>s vs an engine whose hidden order swallows an extension</td></tr>
+        <tr><td><code>com.katas.yagni</code></td><td><code>ShoppingList</code>, <code>Main</code>, <code>naive/ListPrinter</code>; tests <code>ShoppingListTest</code>, <code>SpeculativePrinterTest</code></td><td>Today's need only, vs knobs for a guessed future</td></tr>
+        <tr><td><code>com.katas.demeter</code></td><td><code>Wallet</code>, <code>Customer</code>, <code>Paperboy</code>, <code>Main</code>, <code>naive/</code>; tests <code>PaperboyTest</code>, <code>TrainWreckTest</code></td><td>Telling a friend vs reaching into a stranger</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>Smart Home Hub (the living project)</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Package · file</th><th>Purpose</th><th>Since</th></tr></thead>
+      <tbody>
+        <tr><td><code>Main</code>, <code>HomeSetup</code></td><td>The composition root: the only code that names concrete classes and wires them together</td><td>00 / 05, root since 09</td></tr>
+        <tr><td><code>devices.Device</code></td><td>Base contract: <code>getName()</code>, <code>status()</code></td><td>01, slimmed in 08</td></tr>
+        <tr><td><code>devices.Switchable</code>, <code>Lockable</code>, <code>Dimmable</code></td><td>Capability (role) interfaces</td><td>08</td></tr>
+        <tr><td><code>devices.SwitchableDevice</code></td><td>Abstract parent with the shared name and on/off code</td><td>02 (as <code>AbstractDevice</code>), renamed 08</td></tr>
+        <tr><td><code>devices.Light</code>, <code>Thermostat</code>, <code>SmokeAlarm</code>, <code>DoorLock</code></td><td>The concrete devices</td><td>01 / 08</td></tr>
+        <tr><td><code>activity.ActivityLog</code>, <code>LoggedDevice</code></td><td>The house history, and the wrapper that logs any switchable device</td><td>03</td></tr>
+        <tr><td><code>home.Hub</code></td><td>Operating the house: typed device groups, <code>run(Routine)</code>, <code>turnOff</code> / <code>unlock</code> by name</td><td>05, grown in 08, 10, 11</td></tr>
+        <tr><td><code>report.HouseReport</code></td><td>How the house's state looks as text</td><td>05</td></tr>
+        <tr><td><code>routines.Routine</code>, <code>AllOn</code>, <code>AllOff</code>, <code>KeepOnly</code></td><td>House modes as a variation point</td><td>06</td></tr>
+        <tr><td><code>climate.TemperatureSensor</code>, <code>ClimateControl</code></td><td>The comfort policy and the abstraction it owns</td><td>09</td></tr>
+        <tr><td><code>sensors.SimulatedThermometer</code></td><td>A sensor detail implementing the policy's contract</td><td>09</td></tr>
+        <tr><td><code>security.AlertChannel</code>, <code>LockCheck</code></td><td>The lock-warning policy and its delivery abstraction</td><td>10</td></tr>
+        <tr><td><code>alerts.ConsoleAlerts</code></td><td>The one delivery detail (prints)</td><td>10</td></tr>
+        <tr><td>Tests (65)</td><td>Contract tests per capability, policy tests with fakes (<code>FixedSensor</code>, <code>RecordingAlerts</code>), hub, setup, report, routines</td><td>00–11</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ============================== SECTION 2 ============================== -->
+<section id="s2">
+  <h2><span class="sec-num">2</span>The hub, as a diagram</h2>
+  <p>The hub is now too big for one readable picture, so it is drawn in two parts: the device family, and the policies around it.</p>
+
+  <figure class="fig">
+    <svg viewBox="0 0 720 450" role="img" aria-label="Device family. Switchable and Lockable are interfaces extending the Device interface. SmokeAlarm implements Device. The abstract SwitchableDevice implements Switchable; Light and Thermostat extend it, and Light also implements Dimmable. LoggedDevice implements Switchable and holds an inner Switchable. DoorLock implements Lockable.">
+      <defs>
+        <marker id="c1-hollow" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="12" markerHeight="12" orient="auto-start-reverse">
+          <path d="M1,1 L11,6 L1,11 z" class="uml-head-hollow"/>
+        </marker>
+        <marker id="c1-open" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="10" markerHeight="10" orient="auto-start-reverse">
+          <path d="M0,0 L10,5 L0,10" class="uml-head-open"/>
+        </marker>
+      </defs>
+      <!-- Device -->
+      <rect x="265" y="10" width="190" height="70" rx="6" class="fig-contract"/>
+      <text x="360" y="28" class="uml-stereo">«interface»</text>
+      <text x="360" y="46" class="uml-name">Device</text>
+      <line x1="265" y1="54" x2="455" y2="54" class="uml-divider"/>
+      <text x="275" y="72" class="uml-member">+ getName() · status()</text>
+      <!-- Switchable -->
+      <rect x="30" y="110" width="200" height="70" rx="6" class="fig-contract"/>
+      <text x="130" y="128" class="uml-stereo">«interface»</text>
+      <text x="130" y="146" class="uml-name">Switchable</text>
+      <line x1="30" y1="154" x2="230" y2="154" class="uml-divider"/>
+      <text x="40" y="172" class="uml-member">+ turnOn/turnOff/isOn</text>
+      <!-- Lockable -->
+      <rect x="490" y="110" width="200" height="70" rx="6" class="fig-contract"/>
+      <text x="590" y="128" class="uml-stereo">«interface»</text>
+      <text x="590" y="146" class="uml-name">Lockable</text>
+      <line x1="490" y1="154" x2="690" y2="154" class="uml-divider"/>
+      <text x="500" y="172" class="uml-member">+ lock/unlock/isLocked</text>
+      <!-- SmokeAlarm -->
+      <rect x="330" y="110" width="130" height="36" rx="6" class="fig-code"/>
+      <text x="395" y="133" class="uml-name">SmokeAlarm</text>
+      <!-- interface inheritance + implementation to Device -->
+      <line x1="130" y1="110" x2="290" y2="83" class="uml-line" marker-end="url(#c1-hollow)"/>
+      <line x1="590" y1="110" x2="430" y2="83" class="uml-line" marker-end="url(#c1-hollow)"/>
+      <line x1="395" y1="110" x2="395" y2="84" class="uml-dashed" marker-end="url(#c1-hollow)"/>
+      <!-- SwitchableDevice -->
+      <rect x="10" y="230" width="180" height="56" rx="6" class="fig-contract"/>
+      <text x="100" y="247" class="uml-stereo">«abstract»</text>
+      <text x="100" y="268" class="uml-name uml-abstract">SwitchableDevice</text>
+      <line x1="100" y1="230" x2="100" y2="184" class="uml-dashed" marker-end="url(#c1-hollow)"/>
+      <!-- LoggedDevice -->
+      <rect x="210" y="230" width="160" height="56" rx="6" class="fig-code"/>
+      <text x="290" y="250" class="uml-name">LoggedDevice</text>
+      <line x1="210" y1="258" x2="370" y2="258" class="uml-divider"/>
+      <text x="220" y="276" class="uml-member">- inner : Switchable</text>
+      <line x1="250" y1="230" x2="205" y2="184" class="uml-dashed" marker-end="url(#c1-hollow)"/>
+      <path d="M310,230 L310,166 L234,166" class="uml-line" marker-end="url(#c1-open)"/>
+      <text x="318" y="205" class="uml-mult">inner (has-a)</text>
+      <!-- DoorLock -->
+      <rect x="540" y="230" width="140" height="36" rx="6" class="fig-code"/>
+      <text x="610" y="253" class="uml-name">DoorLock</text>
+      <line x1="610" y1="230" x2="600" y2="184" class="uml-dashed" marker-end="url(#c1-hollow)"/>
+      <!-- Light, Thermostat -->
+      <rect x="10" y="320" width="130" height="36" rx="6" class="fig-code"/>
+      <text x="75" y="343" class="uml-name">Light</text>
+      <rect x="160" y="320" width="130" height="36" rx="6" class="fig-code"/>
+      <text x="225" y="343" class="uml-name">Thermostat</text>
+      <line x1="75" y1="320" x2="85" y2="290" class="uml-line" marker-end="url(#c1-hollow)"/>
+      <line x1="225" y1="320" x2="150" y2="290" class="uml-line" marker-end="url(#c1-hollow)"/>
+      <!-- Dimmable -->
+      <rect x="10" y="390" width="150" height="50" rx="6" class="fig-contract"/>
+      <text x="85" y="408" class="uml-stereo">«interface»</text>
+      <text x="85" y="428" class="uml-name">Dimmable</text>
+      <line x1="75" y1="356" x2="75" y2="386" class="uml-dashed" marker-end="url(#c1-hollow)"/>
+    </svg>
+    <figcaption>The device family after Chapter 02, in the notation from <a href="../../phase-0-oop-foundations/chapter-01-oop/lesson-04-coupling-cohesion-uml.html">Lesson 04</a>. Violet = contracts. Solid line with hollow triangle = extends; dashed = implements. The smoke alarm only promises the base contract (ISP). <code>LoggedDevice</code> both <em>is</em> a <code>Switchable</code> and <em>holds</em> one (composition). The only inheritance between classes is the small, stable <code>SwitchableDevice</code> parent.</figcaption>
+  </figure>
+
+  <figure class="fig">
+    <svg viewBox="0 0 720 410" role="img" aria-label="Policies and contracts. Hub uses Routine and holds lists of Switchable and Lockable. ClimateControl holds a Switchable and a TemperatureSensor. LockCheck holds Lockables and an AlertChannel. AllOn, AllOff and KeepOnly implement Routine; SimulatedThermometer implements TemperatureSensor; ConsoleAlerts implements AlertChannel.">
+      <defs>
+        <marker id="c2-hollow" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="12" markerHeight="12" orient="auto-start-reverse">
+          <path d="M1,1 L11,6 L1,11 z" class="uml-head-hollow"/>
+        </marker>
+        <marker id="c2-open" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="10" markerHeight="10" orient="auto-start-reverse">
+          <path d="M0,0 L10,5 L0,10" class="uml-head-open"/>
+        </marker>
+      </defs>
+      <!-- clients -->
+      <rect x="10" y="20" width="170" height="110" rx="6" class="fig-code"/>
+      <text x="95" y="40" class="uml-name">Hub</text>
+      <line x1="10" y1="48" x2="180" y2="48" class="uml-divider"/>
+      <text x="20" y="66" class="uml-member">+ run(routine)</text>
+      <text x="20" y="83" class="uml-member">+ turnOff(name)</text>
+      <text x="20" y="100" class="uml-member">+ unlock(name)</text>
+      <text x="20" y="117" class="uml-member">- findNamed(...)</text>
+      <rect x="10" y="240" width="170" height="56" rx="6" class="fig-code"/>
+      <text x="95" y="260" class="uml-name">ClimateControl</text>
+      <line x1="10" y1="268" x2="180" y2="268" class="uml-divider"/>
+      <text x="20" y="286" class="uml-member">+ regulate()</text>
+      <rect x="10" y="340" width="170" height="56" rx="6" class="fig-code"/>
+      <text x="95" y="360" class="uml-name">LockCheck</text>
+      <line x1="10" y1="368" x2="180" y2="368" class="uml-divider"/>
+      <text x="20" y="386" class="uml-member">+ run()</text>
+      <!-- contracts -->
+      <rect x="270" y="20" width="180" height="50" rx="6" class="fig-contract"/>
+      <text x="360" y="38" class="uml-stereo">«interface»</text>
+      <text x="360" y="58" class="uml-name">Routine</text>
+      <rect x="270" y="100" width="180" height="50" rx="6" class="fig-contract"/>
+      <text x="360" y="118" class="uml-stereo">«interface»</text>
+      <text x="360" y="138" class="uml-name">Switchable</text>
+      <rect x="270" y="180" width="180" height="50" rx="6" class="fig-contract"/>
+      <text x="360" y="198" class="uml-stereo">«interface»</text>
+      <text x="360" y="218" class="uml-name">Lockable</text>
+      <rect x="270" y="260" width="180" height="50" rx="6" class="fig-contract"/>
+      <text x="360" y="278" class="uml-stereo">«interface»</text>
+      <text x="360" y="298" class="uml-name">TemperatureSensor</text>
+      <rect x="270" y="340" width="180" height="50" rx="6" class="fig-contract"/>
+      <text x="360" y="358" class="uml-stereo">«interface»</text>
+      <text x="360" y="378" class="uml-name">AlertChannel</text>
+      <!-- client to contract -->
+      <line x1="180" y1="40" x2="266" y2="40" class="uml-dashed" marker-end="url(#c2-open)"/>
+      <line x1="180" y1="112" x2="266" y2="125" class="uml-line" marker-end="url(#c2-open)"/>
+      <text x="246" y="112" class="uml-mult">*</text>
+      <path d="M150,130 L150,205 L266,205" class="uml-line" marker-end="url(#c2-open)"/>
+      <text x="246" y="198" class="uml-mult">*</text>
+      <line x1="180" y1="250" x2="266" y2="144" class="uml-line" marker-end="url(#c2-open)"/>
+      <line x1="180" y1="280" x2="266" y2="285" class="uml-line" marker-end="url(#c2-open)"/>
+      <line x1="180" y1="350" x2="266" y2="222" class="uml-line" marker-end="url(#c2-open)"/>
+      <line x1="180" y1="370" x2="266" y2="365" class="uml-line" marker-end="url(#c2-open)"/>
+      <!-- details -->
+      <rect x="490" y="12" width="66" height="30" rx="6" class="fig-code"/>
+      <text x="523" y="32" class="uml-name">AllOn</text>
+      <rect x="566" y="12" width="66" height="30" rx="6" class="fig-code"/>
+      <text x="599" y="32" class="uml-name">AllOff</text>
+      <rect x="642" y="12" width="74" height="30" rx="6" class="fig-code"/>
+      <text x="679" y="32" class="uml-name">KeepOnly</text>
+      <line x1="523" y1="42" x2="523" y2="58" class="uml-dashed"/>
+      <line x1="599" y1="42" x2="599" y2="58" class="uml-dashed"/>
+      <line x1="679" y1="42" x2="679" y2="58" class="uml-dashed"/>
+      <line x1="679" y1="58" x2="454" y2="58" class="uml-dashed" marker-end="url(#c2-hollow)"/>
+      <text x="470" y="122" class="fig-small">implemented by Light, Thermostat,</text>
+      <text x="470" y="138" class="fig-small">LoggedDevice (figure above)</text>
+      <text x="470" y="210" class="fig-small">implemented by DoorLock (figure above)</text>
+      <rect x="520" y="265" width="190" height="40" rx="6" class="fig-code"/>
+      <text x="615" y="290" class="uml-name">SimulatedThermometer</text>
+      <line x1="520" y1="285" x2="454" y2="285" class="uml-dashed" marker-end="url(#c2-hollow)"/>
+      <rect x="520" y="345" width="190" height="40" rx="6" class="fig-code"/>
+      <text x="615" y="370" class="uml-name">ConsoleAlerts</text>
+      <line x1="520" y1="365" x2="454" y2="365" class="uml-dashed" marker-end="url(#c2-hollow)"/>
+    </svg>
+    <figcaption>Left: the policies (blue). Middle: the contracts they depend on (violet). Right: the details that implement those contracts. Every arrow from a policy points at a violet box: that is "program to an interface" and DIP, made visible. Solid open arrows = holds (<code>*</code> = a list); the dashed one from <code>Hub</code> = uses briefly (<code>run</code> takes a routine as a parameter). Some lines cross because the hub and the two checks share contracts. <code>HouseReport</code> and the composition root (<code>Main</code>, <code>HomeSetup</code>) are left out to keep the picture readable.</figcaption>
+  </figure>
+</section>
+
+<!-- ============================== SECTION 3 ============================== -->
+<section id="s3">
+  <h2><span class="sec-num">3</span>The story so far</h2>
+  <ol class="trace">
+    <li><strong>Lesson 05 (S):</strong> <code>Main</code> had become a god class. It split into <code>HomeSetup</code> (which devices), <code>Hub</code> (operating them) and <code>HouseReport</code> (how it looks), one actor each.</li>
+    <li><strong>Lesson 06 (O):</strong> house modes were an if-else on mode names. They became <code>Routine</code> classes, and <code>hub.run(routine)</code> never changes for a new mode.</li>
+    <li><strong>Lesson 07 (L):</strong> the <code>Device</code> contract was written down, and contract tests started checking every implementation, the logging wrapper included.</li>
+    <li><strong>Lesson 08 (I):</strong> a smoke alarm and a door lock arrived and could not honestly "turn off." The fat <code>Device</code> split into <code>Device</code> plus <code>Switchable</code>, <code>Lockable</code> and <code>Dimmable</code>, and the hub keeps typed groups, so routines never see the alarm.</li>
+    <li><strong>Lesson 09 (D):</strong> a climate policy arrived that owns its <code>TemperatureSensor</code> contract. The simulated thermometer plugs in from outside, and <code>Main</code> plus <code>HomeSetup</code> became the composition root.</li>
+    <li><strong>Lesson 10 (all five):</strong> a lock check was built SOLID from its first line, with its own <code>AlertChannel</code>, while a rotten module was refactored in the kata.</li>
+    <li><strong>Lesson 11 (companions):</strong> the audit found a train wreck in our own <code>Main</code> (<code>lockables().get(0)</code>). It became <code>hub.unlock("Front Door")</code>, and both by-name lookups now share one rule.</li>
+  </ol>
+  <p>The hub's printed output has hardly changed across these seven lessons. What changed is how cheaply it can change next. That is the whole point of this chapter.</p>
+</section>
+
+<!-- ============================== SECTION 4 ============================== -->
+<section id="s4">
+  <h2><span class="sec-num">4</span>Lessons at a glance</h2>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Lesson</th><th>Core idea</th><th>Key roles and terms</th><th>Where it lives</th></tr></thead>
+      <tbody>
+        <tr><td><a href="lesson-05-single-responsibility.html">05</a></td><td>One reason to change: answer to one actor</td><td>actor, responsibility, god class, accidental duplication, anemic class</td><td><code>srp</code>; hub <code>HomeSetup</code> / <code>Hub</code> / <code>HouseReport</code></td></tr>
+        <tr><td><a href="lesson-06-open-closed.html">06</a></td><td>Grow by adding code, not by editing it</td><td>variation point, assembly point, speculative generality, take the first bullet</td><td><code>ocp</code>; hub <code>routines</code></td></tr>
+        <tr><td><a href="lesson-07-liskov-substitution.html">07</a></td><td>Every substitute keeps every promise</td><td>precondition, postcondition, refused bequest, immutable, contract test</td><td><code>lsp</code>; hub contract tests</td></tr>
+        <tr><td><a href="lesson-08-interface-segregation.html">08</a></td><td>No client depends on methods it doesn't use</td><td>fat interface, role interface, capability, interface inheritance</td><td><code>isp</code>; hub <code>Switchable</code> / <code>Lockable</code> / <code>Dimmable</code></td></tr>
+        <tr><td><a href="lesson-09-dependency-inversion.html">09</a></td><td>Policy owns the abstraction; details plug in</td><td>high-level policy, low-level detail, DI, constructor injection, composition root</td><td><code>dip</code>; hub <code>climate</code> + <code>sensors</code></td></tr>
+        <tr><td><a href="lesson-10-solid-together.html">10</a></td><td>A tangle cured in order; the principles reinforce and pull against each other</td><td>tangle, small-step refactoring, setting instead of subclass, principle tensions</td><td><code>solid</code>; hub <code>security</code> + <code>alerts</code></td></tr>
+        <tr><td><a href="lesson-11-companion-principles.html">11</a></td><td>The brakes and the extra checks: DRY, KISS, YAGNI, Demeter, composition</td><td>single source of truth, rule of three, wrong abstraction, train wreck, Tell Don't Ask, middle man, generic method</td><td><code>dry</code>, <code>kiss</code>, <code>yagni</code>, <code>demeter</code>; hub <code>Hub.unlock</code> / <code>findNamed</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ============================== SECTION 5 ============================== -->
+<section id="s5">
+  <h2><span class="sec-num">5</span>How the principles connect</h2>
+  <figure class="fig">
+    <svg viewBox="0 0 720 270" role="img" aria-label="Concept map. Top row, inside a frame labelled SOLID: S eases I, I eases L, L makes O safe, D widens O. Bottom row of companions: DRY and S ask one question, must these change together; the Law of Demeter and I both make clients know less; KISS says every part of SOLID must earn its place; YAGNI tells O to wait for the second variant; composition over inheritance is backed by D, and also by L and O.">
+      <defs>
+        <marker id="c3-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+          <path d="M0,0 L10,5 L0,10 z" class="fig-arrow-accent-h"/>
+        </marker>
+      </defs>
+      <text x="8" y="18" class="fig-small">SOLID: adds structure so change stays local</text>
+      <rect x="5" y="24" width="710" height="80" rx="10" class="fig-box fig-dashed"/>
+      <rect x="15" y="40" width="110" height="50" rx="8" class="fig-code"/>
+      <text x="70" y="62" class="fig-heading fig-center">S · SRP</text>
+      <text x="70" y="80" class="fig-small fig-center">Lesson 05</text>
+      <rect x="155" y="40" width="110" height="50" rx="8" class="fig-code"/>
+      <text x="210" y="62" class="fig-heading fig-center">I · ISP</text>
+      <text x="210" y="80" class="fig-small fig-center">Lesson 08</text>
+      <rect x="295" y="40" width="110" height="50" rx="8" class="fig-code"/>
+      <text x="350" y="62" class="fig-heading fig-center">L · LSP</text>
+      <text x="350" y="80" class="fig-small fig-center">Lesson 07</text>
+      <rect x="435" y="40" width="110" height="50" rx="8" class="fig-code"/>
+      <text x="490" y="62" class="fig-heading fig-center">O · OCP</text>
+      <text x="490" y="80" class="fig-small fig-center">Lesson 06</text>
+      <rect x="575" y="40" width="110" height="50" rx="8" class="fig-code"/>
+      <text x="630" y="62" class="fig-heading fig-center">D · DIP</text>
+      <text x="630" y="80" class="fig-small fig-center">Lesson 09</text>
+      <line x1="125" y1="65" x2="151" y2="65" class="fig-arrow-accent" marker-end="url(#c3-arrow)"/>
+      <text x="140" y="36" class="fig-small fig-center">eases</text>
+      <line x1="265" y1="65" x2="291" y2="65" class="fig-arrow-accent" marker-end="url(#c3-arrow)"/>
+      <text x="280" y="36" class="fig-small fig-center">eases</text>
+      <line x1="405" y1="65" x2="431" y2="65" class="fig-arrow-accent" marker-end="url(#c3-arrow)"/>
+      <text x="420" y="36" class="fig-small fig-center">makes safe</text>
+      <line x1="575" y1="65" x2="549" y2="65" class="fig-arrow-accent" marker-end="url(#c3-arrow)"/>
+      <text x="560" y="36" class="fig-small fig-center">widens</text>
+
+      <rect x="15" y="200" width="110" height="50" rx="8" class="fig-infra"/>
+      <text x="70" y="222" class="fig-heading fig-center">DRY</text>
+      <text x="70" y="240" class="fig-small fig-center">one home</text>
+      <rect x="155" y="200" width="110" height="50" rx="8" class="fig-infra"/>
+      <text x="210" y="222" class="fig-heading fig-center">Demeter</text>
+      <text x="210" y="240" class="fig-small fig-center">only friends</text>
+      <rect x="295" y="200" width="110" height="50" rx="8" class="fig-infra"/>
+      <text x="350" y="222" class="fig-heading fig-center">KISS</text>
+      <text x="350" y="240" class="fig-small fig-center">fewest parts</text>
+      <rect x="435" y="200" width="110" height="50" rx="8" class="fig-infra"/>
+      <text x="490" y="222" class="fig-heading fig-center">YAGNI</text>
+      <text x="490" y="240" class="fig-small fig-center">real needs only</text>
+      <rect x="575" y="200" width="110" height="50" rx="8" class="fig-infra"/>
+      <text x="630" y="222" class="fig-heading fig-center">Composition</text>
+      <text x="630" y="240" class="fig-small fig-center">over inheritance</text>
+
+      <line x1="70" y1="200" x2="70" y2="94" class="fig-arrow-accent" marker-end="url(#c3-arrow)"/>
+      <text x="78" y="140" class="fig-small">one question:</text>
+      <text x="78" y="155" class="fig-small">change together?</text>
+      <line x1="210" y1="200" x2="210" y2="94" class="fig-arrow-accent" marker-end="url(#c3-arrow)"/>
+      <text x="218" y="140" class="fig-small">both: clients</text>
+      <text x="218" y="155" class="fig-small">know less</text>
+      <line x1="350" y1="200" x2="350" y2="108" class="fig-arrow-accent" marker-end="url(#c3-arrow)"/>
+      <text x="358" y="140" class="fig-small">every part must</text>
+      <text x="358" y="155" class="fig-small">earn its place</text>
+      <line x1="490" y1="200" x2="490" y2="94" class="fig-arrow-accent" marker-end="url(#c3-arrow)"/>
+      <text x="498" y="140" class="fig-small">wait for the</text>
+      <text x="498" y="155" class="fig-small">2nd variant</text>
+      <line x1="630" y1="200" x2="630" y2="94" class="fig-arrow-accent" marker-end="url(#c3-arrow)"/>
+      <text x="638" y="140" class="fig-small">backed by</text>
+      <text x="638" y="155" class="fig-small">D (and L, O)</text>
+    </svg>
+    <figcaption>Blue = the five SOLID principles, ordered so each arrow joins neighbours: single jobs make small interfaces easy, small interfaces leave nothing to refuse, honest substitutes make open/closed code safe, and inverted dependencies let new details plug in from outside. Teal = the companions. KISS points at the whole frame, because it brakes all five. The others each pair with the principle they complete or restrain.</figcaption>
+  </figure>
+</section>
+
+<!-- ============================== SECTION 6 ============================== -->
+<section id="s6">
+  <h2><span class="sec-num">6</span>Ideas that come back</h2>
+  <ul>
+    <li><strong>The policy-owned interface with an injected detail</strong> (<code>TemperatureSensor</code>, <code>AlertChannel</code>) is the shape of most behavioral patterns. It returns as interchangeable algorithms in Lesson 25 and as dependency injection, named as a pattern, in Lesson 37.</li>
+    <li><strong><code>Routine</code>, an object you hand to <code>run</code></strong>, is very close to two patterns ahead: one that swaps algorithms (Lesson 25) and one that turns a request into an object you can queue and undo (Lesson 28). Lesson 12 explains why the same shape can be two different patterns.</li>
+    <li><strong>The wrapper that keeps its contract</strong> (<code>LoggedDevice</code>, now backed by LSP, OCP and composition) becomes three named structural patterns in Lessons 18–22, told apart by intent.</li>
+    <li><strong>"Only the composition root says <code>new</code>"</strong> raises the next question: what happens when creating the right object gets complicated? That is the whole of Chapter 04, the creational patterns.</li>
+    <li><strong>KISS and YAGNI</strong> become the course's immune system against <em>pattern fever</em>, the urge to use a pattern because you know it. They come back in Lesson 12 and in full in Lesson 41.</li>
+  </ul>
+</section>
+
+<!-- ============================== SECTION 7 ============================== -->
+<section id="s7">
+  <h2><span class="sec-num">7</span>Self-check</h2>
+  <details class="check">
+    <summary><code>PayCalculator</code> and <code>HoursReporter</code> each contain an identical-looking <code>Math.min(...)</code> line. Should DRY merge them?</summary>
+    <p>No. They serve different actors (accounting and HR) and will change for different reasons, so it is accidental duplication (<a href="lesson-05-single-responsibility.html">Lesson 05</a>). DRY's test is "must they change together?", and here the answer is no (<a href="lesson-11-companion-principles.html">Lesson 11</a>).</p>
+  </details>
+  <details class="check">
+    <summary>Why is <code>QuietSecurityModule</code>, which throws at night, an LSP violation and not just a design choice?</summary>
+    <p>Code written against <code>SecurityModule</code> trusts <code>checkHouse</code> to check. The subclass refuses that promise (a refused bequest), so honest client code silently loses smoke alerts. A substitute may ask for less and give more, never ask for more or give less (<a href="lesson-07-liskov-substitution.html">Lesson 07</a>, <a href="lesson-10-solid-together.html">Lesson 10</a>).</p>
+  </details>
+  <details class="check">
+    <summary>The hub's smoke alarm implements only <code>Device</code>. Which principle made that possible, and what did routines gain?</summary>
+    <p>ISP (<a href="lesson-08-interface-segregation.html">Lesson 08</a>): <code>Switchable</code> was split off, so the alarm is never forced to "turn off." Routines now take <code>List&lt;Switchable&gt;</code>, so the compiler itself guarantees an "everything off" routine can never touch the alarm.</p>
+  </details>
+  <details class="check">
+    <summary><code>ClimateControl</code> calls <code>sensor.readCelsius()</code>. Which way does the source-code arrow point, and why is that "inverted"?</summary>
+    <p>From <code>SimulatedThermometer</code> <em>up</em> to <code>TemperatureSensor</code>, which lives in the policy's own <code>climate</code> package. At run time control flows from the policy down to the detail, but the source-code dependency points from the detail up to the policy's abstraction, against that flow (<a href="lesson-09-dependency-inversion.html">Lesson 09</a>).</p>
+  </details>
+  <details class="check">
+    <summary><code>text.append("a").append("b")</code> and <code>hub.lockables().get(0).unlock()</code> both chain calls. Why is only one a Law of Demeter problem?</summary>
+    <p>Each <code>append</code> returns the same builder, so you are still talking to your friend. The other chain reaches through the hub into its list and into one item by position, and calls <code>unlock</code> on a stranger. Count strangers, not dots (<a href="lesson-11-companion-principles.html">Lesson 11</a>).</p>
+  </details>
+</section>
+
+<!-- ============================== SECTION 8 ============================== -->
+<section id="s8">
+  <h2><span class="sec-num">8</span>Boss challenge</h2>
+  <p>A "movie night" feature arrived from another team. Diagnose it against <strong>all ten</strong> catalog entries, put your refactoring steps in a sensible order, sketch the result, and predict what it prints when the living room has one light, one TV and one speaker and the owner is notified by SMS at 555-0100.</p>
+  <pre class="code" data-title="the feature as delivered"><code><span class="kw">public interface</span> <span class="ty">Appliance</span> {
+    <span class="ty">String</span> <span class="fn">name</span>(); <span class="kw">void</span> <span class="fn">powerOn</span>(); <span class="kw">void</span> <span class="fn">powerOff</span>();
+    <span class="kw">int</span> <span class="fn">volume</span>(); <span class="kw">void</span> <span class="fn">setVolume</span>(<span class="kw">int</span> percent); <span class="kw">boolean</span> <span class="fn">isRecording</span>();
+}
+
+<span class="cmt">// A camera "is an" appliance, so it must have a volume...</span>
+<span class="kw">public class</span> <span class="ty">Camera</span> <span class="kw">implements</span> <span class="ty">Appliance</span> {
+    <span class="cmt">/* powerOn/powerOff/isRecording work; volume() and setVolume() throw UnsupportedOperationException */</span>
+}
+
+<span class="kw">public class</span> <span class="ty">MovieNight</span> {
+    <span class="kw">public void</span> <span class="fn">start</span>(<span class="ty">Home</span> home, <span class="ty">String</span> speakerBrand) {
+        <span class="kw">for</span> (<span class="ty">Appliance</span> a : home.<span class="fn">getLivingRoom</span>().<span class="fn">getAppliances</span>()) {
+            <span class="kw">if</span> (a.<span class="fn">name</span>().<span class="fn">startsWith</span>(<span class="str">"Light"</span>)) a.<span class="fn">powerOff</span>();
+            <span class="kw">else if</span> (a.<span class="fn">name</span>().<span class="fn">startsWith</span>(<span class="str">"TV"</span>)) a.<span class="fn">powerOn</span>();
+            <span class="kw">else if</span> (a.<span class="fn">name</span>().<span class="fn">startsWith</span>(<span class="str">"Speaker"</span>)) { a.<span class="fn">powerOn</span>(); a.<span class="fn">setVolume</span>(speakerBrand.<span class="fn">equals</span>(<span class="str">"Sonos"</span>) ? <span class="num">30</span> : <span class="num">25</span>); }
+            <span class="kw">else</span> a.<span class="fn">setVolume</span>(<span class="num">0</span>);   <span class="cmt">// "mute everything else" — including the camera</span>
+        }
+        <span class="ty">System</span>.out.<span class="fn">println</span>(<span class="str">"Movie night: "</span> + home.<span class="fn">getLivingRoom</span>().<span class="fn">getAppliances</span>().<span class="fn">size</span>() + <span class="str">" appliances (max volume 30)"</span>);
+        <span class="kw">new</span> <span class="ty">SmsSender</span>().<span class="fn">send</span>(<span class="str">"555-0100"</span>, <span class="str">"Movie night started"</span>);
+    }
+}</code></pre>
+
+  <details class="answer">
+    <summary>Click to reveal the answer</summary>
+
+    <h4>Diagnosis, entry by entry</h4>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Entry</th><th>Problem</th></tr></thead>
+        <tbody>
+          <tr><td>SRP</td><td><code>start</code> runs the scene, writes a console report, and sends an SMS: three actors (the scene designer, whoever reads the console, whoever runs messaging).</td></tr>
+          <tr><td>OCP</td><td>A ladder on name prefixes: a projector means editing <code>start</code>, and a device named "Lamp" silently falls into "mute."</td></tr>
+          <tr><td>LSP</td><td><code>Camera</code> throws from <code>setVolume</code>, so the <code>else</code> branch crashes the whole scene the day a camera is in the living room.</td></tr>
+          <tr><td>ISP</td><td>The fat <code>Appliance</code> forces volume onto cameras and lights, and recording onto speakers.</td></tr>
+          <tr><td>DIP</td><td><code>new SmsSender()</code> and <code>System.out</code> are welded into the policy, so it is untestable without a phone and a console.</td></tr>
+          <tr><td>DRY</td><td>30 is typed twice (the volume and the message), and <code>home.getLivingRoom().getAppliances()</code> is reached for twice.</td></tr>
+          <tr><td>KISS</td><td>Device kinds are guessed from name strings instead of being known from their type.</td></tr>
+          <tr><td>YAGNI</td><td><code>speakerBrand</code> exists for one ternary. The real need is one volume setting.</td></tr>
+          <tr><td>Demeter</td><td><code>home.getLivingRoom().getAppliances()</code> is a train wreck. The scene is coupled to how homes and rooms are built.</td></tr>
+          <tr><td>Composition</td><td>"A camera is an appliance" forced an is-a, and every inherited promise came with it. The roles a device has should be chosen by the device (capabilities).</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p><strong>Order:</strong> S (pull the report and the message out of the scene), then I (split <code>Appliance</code> into small roles; LSP stops mattering once the camera signs only what it does), then O (the setup hands over typed groups, so the ladder disappears), then D (the scene owns a <code>Notifier</code>, and the SMS detail is injected). The companions apply along the way: one volume value (DRY, YAGNI), no <code>Home</code> parameter (Demeter), no name guessing (KISS).</p>
+
+    <pre class="code" data-title="redesign (sketch, one file per type in real code)"><code><span class="cmt">// Small roles (ISP). A camera signs neither of these.</span>
+<span class="kw">public interface</span> <span class="ty">Switchable</span> { <span class="kw">void</span> <span class="fn">turnOn</span>(); <span class="kw">void</span> <span class="fn">turnOff</span>(); }
+<span class="kw">public interface</span> <span class="ty">Speaker</span> <span class="kw">extends</span> <span class="ty">Switchable</span> { <span class="kw">void</span> <span class="fn">setVolume</span>(<span class="kw">int</span> percent); }
+
+<span class="cmt">// Owned by the scene's package (DIP); SmsNotifier lives elsewhere and implements it.</span>
+<span class="kw">public interface</span> <span class="ty">Notifier</span> { <span class="kw">void</span> <span class="fn">notify</span>(<span class="ty">String</span> message); }
+
+<span class="kw">public class</span> <span class="ty">MovieNight</span> {
+    <span class="kw">private final</span> <span class="ty">List</span>&lt;<span class="ty">Switchable</span>&gt; lights;     <span class="cmt">// typed groups from the setup (O): no name ladder</span>
+    <span class="kw">private final</span> <span class="ty">List</span>&lt;<span class="ty">Switchable</span>&gt; screens;
+    <span class="kw">private final</span> <span class="ty">List</span>&lt;<span class="ty">Speaker</span>&gt; speakers;
+    <span class="kw">private final int</span> volume;                      <span class="cmt">// ONE home for the number (DRY), no brand knob (YAGNI)</span>
+    <span class="kw">private final</span> <span class="ty">Notifier</span> notifier;
+
+    <span class="kw">public</span> <span class="fn">MovieNight</span>(<span class="ty">List</span>&lt;<span class="ty">Switchable</span>&gt; lights, <span class="ty">List</span>&lt;<span class="ty">Switchable</span>&gt; screens, <span class="ty">List</span>&lt;<span class="ty">Speaker</span>&gt; speakers,
+                      <span class="kw">int</span> volume, <span class="ty">Notifier</span> notifier) {
+        <span class="kw">this</span>.lights = <span class="ty">List</span>.<span class="fn">copyOf</span>(lights); <span class="kw">this</span>.screens = <span class="ty">List</span>.<span class="fn">copyOf</span>(screens);
+        <span class="kw">this</span>.speakers = <span class="ty">List</span>.<span class="fn">copyOf</span>(speakers); <span class="kw">this</span>.volume = volume; <span class="kw">this</span>.notifier = notifier;
+    }
+
+    <span class="cmt">// Talks only to its own fields (Demeter). One job: run the scene, then say so (S).</span>
+    <span class="kw">public void</span> <span class="fn">start</span>() {
+        <span class="kw">for</span> (<span class="ty">Switchable</span> light : lights) { light.<span class="fn">turnOff</span>(); }
+        <span class="kw">for</span> (<span class="ty">Switchable</span> screen : screens) { screen.<span class="fn">turnOn</span>(); }
+        <span class="kw">for</span> (<span class="ty">Speaker</span> speaker : speakers) { speaker.<span class="fn">turnOn</span>(); speaker.<span class="fn">setVolume</span>(volume); }
+        notifier.<span class="fn">notify</span>(<span class="str">"Movie night started (volume "</span> + volume + <span class="str">")"</span>);
+    }
+}</code></pre>
+    <p>Wiring it at a composition root: <code>new MovieNight(List.of(light), List.of(tv), List.of(speaker), 30, new SmsNotifier("555-0100")).start()</code>. Here the demo devices print one line per action (<code>"Light: OFF"</code>, <code>"TV: ON"</code>, <code>"Speaker: ON"</code>, <code>"Speaker: volume 30"</code>), and <code>SmsNotifier</code> prints <code>"SMS to " + number + ": " + message</code>.</p>
+    <p class="pred-label">Prediction</p>
+    <pre class="output"><code>Light: OFF
+TV: ON
+Speaker: ON
+Speaker: volume 30
+SMS to 555-0100: Movie night started (volume 30)</code></pre>
+    <p>The order follows the three loops, then the notification. A test passes a recording notifier and checks one message, and a projector is just one more item in <code>screens</code>. The camera is never handed to the scene, so it can no longer crash it. Lesson 20 comes back to "movie night" with a pattern built for exactly this kind of many-steps-behind-one-call job. If you build it in a scratch package, run it and compare. The machine is the judge.</p>
+  </details>
+</section>
+
+<div class="nextup">
+  <p><strong>Phase 2 begins: Lesson 12 — Patterns: Named Cures for Named Pains.</strong> Where design patterns came from (the Gang of Four, 1994), what a pattern actually is, the three families and the question each answers, how to read any pattern, and why "no pattern" is often the right design.</p>
+</div>
+<p class="position">Chapter 02 summary · Phase 1 complete (Lessons 05–11) · 12 of 45 lessons done</p>
+
+</main>
+</div>
+</body>
+</html>

@@ -19,12 +19,17 @@
     <li><a href="#lsp">Liskov Substitution</a></li>
     <li><a href="#isp">Interface Segregation</a></li>
     <li><a href="#dip">Dependency Inversion</a></li>
+    <li><a href="#dry">DRY</a></li>
+    <li><a href="#kiss">KISS</a></li>
+    <li><a href="#yagni">YAGNI</a></li>
+    <li><a href="#lod">Law of Demeter</a></li>
+    <li><a href="#composition">Composition over inheritance</a></li>
   </ol>
   <nav class="toc-nav" aria-label="Course navigation">
     <a class="navmap" href="index.html">↑ Course map</a>
-    <a class="navcard" href="phase-1-solid/chapter-02-solid/lesson-09-dependency-inversion.html">
-      <span class="navkicker">Latest entry · Lesson 09</span>
-      <span class="navtitle">D — Dependency Inversion Principle</span>
+    <a class="navcard" href="phase-1-solid/chapter-02-solid/lesson-11-companion-principles.html">
+      <span class="navkicker">Latest entries · Lesson 11</span>
+      <span class="navtitle">The Companion Principles</span>
     </a>
   </nav>
 </aside>
@@ -65,6 +70,11 @@
         <tr><td>3</td><td><a href="#lsp">Liskov Substitution Principle</a></td><td><span class="family-badge principle">principle</span></td><td><a href="phase-1-solid/chapter-02-solid/lesson-07-liskov-substitution.html">07</a></td></tr>
         <tr><td>4</td><td><a href="#isp">Interface Segregation Principle</a></td><td><span class="family-badge principle">principle</span></td><td><a href="phase-1-solid/chapter-02-solid/lesson-08-interface-segregation.html">08</a></td></tr>
         <tr><td>5</td><td><a href="#dip">Dependency Inversion Principle</a></td><td><span class="family-badge principle">principle</span></td><td><a href="phase-1-solid/chapter-02-solid/lesson-09-dependency-inversion.html">09</a></td></tr>
+        <tr><td>6</td><td><a href="#dry">DRY — Don't Repeat Yourself</a></td><td><span class="family-badge principle">principle</span></td><td><a href="phase-1-solid/chapter-02-solid/lesson-11-companion-principles.html">11</a></td></tr>
+        <tr><td>7</td><td><a href="#kiss">KISS — Keep It Simple</a></td><td><span class="family-badge principle">principle</span></td><td><a href="phase-1-solid/chapter-02-solid/lesson-11-companion-principles.html">11</a></td></tr>
+        <tr><td>8</td><td><a href="#yagni">YAGNI — You Aren't Gonna Need It</a></td><td><span class="family-badge principle">principle</span></td><td><a href="phase-1-solid/chapter-02-solid/lesson-11-companion-principles.html">11</a></td></tr>
+        <tr><td>9</td><td><a href="#lod">Law of Demeter</a></td><td><span class="family-badge principle">principle</span></td><td><a href="phase-1-solid/chapter-02-solid/lesson-11-companion-principles.html">11</a></td></tr>
+        <tr><td>10</td><td><a href="#composition">Favor composition over inheritance</a></td><td><span class="family-badge principle">principle</span></td><td><a href="phase-0-oop-foundations/chapter-01-oop/lesson-03-composition-vs-inheritance.html">03</a> · <a href="phase-1-solid/chapter-02-solid/lesson-11-companion-principles.html">11</a></td></tr>
       </tbody>
     </table>
   </div>
@@ -250,7 +260,183 @@
   </dl>
 </article>
 
-<p class="position">Pattern catalog · 5 entries · updated by every principle and pattern lesson</p>
+<article class="catalog-entry" id="dry">
+  <h2>DRY — Don't Repeat Yourself <span class="family-badge principle">principle</span></h2>
+  <p class="catalog-intent">Every piece of knowledge (a rule, a meaningful number, a format) is written down in exactly one place, and everything that needs it asks that place.</p>
+  <dl class="catalog-fields">
+    <dt>The pain it cures</dt>
+    <dd>One fact typed in several places: every change must be made in all of them (shotgun surgery), and the day one is missed the program contradicts itself, like a banner promising free delivery while the checkout charges for it.</dd>
+    <dt>Use it when…</dt>
+    <dd><ul>
+      <li>Changing one copy means you <em>must</em> change the other, or the program is wrong.</li>
+      <li>The same threshold, rate, format or validation rule appears in two classes, or in code and in a message shown to users.</li>
+      <li>A bug fix had to be applied "in a few places."</li>
+      <li>You have just written a third copy of something (the rule of three).</li>
+    </ul></dd>
+    <dt class="not">Do NOT use it when…</dt>
+    <dd><ul>
+      <li>The look-alike code serves different actors and will change for different reasons (accidental duplication, Lesson 05). Merging couples them.</li>
+      <li>Merging would need flags or parameters to cover each caller's differences. That is the wrong abstraction, and duplication is cheaper.</li>
+      <li>There are only two copies and you can't yet see what really repeats. Wait for the third.</li>
+      <li>It is test code, where a little repetition often makes each test readable on its own.</li>
+    </ul></dd>
+    <dt>The cost</dt>
+    <dd>A new home (a class, constant or method) that both callers depend on, which couples them to it; one more hop when reading; and the risk of a premature, flag-ridden shared helper that is harder to change than the copies were.</dd>
+    <dt>Relatives</dt>
+    <dd><ul>
+      <li><strong>SRP</strong> (Lesson 05): the other half of the question "must these change together?" SRP keeps look-alikes apart when the answer is no.</li>
+      <li><strong>Single source of truth</strong>: the name for the one place that holds a fact.</li>
+      <li><strong>Template Method</strong> (Lesson 26): a pattern for writing a shared skeleton once.</li>
+    </ul></dd>
+    <dt>Seen in the wild</dt>
+    <dd><code>java.util.AbstractList</code> implements <code>indexOf</code>, <code>equals</code>, <code>hashCode</code> and its iterator once, on top of each list's own <code>get</code> and <code>size</code>. Coined by Hunt and Thomas in <em>The Pragmatic Programmer</em> (1999).</dd>
+    <dt>Where it lives</dt>
+    <dd>Kata: <code>com.katas.dry</code> (<code>DeliveryPolicy</code> shared by <code>CartBanner</code> and <code>Checkout</code>; drifted copies in <code>naive/</code>). Hub: <code>home.Hub.findNamed</code>, the one by-name lookup shared by <code>switchableNamed</code> and <code>unlock</code>. Lesson: <a href="phase-1-solid/chapter-02-solid/lesson-11-companion-principles.html">11</a>.</dd>
+  </dl>
+</article>
+
+<article class="catalog-entry" id="kiss">
+  <h2>KISS — Keep It Simple <span class="family-badge principle">principle</span></h2>
+  <p class="catalog-intent">Of the designs that fully do the job, choose the one with the fewest parts and nothing hidden; every extra part must earn its place.</p>
+  <dl class="catalog-fields">
+    <dt>The pain it cures</dt>
+    <dd>Machinery bigger than the problem (registries, plug-in rules, configuration) that must be read, tested and understood, and that hides the thing that decides the answer, so the first extension goes wrong.</dd>
+    <dt>Use it when…</dt>
+    <dd><ul>
+      <li>A newcomer can't predict the output by reading the code once, top to bottom.</li>
+      <li>There are interfaces with one implementation and no second in sight.</li>
+      <li>Order, priority or behaviour depends on registration, configuration or naming conventions you can't see in one place.</li>
+      <li>A "clever" one-liner needs a comment to explain what it does.</li>
+    </ul></dd>
+    <dt class="not">Do NOT use it when…</dt>
+    <dd><ul>
+      <li>"Simple" is an excuse for no structure at all (one 600-line <code>Main</code>). That is easy to start, not simple.</li>
+      <li>The problem really is complex (many modes, many channels, real variation). Then the structured design <em>is</em> the simple one.</li>
+      <li>Simplicity is judged only by line count. Short and cryptic is not simple.</li>
+      <li>You would delete a variation point that two or more real variants already use.</li>
+    </ul></dd>
+    <dt>The cost</dt>
+    <dd>Code may need restructuring later when real complexity arrives, and simple code can look "naive" to people who equate quality with machinery, so you may have to defend it in review.</dd>
+    <dt>Relatives</dt>
+    <dd><ul>
+      <li><strong>YAGNI</strong>: KISS is about how a solution is built; YAGNI is about whether to build a feature at all.</li>
+      <li><strong>Needless complexity</strong> (Lesson 04): the design smell KISS prevents.</li>
+      <li><strong>SOLID</strong> (Lessons 05–10): adds parts so change stays local; KISS asks each part to justify itself.</li>
+    </ul></dd>
+    <dt>Seen in the wild</dt>
+    <dd>A motto usually credited to the aircraft engineer Kelly Johnson. In code it shows up mostly in review comments ("can this just be an <code>if</code>?") and in libraries that offer a plain method beside the configurable one.</dd>
+    <dt>Where it lives</dt>
+    <dd>Kata: <code>com.katas.kiss</code> (<code>Greeter</code>, four plain <code>if</code>s; the over-built <code>GreetingEngine</code> in <code>naive/</code>). Hub: <code>Hub.findNamed</code> stays a plain loop, with no index or name map for four devices. Lesson: <a href="phase-1-solid/chapter-02-solid/lesson-11-companion-principles.html">11</a>.</dd>
+  </dl>
+</article>
+
+<article class="catalog-entry" id="yagni">
+  <h2>YAGNI — You Aren't Gonna Need It <span class="family-badge principle">principle</span></h2>
+  <p class="catalog-intent">Don't build a feature, option or extension point until a real need for it arrives.</p>
+  <dl class="catalog-fields">
+    <dt>The pain it cures</dt>
+    <dd>Speculative features that cost effort now, burden every caller (knobs to choose), rot untested, and usually guess wrong: the real request turns out to be something none of the guesses covered.</dd>
+    <dt>Use it when…</dt>
+    <dd><ul>
+      <li>The justification is "in case," "one day," or "to be flexible."</li>
+      <li>An option or format has no caller today.</li>
+      <li>You are about to add an interface, parameter or setting with a single known use.</li>
+      <li>Code paths exist that no test exercises because nothing uses them.</li>
+    </ul></dd>
+    <dt class="not">Do NOT use it when…</dt>
+    <dd><ul>
+      <li>It would mean skipping tests, error handling, clear names or security. Those are quality, needed today.</li>
+      <li>The decision is very costly to change later: a published API, a stored data format, a security model. Think those through up front.</li>
+      <li>The need is real and scheduled (it is in this release's agreed work), not imagined.</li>
+      <li>You are using it to refuse keeping code easy to change. YAGNI only works <em>because</em> code stays cheap to change.</li>
+    </ul></dd>
+    <dt>The cost</dt>
+    <dd>When the need does arrive, you build it then, sometimes with a small refactoring first. That is usually cheaper than the speculative version, but it is not free.</dd>
+    <dt>Relatives</dt>
+    <dd><ul>
+      <li><strong>Take the first bullet</strong> / <strong>OCP</strong> (Lesson 06): YAGNI applied to variation points. Wait for the second real variant.</li>
+      <li><strong>Speculative generality</strong> (Lesson 06): the smell YAGNI prevents.</li>
+      <li><strong>KISS</strong>: whether to build it (YAGNI) versus how simply to build it (KISS).</li>
+    </ul></dd>
+    <dt>Seen in the wild</dt>
+    <dd>A rule of Extreme Programming (Kent Beck, Ron Jeffries, late 1990s), and the most common question in code review: "who asked for this option?"</dd>
+    <dt>Where it lives</dt>
+    <dd>Kata: <code>com.katas.yagni</code> (<code>ShoppingList</code>; the over-prepared <code>ListPrinter</code> with an unfinished columns knob in <code>naive/</code>). Hub: <code>Hub</code> has <code>unlock(name)</code> but no <code>lock(name)</code> or <code>turnOn(name)</code>, and only one alert channel, because nothing needs more. Lesson: <a href="phase-1-solid/chapter-02-solid/lesson-11-companion-principles.html">11</a>.</dd>
+  </dl>
+</article>
+
+<article class="catalog-entry" id="lod">
+  <h2>Law of Demeter (principle of least knowledge) <span class="family-badge principle">principle</span></h2>
+  <p class="catalog-intent">Talk only to your friends: a method calls methods only on its own object, its parameters, objects it creates, and its own fields, never on objects those friends hand back.</p>
+  <dl class="catalog-fields">
+    <dt>The pain it cures</dt>
+    <dd>Train-wreck calls (<code>customer.getWallet().take(2)</code>) that couple a class to the inside structure of other objects. When that structure changes, every class that reaches through breaks, often silently, without being edited.</dd>
+    <dt>Use it when…</dt>
+    <dd><ul>
+      <li>You see a chain of getters ending in an action: <code>a.getB().getC().doD()</code>.</li>
+      <li>A class asks another for its insides and then makes a decision that belongs to the other class.</li>
+      <li>A change inside one class forces edits in classes that only use it.</li>
+      <li>Code depends on an item's position in someone else's list (<code>lockables().get(0)</code>).</li>
+    </ul></dd>
+    <dt class="not">Do NOT use it when…</dt>
+    <dd><ul>
+      <li>The chain calls methods on the same object each time (<code>StringBuilder.append(…).append(…)</code>, builders, streams). Count strangers, not dots.</li>
+      <li>The returned thing is a stable value or plain data (<code>String</code>, numbers, <code>java.time</code> values).</li>
+      <li>Obeying would mean wrapper methods that only forward (<code>getWalletCashInEuros()</code>). That is the middle man smell. Give the friend a method that does the <em>job</em> instead.</li>
+      <li>The code is a composition root that only passes objects along without calling them.</li>
+    </ul></dd>
+    <dt>The cost</dt>
+    <dd>Friends gain task-shaped methods (<code>pay</code>, <code>unlock(name)</code>), so their interfaces grow; done mechanically, it produces forwarding boilerplate; and a caller can no longer improvise with another object's insides.</dd>
+    <dt>Relatives</dt>
+    <dd><ul>
+      <li><strong>Tell, Don't Ask</strong>: the usual way to obey it. Tell the friend what you want done.</li>
+      <li><strong>Encapsulation</strong> (Lesson 01): Demeter is encapsulation seen from the caller's side.</li>
+      <li><strong>ISP</strong> (Lesson 08): both make clients know less. ISP limits methods, Demeter limits objects.</li>
+      <li><strong>Message chains</strong> and <strong>middle man</strong>: Fowler's names for the violation and for the over-correction.</li>
+    </ul></dd>
+    <dt>Seen in the wild</dt>
+    <dd>Named after the Demeter project at Northeastern University (Ian Holland, 1987). David Bock's short paper <em>The Paperboy, The Wallet, and The Law of Demeter</em> is the classic illustration, and this course's kata borrows its story.</dd>
+    <dt>Where it lives</dt>
+    <dd>Kata: <code>com.katas.demeter</code> (<code>Paperboy</code> → <code>Customer.pay</code>; the reaching paperboy in <code>naive/</code>). Hub: <code>Main</code> calls <code>hub.unlock("Front Door")</code> instead of <code>hub.lockables().get(0).unlock()</code>. Lesson: <a href="phase-1-solid/chapter-02-solid/lesson-11-companion-principles.html">11</a>.</dd>
+  </dl>
+</article>
+
+<article class="catalog-entry" id="composition">
+  <h2>Favor composition over inheritance <span class="family-badge principle">principle</span></h2>
+  <p class="catalog-intent">When in doubt, build behaviour by holding other objects and delegating to them (has-a), rather than by extending a class (is-a).</p>
+  <dl class="catalog-fields">
+    <dt>The pain it cures</dt>
+    <dd>Subclasses broken by changes inside their parent (the fragile base class problem), class explosion when features combine (<code>LoggingLight</code>, <code>LoggingThermostat</code>…), and behaviour fixed at compile time that cannot be swapped or injected.</dd>
+    <dt>Use it when…</dt>
+    <dd><ul>
+      <li>You want to add a feature (logging, counting, retrying) to several existing classes.</li>
+      <li>The class you would extend is not yours, or was not designed for extension.</li>
+      <li>"X is a Y" sounds forced, or holds only for some of Y's methods.</li>
+      <li>You want to choose or swap the behaviour at run time or in tests.</li>
+    </ul></dd>
+    <dt class="not">Do NOT use it when…</dt>
+    <dd><ul>
+      <li>It is a true is-a with a small, stable parent you own and designed for extension (the hub's <code>SwitchableDevice</code>).</li>
+      <li>The wrapper would only forward many methods and add nothing. That is needless complexity.</li>
+      <li>A framework requires extending its base class to plug in (you follow its rules).</li>
+      <li>You are replacing working inheritance that causes no pain, just to follow the slogan. "Favor" is not "always."</li>
+    </ul></dd>
+    <dt>The cost</dt>
+    <dd>Forwarding methods for every operation of the interface; two objects where there was one; an interface is needed for the held object to be swappable; and the parts must be wired together, usually at the composition root.</dd>
+    <dt>Relatives</dt>
+    <dd><ul>
+      <li><strong>LSP / OCP / DIP</strong> (Lessons 07, 06, 09): a wrapper promises only the interface it signs, adds behaviour without edits, and its parts can be injected.</li>
+      <li><strong>Delegation</strong> and <strong>wrapper</strong> (Lesson 03): the mechanics it uses.</li>
+      <li><strong>Decorator, Proxy, Adapter, Strategy</strong> (Lessons 18–25): named patterns built on composition, told apart by intent.</li>
+    </ul></dd>
+    <dt>Seen in the wild</dt>
+    <dd>Stated in the Gang of Four's <em>Design Patterns</em> (1994). Joshua Bloch's <em>Effective Java</em> has an item of the same name (Item 18 in the 3rd edition; verify the number), citing <code>Stack extends Vector</code> and <code>Properties extends Hashtable</code> as JDK missteps.</dd>
+    <dt>Where it lives</dt>
+    <dd>Kata: <code>com.katas.composition</code> (<code>CountingPlaylist</code> wrapping a <code>SongList</code>; the double-counting subclass in <code>naive/</code>). Hub: <code>activity.LoggedDevice</code> logs any switchable device by wrapping it. Lessons: <a href="phase-0-oop-foundations/chapter-01-oop/lesson-03-composition-vs-inheritance.html">03</a>, <a href="phase-1-solid/chapter-02-solid/lesson-11-companion-principles.html">11</a>.</dd>
+  </dl>
+</article>
+
+<p class="position">Pattern catalog · 10 entries · updated by every principle and pattern lesson</p>
 
 </main>
 </div>

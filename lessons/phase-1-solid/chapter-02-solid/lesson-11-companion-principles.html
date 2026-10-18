@@ -1,0 +1,829 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lesson 11 — The Companion Principles · Design Patterns in Java</title>
+<link rel="stylesheet" href="../../assets/lesson.css">
+</head>
+<body>
+<div class="page">
+
+<aside class="toc" aria-label="Table of contents">
+  <p class="toc-title">Lesson 11 · Contents</p>
+  <ol>
+    <li><a href="#s1">1 · The pain</a></li>
+    <li><a href="#s2">2 · Real-world analogy</a></li>
+    <li><a href="#s3">3 · The principles explained</a></li>
+    <li><a href="#s4">4 · The katas</a></li>
+    <li><a href="#s5">5 · Applied to the hub</a></li>
+    <li><a href="#s6">6 · In the wild</a></li>
+    <li><a href="#s7">7 · How each gets abused</a></li>
+    <li><a href="#s8">8 · Key takeaways</a></li>
+    <li><a href="#s9">9 · Challenge</a></li>
+    <li><a href="#s10">10 · Catalog update</a></li>
+  </ol>
+  <nav class="toc-nav" aria-label="Course navigation">
+    <a class="navcard" href="lesson-10-solid-together.html">
+      <span class="navkicker">← Prev · Lesson 10</span>
+      <span class="navtitle">SOLID Together</span>
+    </a>
+    <a class="navmap" href="../../index.html">↑ Course map</a>
+    <a class="navcatalog" href="../../pattern-catalog.html">◆ Pattern catalog</a>
+    <a class="navcard" href="chapter-02-summary.html">
+      <span class="navkicker">Next · Chapter 02 summary →</span>
+      <span class="navtitle">SOLID — Chapter Summary</span>
+    </a>
+  </nav>
+</aside>
+
+<main>
+
+<header class="banner">
+  <p class="kicker">Phase 1 · Chapter 02 · Lesson 11</p>
+  <h1>The Companion Principles</h1>
+  <p class="subtitle">DRY, KISS, YAGNI and the Law of Demeter: four short rules that catch the rot SOLID misses and stop SOLID from turning into over-design. Plus "favor composition over inheritance," now seen through SOLID.</p>
+  <p class="meta">
+    <strong>Kata packages:</strong> <code>com.katas.dry</code>, <code>com.katas.kiss</code>, <code>com.katas.yagni</code>, <code>com.katas.demeter</code> (each with its wrong way in <code>naive/</code>). Composition keeps its Lesson 03 kata, <code>com.katas.composition</code>.<br>
+    <strong>Smart Home Hub:</strong> modified <code>home/Hub.java</code> (new <code>unlock(name)</code>, one shared by-name lookup), <code>Main.java</code> (no more reaching into the hub's list), <code>home/HubTest.java</code> (+2 tests).<br>
+    <strong>Prerequisites:</strong> Lessons <a href="../../phase-0-oop-foundations/chapter-01-oop/lesson-03-composition-vs-inheritance.html">03</a>, <a href="../../phase-0-oop-foundations/chapter-01-oop/lesson-04-coupling-cohesion-uml.html">04</a>, <a href="lesson-05-single-responsibility.html">05</a>, <a href="lesson-06-open-closed.html">06</a>, <a href="lesson-10-solid-together.html">10</a>.
+  </p>
+</header>
+
+<!-- ============================== SECTION 1 ============================== -->
+<section id="s1">
+  <h2><span class="sec-num">1</span>The pain</h2>
+
+  <p class="lead">SOLID gives five ways to keep change local. But some rot slips past all five, and a keen beginner who applies SOLID everywhere can create a new kind of rot. Here are four small programs. Each one works today, and each one is about to hurt.</p>
+
+  <h3>Pain 1 · one rule, typed twice</h3>
+  <p>A shop shows a banner ("Add 5 EUR for free delivery") and charges a delivery fee at checkout. Both classes contain the rule "free delivery from 50 EUR." Then the shop raises the threshold to 60. Someone updates <code>Checkout</code>, and nobody remembers the banner.</p>
+  <pre class="code" data-title="naive/CartBanner.java and naive/Checkout.java (key lines)"><code><span class="cmt">// CartBanner: copy 1 of the rule, still the old number</span>
+<span class="kw">if</span> (totalEuros &gt;= <span class="num">50</span>) { <span class="kw">return</span> <span class="str">"Free delivery!"</span>; }
+<span class="kw">return</span> <span class="str">"Add "</span> + (<span class="num">50</span> - totalEuros) + <span class="str">" EUR for free delivery"</span>;
+
+<span class="cmt">// Checkout: copy 2 of the rule, updated</span>
+<span class="kw">return</span> totalEuros &gt;= <span class="num">60</span> ? <span class="num">0</span> : <span class="num">5</span>;</code></pre>
+  <p class="pred-label">Predicted symptom (a 55 EUR basket)</p>
+  <pre class="output"><code><span class="err">Naive banner:   Free delivery!
+Naive checkout: fee 5 EUR          &lt;- promised free, then charged</span></code></pre>
+  <p>The smell is <strong>needless repetition</strong>, one of the design smells from <a href="../../phase-0-oop-foundations/chapter-01-oop/lesson-04-coupling-cohesion-uml.html">Lesson 04</a>. Its symptom is <span class="term" tabindex="0" data-def="one change forcing small edits in many places; miss one and the program contradicts itself.">shotgun surgery</span>: one change of policy needs edits in many places, and nothing tells you when you have missed one.</p>
+
+  <h3>Pain 2 · machinery bigger than the job</h3>
+  <p>Someone wrote a "flexible greeting engine" to say good morning, afternoon or evening. It has a rule interface, a class per part of the day, a list of registered rules, and a loop that asks each rule in turn. Then a new requirement arrives: say "Good night" from 22:00. The engine is "extensible," so a <code>NightRule</code> is added through <code>addRule</code>.</p>
+  <pre class="code" data-title="naive/GreetingEngine.java (key lines)"><code><span class="cmt">// registered on creation, in this order:</span>
+rules.<span class="fn">add</span>(<span class="kw">new</span> <span class="ty">MorningRule</span>());     <span class="cmt">// hour &lt; 12</span>
+rules.<span class="fn">add</span>(<span class="kw">new</span> <span class="ty">AfternoonRule</span>());   <span class="cmt">// 12 to 17</span>
+rules.<span class="fn">add</span>(<span class="kw">new</span> <span class="ty">EveningRule</span>());     <span class="cmt">// hour &gt;= 18   &lt;- already claims 22 and 23</span>
+
+engine.<span class="fn">addRule</span>(<span class="kw">new</span> <span class="ty">GreetingEngine</span>.<span class="ty">NightRule</span>());   <span class="cmt">// hour &gt;= 22, added at the END</span></code></pre>
+  <p class="pred-label">Predicted symptom</p>
+  <pre class="output"><code><span class="err">Engine at 23: Good evening          &lt;- the new rule is never reached</span></code></pre>
+  <p>The order that decides the answer is not written anywhere you can see. It is hidden in the order of registration, spread over five classes. The smell is <span class="term" tabindex="0" data-def="design-wide rot in which the code has parts or machinery the problem does not need.">needless complexity</span>: more parts than the problem needs, and the extra parts hide the bug.</p>
+
+  <h3>Pain 3 · features for a future nobody ordered</h3>
+  <p>A shopping-list printer was built "to be ready for anything": an HTML format, numbering and columns. The app only ever calls it one way.</p>
+  <pre class="code" data-title="naive/ListPrinter.java (key lines)"><code><span class="kw">public</span> <span class="fn">ListPrinter</span>(<span class="ty">String</span> format, <span class="kw">boolean</span> numbered, <span class="kw">int</span> columns) { ... }
+
+<span class="kw">if</span> (columns != <span class="num">1</span>) {
+    <span class="kw">throw new</span> <span class="ty">UnsupportedOperationException</span>(<span class="str">"Columns not implemented yet"</span>);
+}
+
+<span class="cmt">// the ONLY call in the whole app:</span>
+<span class="kw">new</span> <span class="ty">ListPrinter</span>(<span class="str">"plain"</span>, <span class="kw">false</span>, <span class="num">1</span>).<span class="fn">print</span>(items);</code></pre>
+  <p class="pred-label">Predicted symptom</p>
+  <pre class="output"><code><span class="err">Naive printer refused: Columns not implemented yet    &lt;- compiles fine, fails when tried</span></code></pre>
+  <p>Then the real second request arrived: "let me tick off what I have bought." None of the three knobs helps with that. Every caller still has to choose all three, the HTML branch has never been tested, and the columns knob is a trap waiting for someone to try it. This is <span class="term" tabindex="0" data-def="flexibility built for a future that never comes; a form of needless complexity.">speculative generality</span>, met in <a href="lesson-06-open-closed.html">Lesson 06</a>.</p>
+
+  <h3>Pain 4 · reaching through a stranger</h3>
+  <p>A paperboy collects 2 EUR a week. His code reaches through the customer into the customer's wallet, counts the money, and takes it himself. Later the customer starts keeping spare coins in a jar by the door, a change made only inside <code>Customer</code>.</p>
+  <pre class="code" data-title="naive/Paperboy.java (key lines)"><code><span class="kw">if</span> (customer.<span class="fn">getWallet</span>().<span class="fn">getCash</span>() &gt;= price) {   <span class="cmt">// two objects deep</span>
+    customer.<span class="fn">getWallet</span>().<span class="fn">take</span>(price);         <span class="cmt">// and again, taking the money himself</span>
+    <span class="kw">return</span> price;
+}
+<span class="kw">return</span> <span class="num">0</span>;                                    <span class="cmt">// never heard about the jar</span></code></pre>
+  <p class="pred-label">Predicted symptom (1 EUR in the wallet, 10 EUR in the jar)</p>
+  <pre class="output"><code><span class="err">Naive paperboy collected: 0 EUR      &lt;- the customer could pay; the paperboy didn't ask</span></code></pre>
+  <p>The paperboy depends on the <em>inside structure</em> of another object. When that structure changed, he broke without being edited, and so would every other class that reaches in the same way (the milkman, the window cleaner). Martin Fowler's catalogue of smells calls this a <strong>message chain</strong>.</p>
+
+  <p>There is a fifth pain, an old one: the subclass broken by its parent's change in <a href="../../phase-0-oop-foundations/chapter-01-oop/lesson-03-composition-vs-inheritance.html">Lesson 03</a>. We return to it at the end of Section 3, now that SOLID can explain <em>why</em> the cure works.</p>
+
+  <p class="filepath">Full naive code: katas/src/main/java/com/katas/{dry,kiss,yagni,demeter}/naive/</p>
+</section>
+
+<!-- ============================== SECTION 2 ============================== -->
+<section id="s2">
+  <h2><span class="sec-num">2</span>Real-world analogy</h2>
+  <p><strong>Running a small café.</strong> A café that runs well follows a few unwritten house rules. Each rule stops a particular kind of mess.</p>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>House rule in the café</th><th>Principle</th><th>In this lesson's code</th></tr></thead>
+      <tbody>
+        <tr><td>One master recipe card. Each station reads it instead of keeping its own copy that drifts.</td><td>DRY</td><td><code>DeliveryPolicy</code>, shared by banner and checkout</td></tr>
+        <tr><td>A sharp knife, not a gadget with twelve attachments.</td><td>KISS</td><td><code>Greeter</code>: four <code>if</code>s in plain order</td></tr>
+        <tr><td>No twelve-burner stove for a two-table café "in case we grow." Buy the second stove when the queue is real.</td><td>YAGNI</td><td><code>ShoppingList</code>: only today's format</td></tr>
+        <tr><td>The waiter asks the customer to pay. They never take the wallet out of the customer's pocket.</td><td>Law of Demeter</td><td><code>customer.pay(2)</code></td></tr>
+        <tr><td>Rent a fridge and plug it in. Don't become a branch of the dairy just to use its cold room, because then every rule change at the dairy's head office reaches your kitchen.</td><td>Composition over inheritance</td><td><code>LoggedDevice</code> wraps any switchable device</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ============================== SECTION 3 ============================== -->
+<section id="s3">
+  <h2><span class="sec-num">3</span>The principles explained</h2>
+
+  <p>These are called the <strong>companion principles</strong>: short rules of thumb that travel alongside SOLID. SOLID tells you how to <em>add</em> structure so change stays local. DRY and the Law of Demeter catch rot that SOLID misses. KISS and YAGNI tell you when to <em>stop</em> adding structure. Each gets the full treatment below.</p>
+
+  <h3>DRY: every piece of knowledge has one home</h3>
+  <p><strong>What it says.</strong> Every fact your program knows, such as a rule, a number with meaning, or a format, should be written down in exactly one place. Everything else that needs the fact asks that place.</p>
+  <p><strong>Why it exists.</strong> When a fact lives in two places, every change to it must be made twice. The day someone makes it once, the program contradicts itself, as the 55 EUR basket did.</p>
+  <p><strong>Tiny example.</strong> Instead of <code>totalEuros &gt;= 60</code> typed in two classes, one object holds the rule and both classes ask it:</p>
+  <pre class="code" data-title="one home"><code><span class="ty">DeliveryPolicy</span> policy = <span class="kw">new</span> <span class="ty">DeliveryPolicy</span>(<span class="num">60</span>, <span class="num">5</span>);   <span class="cmt">// the ONLY place 60 and 5 appear</span>
+banner.<span class="fn">message</span>(<span class="num">55</span>);     <span class="cmt">// asks policy.isFree(55)</span>
+checkout.<span class="fn">deliveryFee</span>(<span class="num">55</span>); <span class="cmt">// asks policy.feeFor(55)</span></code></pre>
+  <p><strong>The name.</strong> This is <strong>DRY, "Don't Repeat Yourself,"</strong> from Andy Hunt and Dave Thomas's book <em>The Pragmatic Programmer</em> (1999): "Every piece of knowledge must have a single, unambiguous, authoritative representation within a system." The one place that holds a fact is often called its <strong>single source of truth</strong>.</p>
+  <p>The key word is <em>knowledge</em>, not <em>text</em>. Two lines can look different and still repeat one fact: <code>total &gt;= 60</code> in one class and <code>total &lt; 60</code> in another are the same rule. Two lines can also look identical and be <em>different</em> facts. That is <span class="term" tabindex="0" data-def="code that looks the same but represents different rules for different actors; merging it couples them.">accidental duplication</span> from <a href="lesson-05-single-responsibility.html">Lesson 05</a>, and merging it is a mistake. The test is not "do these look alike?" It is "if one changes, <em>must</em> the other change too?"</p>
+
+  <figure class="fig">
+    <svg viewBox="0 0 720 232" role="img" aria-label="Before: CartBanner holds the rule total at least 50 (old copy) and Checkout holds total at least 60 (new copy); nothing links them. After: CartBanner and Checkout each hold a reference to one DeliveryPolicy, which holds freeFromEuros and feeEuros and offers isFree, missing and feeFor.">
+      <defs>
+        <marker id="f1-open" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="10" markerHeight="10" orient="auto-start-reverse">
+          <path d="M0,0 L10,5 L0,10" class="uml-head-open"/>
+        </marker>
+      </defs>
+      <text x="20" y="22" class="fig-heading fig-smell-text">Before: the rule typed twice</text>
+      <rect x="20" y="36" width="220" height="58" rx="6" class="fig-smell"/>
+      <text x="130" y="56" class="uml-name">CartBanner</text>
+      <line x1="20" y1="64" x2="240" y2="64" class="uml-divider"/>
+      <text x="30" y="82" class="uml-member">total &gt;= 50   (old copy)</text>
+      <text x="130" y="116" class="fig-small fig-center fig-smell-text">nothing links the two copies</text>
+      <rect x="20" y="130" width="220" height="58" rx="6" class="fig-smell"/>
+      <text x="130" y="150" class="uml-name">Checkout</text>
+      <line x1="20" y1="158" x2="240" y2="158" class="uml-divider"/>
+      <text x="30" y="176" class="uml-member">total &gt;= 60   (new copy)</text>
+      <text x="20" y="218" class="fig-small">a half-done edit splits them</text>
+
+      <circle cx="277" cy="112" r="17" class="fig-vs"/>
+      <text x="277" y="117" class="fig-vs-text">vs</text>
+
+      <text x="320" y="22" class="fig-heading fig-code-text">After: one home for the rule</text>
+      <rect x="320" y="40" width="150" height="36" rx="6" class="fig-code"/>
+      <text x="395" y="63" class="uml-name">CartBanner</text>
+      <rect x="320" y="150" width="150" height="36" rx="6" class="fig-code"/>
+      <text x="395" y="173" class="uml-name">Checkout</text>
+      <rect x="520" y="46" width="190" height="132" rx="6" class="fig-code"/>
+      <text x="615" y="66" class="uml-name">DeliveryPolicy</text>
+      <line x1="520" y1="74" x2="710" y2="74" class="uml-divider"/>
+      <text x="530" y="92" class="uml-member">- freeFromEuros : int</text>
+      <text x="530" y="109" class="uml-member">- feeEuros : int</text>
+      <text x="530" y="130" class="uml-member">+ isFree(total)</text>
+      <text x="530" y="147" class="uml-member">+ missing(total)</text>
+      <text x="530" y="164" class="uml-member">+ feeFor(total)</text>
+      <line x1="470" y1="58" x2="516" y2="90" class="uml-line" marker-end="url(#f1-open)"/>
+      <line x1="470" y1="168" x2="516" y2="140" class="uml-line" marker-end="url(#f1-open)"/>
+      <text x="320" y="218" class="fig-small">one edit moves both screens</text>
+    </svg>
+    <figcaption>Left (red): two classes each hold their own copy of one rule, and the copies have drifted apart. Right (blue): both classes hold a reference (association arrow) to the rule's single home. To change the policy, you edit one constructor call.</figcaption>
+  </figure>
+
+  <h3>KISS: the simplest design that fully does the job</h3>
+  <p><strong>What it says.</strong> Of all the designs that fully solve the problem, choose the one with the fewest parts and the fewest ideas a reader must hold in their head. Every extra part must earn its place.</p>
+  <p><strong>Why it exists.</strong> Every part is something to read, test and get wrong. Extra machinery also <em>hides</em> things. The engine's deciding order was hidden in its registration order, so the first person to extend it got it wrong.</p>
+  <p><strong>Tiny example.</strong> The whole greeting rule, in deciding order, read from top to bottom:</p>
+  <pre class="code" data-title="simple"><code><span class="kw">if</span> (hour &lt; <span class="num">12</span>) { <span class="kw">return</span> <span class="str">"Good morning"</span>; }
+<span class="kw">if</span> (hour &lt; <span class="num">18</span>) { <span class="kw">return</span> <span class="str">"Good afternoon"</span>; }
+<span class="kw">if</span> (hour &lt; <span class="num">22</span>) { <span class="kw">return</span> <span class="str">"Good evening"</span>; }
+<span class="kw">return</span> <span class="str">"Good night"</span>;</code></pre>
+  <p><strong>The name.</strong> This is <strong>KISS, "Keep It Simple, Stupid,"</strong> a motto usually credited to the aircraft engineer Kelly Johnson. Many people soften it to "Keep It Short and Simple."</p>
+  <p>Simple is not the same as short, and it is not the same as clever. <code>return h &lt; 12 ? "Good morning" : h &lt; 18 ? "Good afternoon" : …</code> is shorter, but a reader has to untangle it before trusting it. A useful test for "simple": <em>can a newcomer predict the output by reading the code once, top to bottom?</em> The four <code>if</code>s pass. The engine fails, because you must know the registration order to answer.</p>
+
+  <h3>YAGNI: don't build it until it is really needed</h3>
+  <p><strong>What it says.</strong> Don't add a feature, option or extension point because you think it <em>might</em> be needed one day. Add it on the day a real need arrives.</p>
+  <p><strong>Why it exists.</strong> A guessed feature costs you now: it must be written, tested and read, and callers must deal with it (every caller of <code>ListPrinter</code> picks three knobs). It rots while nobody uses it. And the guess is often wrong: the real request ("tick items off") was not one of the three guesses. When the real need comes, you build it with real information, which beats a year-old guess.</p>
+  <p><strong>Tiny example.</strong> <code>new ShoppingList().print(items)</code> does exactly what the app uses, a dash per item, and nothing else.</p>
+  <p><strong>The name.</strong> This is <strong>YAGNI, "You Aren't Gonna Need It,"</strong> from <strong>Extreme Programming</strong> (XP), a way of building software in very small steps with constant testing and feedback, made popular by Kent Beck and Ron Jeffries in the late 1990s. You met YAGNI's idea already as <span class="term" tabindex="0" data-def="write the simple version first; introduce a variation point when the second real variant arrives.">take the first bullet</span> in <a href="lesson-06-open-closed.html">Lesson 06</a>: don't build a variation point until the second real variant arrives.</p>
+  <div class="callout note">
+    <p><strong>An honest limit.</strong> YAGNI is about <em>features</em>, never about <em>quality</em>. Tests, clear names, error handling and code that is easy to change are needed today, not "later." YAGNI works <em>because</em> the code stays easy to change. It lets you add the feature cheaply when the real need arrives.</p>
+  </div>
+
+  <details class="check">
+    <summary>DRY says "one home for each rule." YAGNI says "don't build what isn't needed." Does <code>DeliveryPolicy</code> break YAGNI?</summary>
+    <p>No. It was built for a need that is <em>already here</em>: two screens using one rule, and a real bug when they drifted apart. YAGNI warns against parts built for <em>imagined</em> needs. Notice also what <code>DeliveryPolicy</code> does not have: no interface, no different policy per country, no settings file. Those would be YAGNI violations until someone asks.</p>
+  </details>
+
+  <h3>The Law of Demeter: talk only to your friends</h3>
+  <p><strong>What it says.</strong> A method should call methods only on objects it knows directly, its "friends," and never on objects it got <em>from</em> a friend (strangers). Precisely, a method <code>m</code> of object <code>O</code> may call methods on:</p>
+  <ol>
+    <li><code>O</code> itself (<code>this</code>);</li>
+    <li><code>m</code>'s own parameters;</li>
+    <li>objects that <code>m</code> creates with <code>new</code>;</li>
+    <li><code>O</code>'s own fields.</li>
+  </ol>
+  <p>An object that one of those friends <em>returns</em> to you is a stranger. Don't call methods on it.</p>
+  <p><strong>Why it exists.</strong> Each step into a stranger couples you to how your friend is built inside. The paperboy's friend was the customer, but he called methods on the customer's wallet, a stranger. When the customer's insides changed (the jar), the paperboy broke. With the rule followed, a change inside <code>Customer</code> stays inside <code>Customer</code>.</p>
+  <p><strong>Tiny example.</strong> <code>customer.getWallet().take(2)</code> breaks the rule, because <code>take</code> is called on what <code>getWallet()</code> returned. <code>customer.pay(2)</code> follows it, because <code>pay</code> is called on a parameter.</p>
+  <p><strong>The name.</strong> This is the <strong>Law of Demeter</strong>, named after the Demeter research project at Northeastern University, where Ian Holland proposed it in 1987. It is also called the <em>principle of least knowledge</em>. A chain of calls like <code>a.getB().getC().doD()</code> looks like a line of railway carriages, so it is nicknamed a <strong>train wreck</strong>.</p>
+  <p>The usual cure has its own name. Instead of <em>asking</em> an object for its insides and doing the work yourself, you <em>tell</em> it what you want and let it do the work. This is called <strong>Tell, Don't Ask</strong>. <code>customer.pay(2)</code> tells. <code>customer.getWallet().getCash()</code> asks. It is <span class="term" tabindex="0" data-def="hiding an object's data (private) behind guarded methods, so it can only change in rule-respecting ways.">encapsulation</span> seen from the caller's side: the customer's money is the customer's business.</p>
+
+  <figure class="fig">
+    <svg viewBox="0 0 720 290" role="img" aria-label="Before: Paperboy depends on Customer and also, reaching through, on Wallet; Customer exposes getWallet and getCoinJar and holds wallets. After: Paperboy depends only on Customer, which offers pay and moneyLeft and keeps its two Wallets private.">
+      <defs>
+        <marker id="f2-open" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="10" markerHeight="10" orient="auto-start-reverse">
+          <path d="M0,0 L10,5 L0,10" class="uml-head-open"/>
+        </marker>
+        <marker id="f2-smell" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="10" markerHeight="10" orient="auto-start-reverse">
+          <path d="M0,0 L10,5 L0,10" class="fig-arrow-smell"/>
+        </marker>
+      </defs>
+      <text x="20" y="22" class="fig-heading fig-smell-text">Before: reaching through</text>
+      <rect x="20" y="40" width="130" height="40" rx="6" class="fig-smell"/>
+      <text x="85" y="65" class="uml-name">Paperboy</text>
+      <rect x="190" y="40" width="150" height="76" rx="6" class="fig-smell"/>
+      <text x="265" y="60" class="uml-name">Customer</text>
+      <line x1="190" y1="68" x2="340" y2="68" class="uml-divider"/>
+      <text x="200" y="86" class="uml-member">+ getWallet()</text>
+      <text x="200" y="103" class="uml-member">+ getCoinJar()</text>
+      <rect x="190" y="176" width="150" height="72" rx="6" class="fig-smell"/>
+      <text x="265" y="196" class="uml-name">Wallet</text>
+      <line x1="190" y1="204" x2="340" y2="204" class="uml-divider"/>
+      <text x="200" y="222" class="uml-member">+ getCash()</text>
+      <text x="200" y="239" class="uml-member">+ take(n)</text>
+      <line x1="150" y1="60" x2="186" y2="60" class="uml-dashed" marker-end="url(#f2-open)"/>
+      <line x1="265" y1="116" x2="265" y2="172" class="uml-line" marker-end="url(#f2-open)"/>
+      <text x="257" y="148" class="uml-mult" text-anchor="end">wallet, coinJar</text>
+      <path d="M85,80 L85,212 L186,212" class="fig-arrow-smell fig-dashed" marker-end="url(#f2-smell)"/>
+      <text x="93" y="200" class="fig-small fig-smell-text">reaches in</text>
+      <text x="20" y="276" class="fig-small">Paperboy depends on 2 classes</text>
+
+      <circle cx="365" cy="145" r="17" class="fig-vs"/>
+      <text x="365" y="150" class="fig-vs-text">vs</text>
+
+      <text x="395" y="22" class="fig-heading fig-code-text">After: it asks its friend</text>
+      <rect x="395" y="40" width="130" height="40" rx="6" class="fig-code"/>
+      <text x="460" y="65" class="uml-name">Paperboy</text>
+      <rect x="565" y="40" width="145" height="76" rx="6" class="fig-code"/>
+      <text x="637" y="60" class="uml-name">Customer</text>
+      <line x1="565" y1="68" x2="710" y2="68" class="uml-divider"/>
+      <text x="575" y="86" class="uml-member">+ pay(amount)</text>
+      <text x="575" y="103" class="uml-member">+ moneyLeft()</text>
+      <rect x="565" y="176" width="145" height="72" rx="6" class="fig-code"/>
+      <text x="637" y="196" class="uml-name">Wallet</text>
+      <line x1="565" y1="204" x2="710" y2="204" class="uml-divider"/>
+      <text x="575" y="222" class="uml-member">+ has(n)</text>
+      <text x="575" y="239" class="uml-member">+ take(n)</text>
+      <line x1="525" y1="60" x2="561" y2="60" class="uml-dashed" marker-end="url(#f2-open)"/>
+      <line x1="637" y1="116" x2="637" y2="172" class="uml-line" marker-end="url(#f2-open)"/>
+      <text x="629" y="148" class="uml-mult" text-anchor="end">wallet, coinJar (private)</text>
+      <text x="395" y="276" class="fig-small">Paperboy depends on 1 class</text>
+    </svg>
+    <figcaption>Dashed arrows are "uses briefly" (dependency); solid ones are "holds" (association), as in <a href="../../phase-0-oop-foundations/chapter-01-oop/lesson-04-coupling-cohesion-uml.html">Lesson 04</a>. Left: the red arrow reaches past the customer into its wallet, so the paperboy is coupled to two classes and to how they fit together. Right: one arrow, to a friend. The wallets can become a jar, a card or a bank account and the paperboy never notices.</figcaption>
+  </figure>
+
+  <p><strong>Not a dot-counting rule.</strong> The law is about reaching into the <em>structure</em> of other objects, not about how many dots a line has. Two common cases are fine:</p>
+  <ul>
+    <li><strong>Calls that hand back the object you are already talking to.</strong> <code>text.append("a").append("b")</code> in the hub's <code>HouseReport</code> has many dots, but each <code>append</code> returns the same <code>StringBuilder</code>. It is still your friend, so you never meet a stranger.</li>
+    <li><strong>Stable value types.</strong> <code>device.getName().equals(name)</code> strictly calls a method on a returned <code>String</code>. But <code>String</code> is a stable JDK value that will never grow a coin jar. This is the same judgement <a href="lesson-09-dependency-inversion.html">Lesson 09</a> made about depending on stable things.</li>
+  </ul>
+
+  <details class="check">
+    <summary>In <code>Paperboy.collect(Customer customer, int price)</code>, which of these may it call under the Law of Demeter: <code>customer.pay(price)</code>, <code>this.toString()</code>, <code>customer.getWallet().take(price)</code>, <code>new Receipt(price).print()</code>?</summary>
+    <p><code>customer.pay(price)</code>: yes, a parameter. <code>this.toString()</code>: yes, the object itself. <code>new Receipt(price).print()</code>: yes, an object the method created. <code>customer.getWallet().take(price)</code>: no. <code>take</code> is called on what a friend returned, which is a stranger.</p>
+  </details>
+
+  <h3>Composition over inheritance, revisited as a principle</h3>
+  <p>In <a href="../../phase-0-oop-foundations/chapter-01-oop/lesson-03-composition-vs-inheritance.html">Lesson 03</a> you met the Gang of Four's advice, <span class="term" tabindex="0" data-def="prefer has-a to is-a when in doubt; &quot;favor&quot;, not &quot;always&quot;.">favor composition over inheritance</span>, through a bug. A counting playlist that <em>extended</em> <code>Playlist</code> double-counted when its parent's internals changed (the <span class="term" tabindex="0" data-def="a subclass broken by a change made only to its parent (base class), because it depended on the parent's internal self-use.">fragile base class problem</span>), while one that <em>held</em> a playlist (composition) and passed calls on to it (<span class="term" tabindex="0" data-def="passing a request on to a held object so it does the real work.">delegation</span>) was immune. Now SOLID explains why the cure works so well:</p>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Principle</th><th>What inheritance does</th><th>What composition does</th></tr></thead>
+      <tbody>
+        <tr><td>L (Lesson 07)</td><td>Promises that every subclass can stand in for its parent, including every inherited method. Easy to break by accident.</td><td>A wrapper signs only the interface it chooses, so it promises only what it can keep.</td></tr>
+        <tr><td>O (Lesson 06)</td><td>To add a feature to many classes you need a subclass of each one (class explosion).</td><td>One wrapper adds a feature to any implementation, with no edits (the hub's <code>LoggedDevice</code>).</td></tr>
+        <tr><td>D (Lesson 09)</td><td>The parent is fixed when the code is compiled, and you cannot inject a different one.</td><td>The held object is any implementation, chosen at the <span class="term" tabindex="0" data-def="the one place at the program's start that creates concrete objects and wires them together (Main + HomeSetup).">composition root</span>.</td></tr>
+        <tr><td>S (Lesson 05)</td><td>Parent and child share one object, so their jobs blur together.</td><td>Each part is its own object with one job.</td></tr>
+        <tr><td>Demeter (this lesson)</td><td>The child depends on the parent's insides (self-use), which is reaching into a structure.</td><td>The wrapper uses only the held object's public contract (black-box reuse).</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>"Favor" still does not mean "always." Inheritance is the right tool for a true is-a relationship with a small, stable parent that you own and designed to be extended. The hub's <code>SwitchableDevice</code>, shared by <code>Light</code> and <code>Thermostat</code>, is exactly that, and it stays.</p>
+</section>
+
+<!-- ============================== SECTION 4 ============================== -->
+<section id="s4">
+  <h2><span class="sec-num">4</span>The katas</h2>
+  <p>Four small packages, one per new principle, each with its wrong way kept in <code>naive/</code>. Composition over inheritance keeps its frozen Lesson 03 kata, <code>com.katas.composition</code>, so there is nothing new to write for it.</p>
+
+  <h3>DRY · <code>com.katas.dry</code></h3>
+  <p class="filepath">Saved: katas/src/main/java/com/katas/dry/DeliveryPolicy.java</p>
+  <pre class="code" data-title="DeliveryPolicy.java"><code><span class="cmt">// The DRY way (Lesson 11): the rule gets one home.</span>
+<span class="kw">package</span> com.katas.dry;
+
+<span class="cmt">// The ONE place that knows the free-delivery rule: the threshold and the fee</span>
+<span class="cmt">// are written here and nowhere else (DRY: every piece of knowledge has a single</span>
+<span class="cmt">// home). Changing the shop's policy is now one edit, and every screen that</span>
+<span class="cmt">// asks this object follows automatically.</span>
+<span class="kw">public class</span> <span class="ty">DeliveryPolicy</span> {
+
+    <span class="cmt">// From this basket value (in EUR) delivery is free.</span>
+    <span class="kw">private final int</span> freeFromEuros;
+
+    <span class="cmt">// The fee (in EUR) charged below that value.</span>
+    <span class="kw">private final int</span> feeEuros;
+
+    <span class="cmt">// The shop chooses the numbers once, when the policy is built.</span>
+    <span class="kw">public</span> <span class="fn">DeliveryPolicy</span>(<span class="kw">int</span> freeFromEuros, <span class="kw">int</span> feeEuros) {
+        <span class="cmt">// Remember the threshold.</span>
+        <span class="kw">this</span>.freeFromEuros = freeFromEuros;
+        <span class="cmt">// Remember the fee.</span>
+        <span class="kw">this</span>.feeEuros = feeEuros;
+    }
+
+    <span class="cmt">// Is delivery free for a basket worth totalEuros? The comparison is written once.</span>
+    <span class="kw">public boolean</span> <span class="fn">isFree</span>(<span class="kw">int</span> totalEuros) {
+        <span class="cmt">// The single copy of the rule.</span>
+        <span class="kw">return</span> totalEuros &gt;= freeFromEuros;
+    }
+
+    <span class="cmt">// How many EUR the shopper must still add for free delivery (0 if already free).</span>
+    <span class="kw">public int</span> <span class="fn">missing</span>(<span class="kw">int</span> totalEuros) {
+        <span class="cmt">// Reuse isFree rather than repeating the comparison.</span>
+        <span class="kw">return</span> <span class="fn">isFree</span>(totalEuros) ? <span class="num">0</span> : freeFromEuros - totalEuros;
+    }
+
+    <span class="cmt">// The delivery fee to charge for a basket worth totalEuros.</span>
+    <span class="kw">public int</span> <span class="fn">feeFor</span>(<span class="kw">int</span> totalEuros) {
+        <span class="cmt">// Reuse isFree again: one rule, asked three ways.</span>
+        <span class="kw">return</span> <span class="fn">isFree</span>(totalEuros) ? <span class="num">0</span> : feeEuros;
+    }
+}</code></pre>
+  <p><span class="filepath">Saved: CartBanner.java and Checkout.java</span> each take the policy in their constructor. The banner keeps only the <em>wording</em> (<code>"Free delivery!"</code> or <code>"Add " + policy.missing(total) + " EUR for free delivery"</code>), and the checkout returns <code>policy.feeFor(total)</code>. Neither contains a number. <span class="filepath">Saved: Main.java</span> runs the naive pair, then builds <code>new DeliveryPolicy(60, 5)</code> once and hands the <em>same object</em> to both screens.</p>
+  <ol class="trace">
+    <li>Naive: the banner compares 55 with its own 50 and celebrates. The checkout compares 55 with its own 60 and charges 5.</li>
+    <li>DRY, 55 EUR: <code>banner.message(55)</code> calls <code>policy.isFree(55)</code>, which is false because 55 is less than 60. It then calls <code>policy.missing(55)</code>, which calls <code>isFree</code> again and returns 60 − 55 = 5. <code>checkout.deliveryFee(55)</code> calls <code>policy.feeFor(55)</code>, which returns the fee, 5.</li>
+    <li>DRY, 60 EUR: <code>isFree(60)</code> is true, so the banner says "Free delivery!" and <code>feeFor</code> returns 0.</li>
+  </ol>
+  <p class="pred-label">Prediction — com.katas.dry.Main</p>
+  <pre class="output"><code><span class="err">Naive banner:   Free delivery!
+Naive checkout: fee 5 EUR</span>
+<span class="out">DRY banner:     Add 5 EUR for free delivery
+DRY checkout:   fee 5 EUR</span>
+DRY banner:     Free delivery!
+DRY checkout:   fee 0 EUR</code></pre>
+  <p>Tests: <span class="filepath">DeliveryPolicyTest.java</span> (2): <code>bannerAndCheckoutAlwaysAgree</code> at 55 and 60, and <code>oneEditMovesEveryScreen</code> with a 40/3 policy. <span class="filepath">DuplicatedRuleTest.java</span> (1) pins the naive contradiction.</p>
+
+  <h3>KISS · <code>com.katas.kiss</code></h3>
+  <p class="filepath">Saved: katas/src/main/java/com/katas/kiss/Greeter.java</p>
+  <pre class="code" data-title="Greeter.java"><code><span class="cmt">// The KISS way (Lesson 11): the simplest code that does the whole job.</span>
+<span class="kw">package</span> com.katas.kiss;
+
+<span class="cmt">// Chooses a greeting by the hour. The whole rule, in its deciding order, fits</span>
+<span class="cmt">// on one screen: four lines, read top to bottom. The "Good night" requirement</span>
+<span class="cmt">// was one new line, placed where its order is plain to see.</span>
+<span class="kw">public class</span> <span class="ty">Greeter</span> {
+
+    <span class="cmt">// The greeting for an hour of the day (0-23).</span>
+    <span class="kw">public</span> <span class="ty">String</span> <span class="fn">greet</span>(<span class="kw">int</span> hour) {
+        <span class="cmt">// Before noon.</span>
+        <span class="kw">if</span> (hour &lt; <span class="num">12</span>) {
+            <span class="cmt">// Morning.</span>
+            <span class="kw">return</span> <span class="str">"Good morning"</span>;
+        }
+        <span class="cmt">// Noon until 17:59.</span>
+        <span class="kw">if</span> (hour &lt; <span class="num">18</span>) {
+            <span class="cmt">// Afternoon.</span>
+            <span class="kw">return</span> <span class="str">"Good afternoon"</span>;
+        }
+        <span class="cmt">// 18:00 until 21:59.</span>
+        <span class="kw">if</span> (hour &lt; <span class="num">22</span>) {
+            <span class="cmt">// Evening.</span>
+            <span class="kw">return</span> <span class="str">"Good evening"</span>;
+        }
+        <span class="cmt">// Everything later: the requirement added in this lesson.</span>
+        <span class="kw">return</span> <span class="str">"Good night"</span>;
+    }
+}</code></pre>
+  <p>The over-built version is <span class="filepath">naive/GreetingEngine.java</span>: a nested <code>GreetingRule</code> interface, four nested rule classes, a registry list, <code>addRule</code> and a loop. That is about 140 lines, compared with about 30 here.</p>
+  <ol class="trace">
+    <li>Naive: the constructor registers Morning, Afternoon and Evening, and <code>addRule</code> appends Night as the fourth rule.</li>
+    <li><code>engine.greet(9)</code>: <code>MorningRule.appliesTo(9)</code> is true, so the answer is "Good morning".</li>
+    <li><code>engine.greet(23)</code>: Morning says no, Afternoon says no, then <code>EveningRule.appliesTo(23)</code> (23 ≥ 18) says yes. The loop returns "Good evening" and never reaches <code>NightRule</code>.</li>
+    <li>Simple: <code>greet(23)</code> fails the first three tests and reaches <code>return "Good night"</code>.</li>
+  </ol>
+  <p class="pred-label">Prediction — com.katas.kiss.Main</p>
+  <pre class="output"><code>Engine at 9:  Good morning
+<span class="err">Engine at 23: Good evening</span>
+Simple at 9:  Good morning
+<span class="out">Simple at 23: Good night</span></code></pre>
+  <p>Tests: <span class="filepath">GreeterTest.java</span> (1) checks every part of the day at both of its edges (0, 11, 12, 17, 18, 21, 22, 23). <span class="filepath">EngineShadowingTest.java</span> (1) pins the hidden-order bug.</p>
+
+  <h3>YAGNI · <code>com.katas.yagni</code></h3>
+  <p class="filepath">Saved: katas/src/main/java/com/katas/yagni/ShoppingList.java</p>
+  <pre class="code" data-title="ShoppingList.java"><code><span class="cmt">// The YAGNI way (Lesson 11): build what is needed today, and nothing more.</span>
+<span class="kw">package</span> com.katas.yagni;
+
+<span class="cmt">// The JDK's list interface.</span>
+<span class="kw">import</span> java.util.<span class="ty">List</span>;
+
+<span class="cmt">// Prints a shopping list the one way the app actually uses: a dash per item.</span>
+<span class="cmt">// No formats, no numbering, no columns. When a real new need arrives, it is</span>
+<span class="cmt">// added then, shaped by that real need instead of by a guess.</span>
+<span class="kw">public class</span> <span class="ty">ShoppingList</span> {
+
+    <span class="cmt">// Turn the items into printable text, one dashed line each.</span>
+    <span class="kw">public</span> <span class="ty">String</span> <span class="fn">print</span>(<span class="ty">List</span>&lt;<span class="ty">String</span>&gt; items) {
+        <span class="cmt">// StringBuilder: a growable piece of text.</span>
+        <span class="ty">StringBuilder</span> text = <span class="kw">new</span> <span class="ty">StringBuilder</span>();
+        <span class="cmt">// Every item in order.</span>
+        <span class="kw">for</span> (<span class="ty">String</span> item : items) {
+            <span class="cmt">// A dash, the item, and a line break.</span>
+            text.<span class="fn">append</span>(<span class="str">"- "</span>).<span class="fn">append</span>(item).<span class="fn">append</span>(<span class="str">"\n"</span>);
+        }
+        <span class="cmt">// The finished text.</span>
+        <span class="kw">return</span> text.<span class="fn">toString</span>();
+    }
+}</code></pre>
+  <ol class="trace">
+    <li>Naive, <code>("plain", false, 1)</code>: the columns check passes, the HTML checks fail, and each item gets the marker <code>"- "</code> because <code>numbered</code> is false.</li>
+    <li>Naive, two columns: the constructor accepts it without complaint. <code>print</code> throws at its first line, and <code>Main</code> catches the exception and prints the refusal.</li>
+    <li>YAGNI: one loop with no choices to make, giving the same two lines.</li>
+  </ol>
+  <p class="pred-label">Prediction — com.katas.yagni.Main</p>
+  <pre class="output"><code>- milk
+- eggs
+<span class="err">Naive printer refused: Columns not implemented yet</span>
+<span class="out">- milk
+- eggs</span></code></pre>
+  <p>Tests: <span class="filepath">ShoppingListTest.java</span> (1) checks <code>"- milk\n- eggs\n"</code> (<code>\n</code> is a line break inside a Java string). <span class="filepath">SpeculativePrinterTest.java</span> (1) pins the trap: the constructor accepts two columns, and printing throws.</p>
+
+  <h3>Law of Demeter · <code>com.katas.demeter</code></h3>
+  <p class="filepath">Saved: katas/src/main/java/com/katas/demeter/Customer.java</p>
+  <pre class="code" data-title="Customer.java"><code><span class="cmt">// The Law of Demeter way (Lesson 11): the customer pays; nobody reaches inside.</span>
+<span class="kw">package</span> com.katas.demeter;
+
+<span class="cmt">// A newspaper customer that is ASKED to pay and decides for itself where the</span>
+<span class="cmt">// money comes from. Its wallet and coin jar are private and never handed out,</span>
+<span class="cmt">// so adding the jar changed this class only: no caller had to hear about it.</span>
+<span class="kw">public class</span> <span class="ty">Customer</span> {
+
+    <span class="cmt">// The money the customer carries.</span>
+    <span class="kw">private final</span> <span class="ty">Wallet</span> wallet;
+
+    <span class="cmt">// Spare money in a jar by the door.</span>
+    <span class="kw">private final</span> <span class="ty">Wallet</span> coinJar;
+
+    <span class="cmt">// A customer with some cash in the wallet and some in the jar.</span>
+    <span class="kw">public</span> <span class="fn">Customer</span>(<span class="kw">int</span> walletCash, <span class="kw">int</span> jarCash) {
+        <span class="cmt">// Build the wallet (this object's own field: a friend).</span>
+        <span class="kw">this</span>.wallet = <span class="kw">new</span> <span class="ty">Wallet</span>(walletCash);
+        <span class="cmt">// Build the jar (also a friend).</span>
+        <span class="kw">this</span>.coinJar = <span class="kw">new</span> <span class="ty">Wallet</span>(jarCash);
+    }
+
+    <span class="cmt">// Pay an amount if possible. Returns true if paid, false if not.</span>
+    <span class="kw">public boolean</span> <span class="fn">pay</span>(<span class="kw">int</span> amount) {
+        <span class="cmt">// First choice: the wallet.</span>
+        <span class="kw">if</span> (wallet.<span class="fn">has</span>(amount)) {
+            <span class="cmt">// Take it from there.</span>
+            wallet.<span class="fn">take</span>(amount);
+            <span class="cmt">// Paid.</span>
+            <span class="kw">return true</span>;
+        }
+        <span class="cmt">// Second choice: the jar by the door.</span>
+        <span class="kw">if</span> (coinJar.<span class="fn">has</span>(amount)) {
+            <span class="cmt">// Take it from there.</span>
+            coinJar.<span class="fn">take</span>(amount);
+            <span class="cmt">// Paid.</span>
+            <span class="kw">return true</span>;
+        }
+        <span class="cmt">// Neither holds enough: decline, and nothing is taken.</span>
+        <span class="kw">return false</span>;
+    }
+
+    <span class="cmt">// Total money left, as a plain number (for the demo and tests).</span>
+    <span class="kw">public int</span> <span class="fn">moneyLeft</span>() {
+        <span class="cmt">// Add the two amounts.</span>
+        <span class="kw">return</span> wallet.<span class="fn">cash</span>() + coinJar.<span class="fn">cash</span>();
+    }
+}</code></pre>
+  <p class="filepath">Saved: katas/src/main/java/com/katas/demeter/Paperboy.java</p>
+  <pre class="code" data-title="Paperboy.java"><code><span class="cmt">// The Law of Demeter way (Lesson 11): the paperboy talks only to its friend.</span>
+<span class="kw">package</span> com.katas.demeter;
+
+<span class="cmt">// Collects the weekly newspaper money by ASKING the customer to pay. It calls</span>
+<span class="cmt">// a method on its parameter (a friend) and never on anything the customer</span>
+<span class="cmt">// holds (a stranger), so it never needs to know about wallets or jars.</span>
+<span class="kw">public class</span> <span class="ty">Paperboy</span> {
+
+    <span class="cmt">// Collect the price from a customer; returns the EUR actually collected.</span>
+    <span class="kw">public int</span> <span class="fn">collect</span>(<span class="ty">Customer</span> customer, <span class="kw">int</span> price) {
+        <span class="cmt">// One call on a friend. How the customer pays is the customer's business.</span>
+        <span class="kw">return</span> customer.<span class="fn">pay</span>(price) ? price : <span class="num">0</span>;
+    }
+}</code></pre>
+  <p><span class="filepath">Saved: Wallet.java</span> now guards its own rule: <code>has(amount)</code>, plus a <code>take(amount)</code> that throws rather than going below zero (an <span class="term" tabindex="0" data-def="a rule about an object that must always be true for its whole life (e.g. &quot;balance is never negative&quot;).">invariant</span>), and <code>cash()</code> returns a plain number. The naive wallet's <code>take</code> did no check at all, because it trusted the paperboy to look first.</p>
+  <ol class="trace">
+    <li>Naive: <code>customer.getWallet()</code> returns the wallet object itself. <code>.getCash()</code> on it gives 1, which is less than 2, so the method returns 0. The jar is never looked at.</li>
+    <li>Demeter: <code>paperboy.collect(customer, 2)</code> calls <code>customer.pay(2)</code>. Inside, <code>wallet.has(2)</code> is false (1 &lt; 2) and <code>coinJar.has(2)</code> is true, so <code>coinJar.take(2)</code> leaves 8 in the jar and <code>pay</code> returns true. <code>collect</code> returns 2.</li>
+    <li><code>moneyLeft()</code> = 1 + 8 = 9.</li>
+  </ol>
+  <p class="pred-label">Prediction — com.katas.demeter.Main</p>
+  <pre class="output"><code><span class="err">Naive paperboy collected: 0 EUR</span>
+<span class="out">Demeter paperboy collected: 2 EUR</span>
+Customer has 9 EUR left</code></pre>
+  <p>Tests: <span class="filepath">PaperboyTest.java</span> (2): the jar pays when the wallet is short (9 left), and a customer who cannot pay declines with nothing taken. <span class="filepath">TrainWreckTest.java</span> (1) pins the naive miss. (That test itself calls <code>customer.getCoinJar().getCash()</code>, a deliberate train wreck so it can look inside the naive design. Tests sometimes need to inspect more than production code should.)</p>
+
+  <h4>Run all four</h4>
+  <pre class="terminal" data-title="terminal — from design-patterns-learning/"><code>cd katas
+mvn test
+mvn compile exec:java <span class="str">"-Dexec.mainClass=com.katas.dry.Main"</span>
+mvn compile exec:java <span class="str">"-Dexec.mainClass=com.katas.kiss.Main"</span>
+mvn compile exec:java <span class="str">"-Dexec.mainClass=com.katas.yagni.Main"</span>
+mvn compile exec:java <span class="str">"-Dexec.mainClass=com.katas.demeter.Main"</span></code></pre>
+  <p class="pred-label">Prediction — mvn test summary</p>
+  <pre class="output"><code><span class="out">[INFO] Tests run: 59, Failures: 0, Errors: 0, Skipped: 0</span>
+<span class="out">[INFO] BUILD SUCCESS</span></code></pre>
+  <div class="callout tryit">
+    <p>Expect <strong>59 tests</strong> (49 earlier + 10 new) and the four demos' lines above. Maven prints its own <code>[INFO]</code> lines around them. If anything differs, the machine is right. Tell me what you saw and we will work out why.</p>
+  </div>
+</section>
+
+<!-- ============================== SECTION 5 ============================== -->
+<section id="s5">
+  <h2><span class="sec-num">5</span>Applied to the Smart Home Hub</h2>
+
+  <p>Reading the hub against the four companions turned up one real train wreck, in our own <code>Main</code>, written in Lesson 10:</p>
+  <pre class="code" data-title="Main.java (before)"><code>hub.<span class="fn">lockables</span>().<span class="fn">get</span>(<span class="num">0</span>).<span class="fn">unlock</span>();   <span class="cmt">// reach into the hub's list, by POSITION</span></code></pre>
+  <p><code>Main</code> asks the hub for its list, asks the list for item 0, and calls <code>unlock</code> on that stranger. It works only because the front door happens to be the first lock. Add a back door before it in <code>HomeSetup</code>, and the wrong door opens with no error at all. The cure is Tell, Don't Ask: tell the hub which lock to open, by name, the same way <code>turnOff(name)</code> already works for switchables.</p>
+
+  <p>That cure created a DRY question straight away. The hub already had a "find a device by its exact name, or fail loudly" loop in <code>switchableNamed</code>. A second, near-identical loop for locks would repeat the same <em>knowledge</em>. If the lookup rule ever changes (say, to ignore upper and lower case), both copies must change together. That makes it real duplication, not accidental duplication, so it gets one home.</p>
+
+  <h4>A new Java tool: the generic method</h4>
+  <p><strong>What it is.</strong> A method with a <em>type placeholder</em>, which is filled in fresh each time the method is called. <strong>Why it exists.</strong> The two lookups are the same loop over two list types, <code>List&lt;Switchable&gt;</code> and <code>List&lt;Lockable&gt;</code>. Without a placeholder you would need either two copies, or one method returning a plain <code>Device</code> that every caller must convert back to the type it wanted. <strong>Tiny example.</strong> <code>findNamed(switchables, …)</code> hands back a <code>Switchable</code>, and <code>findNamed(lockables, …)</code> hands back a <code>Lockable</code>, from one body of code. <strong>The name.</strong> This is a <strong>generic method</strong>. The <code>&lt;T extends Device&gt;</code> written before its return type declares its <strong>type parameter</strong> <code>T</code>. The words <code>extends Device</code> are a <strong>bound</strong>: <code>T</code> may be any type that is a <code>Device</code>, which is why the body is allowed to call <code>getName()</code>. You have been using generics since <code>List&lt;String&gt;</code> in Lesson 03, because <code>List</code> itself is a <em>generic type</em> whose placeholder you fill with <code>String</code> or <code>Device</code>.</p>
+
+  <p class="filepath">Modified: smarthome/src/main/java/com/smarthome/home/Hub.java (the changed part)</p>
+  <pre class="code" data-title="Hub.java (lookups, Lesson 11)"><code>    <span class="cmt">// Look a switchable device up by its exact name. Public since Lesson 09,</span>
+    <span class="cmt">// so the composition root can hand one device to a policy (e.g. the</span>
+    <span class="cmt">// thermostat to ClimateControl) as a Switchable, never as a concrete class.</span>
+    <span class="kw">public</span> <span class="ty">Switchable</span> <span class="fn">switchableNamed</span>(<span class="ty">String</span> name) {
+        <span class="cmt">// The shared lookup rule, asked for a switchable device.</span>
+        <span class="kw">return</span> <span class="fn">findNamed</span>(switchables, name, <span class="str">"switchable"</span>);
+    }
+
+    <span class="cmt">// Unlock one lock, found by its name. Added in Lesson 11 so callers ASK</span>
+    <span class="cmt">// the hub instead of reaching into its list by position (Law of Demeter).</span>
+    <span class="cmt">// There is no lock(name) yet, just as there is no turnOn(name): nothing</span>
+    <span class="cmt">// needs it, so it is not built (YAGNI).</span>
+    <span class="kw">public void</span> <span class="fn">unlock</span>(<span class="ty">String</span> name) {
+        <span class="cmt">// Find it (or fail loudly), then unlock it.</span>
+        <span class="fn">findNamed</span>(lockables, name, <span class="str">"lockable"</span>).<span class="fn">unlock</span>();
+    }
+
+    <span class="cmt">// The ONE copy of the hub's "find a device by its exact name" rule (DRY),</span>
+    <span class="cmt">// shared by switchableNamed and unlock. A GENERIC method: &lt;T extends Device&gt;</span>
+    <span class="cmt">// is a type placeholder, so the same code searches a List&lt;Switchable&gt; and</span>
+    <span class="cmt">// hands back a Switchable, or a List&lt;Lockable&gt; and hands back a Lockable.</span>
+    <span class="kw">private static</span> &lt;<span class="ty">T</span> <span class="kw">extends</span> <span class="ty">Device</span>&gt; <span class="ty">T</span> <span class="fn">findNamed</span>(<span class="ty">List</span>&lt;<span class="ty">T</span>&gt; devices, <span class="ty">String</span> name, <span class="ty">String</span> kind) {
+        <span class="cmt">// Check each device in turn...</span>
+        <span class="kw">for</span> (<span class="ty">T</span> device : devices) {
+            <span class="cmt">// ...and return the first whose name matches (getName comes from Device).</span>
+            <span class="kw">if</span> (device.<span class="fn">getName</span>().<span class="fn">equals</span>(name)) {
+                <span class="cmt">// Found it.</span>
+                <span class="kw">return</span> device;
+            }
+        }
+        <span class="cmt">// No match: refuse loudly, naming the kind and what was asked for.</span>
+        <span class="kw">throw new</span> <span class="ty">IllegalArgumentException</span>(<span class="str">"No "</span> + kind + <span class="str">" device named: "</span> + name);
+    }</code></pre>
+  <p>(<code>static</code> here means the helper needs no particular hub object: it uses only its parameters.) Notice the wording: <code>"No " + kind + " device named: "</code> produces exactly the old message, <code>"No switchable device named: …"</code>, so the existing <code>unknownNameIsRefused</code> test and its behaviour are unchanged. This part is a pure refactoring.</p>
+
+  <p class="filepath">Modified: smarthome/src/main/java/com/smarthome/Main.java (one line)</p>
+  <pre class="code" data-title="Main.java (after)"><code>        <span class="cmt">// Someone goes out and leaves the front door unlocked. Asked of the hub</span>
+        <span class="cmt">// by name (Law of Demeter), not by reaching into its list by position.</span>
+        hub.<span class="fn">unlock</span>(<span class="str">"Front Door"</span>);</code></pre>
+  <p>(<code>new LockCheck(hub.lockables(), …)</code> stays as it is. The composition root <em>passes</em> the list on to a policy and calls nothing on it, so it never talks to a stranger.)</p>
+
+  <h4>The rest of the audit: what we deliberately did <em>not</em> change</h4>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Principle</th><th>Finding in the hub</th></tr></thead>
+      <tbody>
+        <tr><td>DRY</td><td>Fixed: one by-name lookup. Checked: <code>"ALERT: "</code> wording lives only in <code>LockCheck</code>, and the comfort range <code>18, 24</code> appears once, in <code>Main</code>.</td></tr>
+        <tr><td>KISS</td><td>The helper is a plain loop. No search index, no map of names, because the hub has four devices.</td></tr>
+        <tr><td>YAGNI</td><td>No <code>lock(name)</code> or <code>turnOn(name)</code>, because nothing calls them. Only one alert channel exists (<code>ConsoleAlerts</code>), with no email or SMS "for later."</td></tr>
+        <tr><td>Demeter</td><td>Fixed: <code>Main</code>'s train wreck. Fine: <code>HouseReport</code>'s <code>append(…).append(…)</code> chains, because each call returns the same builder.</td></tr>
+        <tr><td>Composition</td><td><code>LoggedDevice</code> adds logging by wrapping. <code>SwitchableDevice</code> stays as a parent class, a true is-a with a small, stable parent.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h4>The tests</h4>
+  <p class="filepath">Modified: smarthome/src/test/java/com/smarthome/home/HubTest.java (+2 tests)</p>
+  <pre class="code" data-title="HubTest.java (the new tests)"><code>    <span class="cmt">// unlock finds the lock by name and opens only that one (Lesson 11).</span>
+    <span class="anno">@Test</span>
+    <span class="kw">void</span> <span class="fn">unlockOpensOnlyTheNamedLock</span>() {
+        <span class="cmt">// Two locks; new locks start locked.</span>
+        <span class="ty">DoorLock</span> front = <span class="kw">new</span> <span class="ty">DoorLock</span>(<span class="str">"Front Door"</span>);
+        <span class="ty">DoorLock</span> back = <span class="kw">new</span> <span class="ty">DoorLock</span>(<span class="str">"Back Door"</span>);
+        <span class="cmt">// A hub with no switchables and no other devices.</span>
+        <span class="ty">Hub</span> hub = <span class="kw">new</span> <span class="ty">Hub</span>(<span class="ty">List</span>.<span class="fn">of</span>(), <span class="ty">List</span>.<span class="fn">of</span>(front, back), <span class="ty">List</span>.<span class="fn">of</span>());
+        <span class="cmt">// Ask the hub, by name.</span>
+        hub.<span class="fn">unlock</span>(<span class="str">"Back Door"</span>);
+        <span class="cmt">// Only the named one changed.</span>
+        <span class="fn">assertTrue</span>(front.<span class="fn">isLocked</span>());
+        <span class="fn">assertFalse</span>(back.<span class="fn">isLocked</span>());
+    }
+
+    <span class="cmt">// An unknown lock is refused loudly, worded by the shared lookup rule.</span>
+    <span class="anno">@Test</span>
+    <span class="kw">void</span> <span class="fn">unknownLockIsRefused</span>() {
+        <span class="cmt">// A one-lock hub.</span>
+        <span class="ty">Hub</span> hub = <span class="kw">new</span> <span class="ty">Hub</span>(<span class="ty">List</span>.<span class="fn">of</span>(), <span class="ty">List</span>.<span class="fn">of</span>(<span class="kw">new</span> <span class="ty">DoorLock</span>(<span class="str">"Front Door"</span>)), <span class="ty">List</span>.<span class="fn">of</span>());
+        <span class="cmt">// assertThrows also hands back the exception, so its message can be checked.</span>
+        <span class="ty">IllegalArgumentException</span> error = <span class="fn">assertThrows</span>(<span class="ty">IllegalArgumentException</span>.<span class="kw">class</span>, () -&gt; hub.<span class="fn">unlock</span>(<span class="str">"Garage Door"</span>));
+        <span class="cmt">// The same wording pattern as for switchables, from the one shared helper.</span>
+        <span class="fn">assertEquals</span>(<span class="str">"No lockable device named: Garage Door"</span>, error.<span class="fn">getMessage</span>());
+    }</code></pre>
+
+  <p><strong>What this adds:</strong> the hub can unlock a lock by name, and both by-name lookups share one rule. The hub's visible behaviour is identical to Lesson 10's, but one hidden "only works because of the order" trap is gone.</p>
+
+  <ol class="trace">
+    <li>Building, routines and the climate check run exactly as in <a href="lesson-10-solid-together.html">Lesson 10</a>.</li>
+    <li><code>hub.unlock("Front Door")</code> calls <code>findNamed(lockables, "Front Door", "lockable")</code>. Java fills <code>T</code> with <code>Lockable</code>. The loop compares <code>"Front Door"</code> with the first (and only) lock's name, a match, and returns it as a <code>Lockable</code>. <code>unlock()</code> is called on it.</li>
+    <li><code>lockCheck.run()</code> finds the door unlocked and prints the alert, and the report follows, both as before.</li>
+  </ol>
+  <p class="pred-label">Prediction — the hub's own lines (unchanged from Lesson 10)</p>
+  <pre class="output"><code>Smart Home Hub is starting up...
+Climate: 26C in Hall (allowed 18-24C) -&gt; heating OFF
+ALERT: Front Door is UNLOCKED
+=== House report ===
+Devices: 4 (2 switchable, 0 on)
+  Living Room Light: OFF
+  Hall Thermostat: OFF
+  Front Door: UNLOCKED
+  Hallway Smoke Alarm: ARMED
+Activity (4 entries):
+  1. Living Room Light: ON
+  2. Hall Thermostat: regulating to 21C
+  3. Living Room Light: OFF
+  4. Hall Thermostat: OFF</code></pre>
+  <pre class="terminal" data-title="terminal — from design-patterns-learning/"><code>cd smarthome
+mvn test
+mvn compile exec:java</code></pre>
+  <p class="pred-label">Prediction — mvn test</p>
+  <pre class="output"><code><span class="out">[INFO] Tests run: 65, Failures: 0, Errors: 0, Skipped: 0</span>
+<span class="out">[INFO] BUILD SUCCESS</span></code></pre>
+  <div class="callout tryit">
+    <p>Expect <strong>65 tests</strong> (63 earlier + 2 new) and the same fourteen lines as last lesson. That sameness is the point of a refactoring. If what you see differs, your machine is right. Tell me what you saw and we will work out why.</p>
+  </div>
+</section>
+
+<!-- ============================== SECTION 6 ============================== -->
+<section id="s6">
+  <h2><span class="sec-num">6</span>In the wild</h2>
+  <ul>
+    <li><strong>DRY in the JDK:</strong> <code>java.util.AbstractList</code> writes <code>indexOf</code>, <code>equals</code>, <code>hashCode</code> and its iterator <em>once</em>, on top of two methods that each list supplies, <code>get(index)</code> and <code>size()</code>. Every list built on it shares that one copy instead of re-typing it. (We will meet this shape again as a named pattern in Lesson 26.)</li>
+    <li><strong>Demeter's paperboy:</strong> this lesson's kata borrows its story from David Bock's well-known short paper, <em>The Paperboy, The Wallet, and The Law of Demeter</em>. It is worth reading, and the exact title is worth checking when you search for it.</li>
+    <li><strong>Composition over inheritance:</strong> Joshua Bloch's <em>Effective Java</em> has an item named "Favor composition over inheritance" (Item 18 in the third edition; the number is worth verifying in your copy). It shows the same double-counting bug as Lesson 03, using a <code>HashSet</code> subclass, and points to <code>java.util.Stack extends Vector</code> and <code>java.util.Properties extends Hashtable</code> as inheritance missteps that the JDK itself is stuck with.</li>
+    <li><strong>KISS and YAGNI</strong> are principles about what is <em>absent</em>, so you will not find them in a class. You will find them in how teams work. Extreme Programming made YAGNI a team rule, and code review is where most YAGNI arguments happen ("who asked for this option?").</li>
+  </ul>
+  <div class="callout realworld">
+    <p>In interviews, "DRY versus the wrong abstraction" is a favourite discussion question. Good answers mention the rule of three, the difference between knowledge and text, and being willing to <em>un-merge</em> a shared helper that has grown flags. Section 7 covers all three.</p>
+  </div>
+</section>
+
+<!-- ============================== SECTION 7 ============================== -->
+<section id="s7">
+  <h2><span class="sec-num">7</span>How each gets abused</h2>
+  <p>Each companion principle is a brake on some other kind of excess, and each one turns into an excess itself when it is pushed too far.</p>
+
+  <h3>DRY abused: the wrong abstraction</h3>
+  <p>A beginner sees two similar-looking blocks and merges them into one shared helper. Then the two callers' needs drift apart, and the helper grows a flag for each difference: <code>format(text, true, false, null)</code>. Now every change risks both callers, which is the very <span class="term" tabindex="0" data-def="how strongly one piece of code depends on another, measured by how many changes in one force changes in the other; loose is good.">coupling</span> DRY was meant to remove. Sandi Metz put it memorably: "duplication is far cheaper than the wrong abstraction." Two habits help:</p>
+  <ul>
+    <li><strong>The rule of three:</strong> tolerate a second copy, and merge on the third, when you can finally see what really repeats. (Martin Fowler credits the rule to Don Roberts in his book <em>Refactoring</em>.)</li>
+    <li><strong>Un-merge without shame.</strong> If a shared helper has grown flags, copy it back into its callers, delete the flags, and see what is really shared.</li>
+  </ul>
+
+  <h3>KISS abused: "simple" as an excuse</h3>
+  <p>"Keep it simple" is sometimes used to refuse <em>any</em> structure: "just put it all in <code>Main</code>." But a 600-line method is not simple. It is easy to <em>start</em> and hard to read, test and change. KISS means the simplest design that <em>fully</em> does the job, including the changes you already know are coming. When the problem is genuinely complex (five house modes, four channels), the SOLID structure <em>is</em> the simple answer, because the alternative is a tangle. Clever one-liners are the other abuse. Short code that the next reader cannot predict is not simple.</p>
+
+  <h3>YAGNI abused: refusing to think ahead</h3>
+  <p>YAGNI does not mean "never plan" or "skip tests and error handling, we don't need them yet." Build the <em>features</em> you need today, but keep the code easy to change: tests, clear names, small classes. Then tomorrow's feature is cheap. YAGNI also does not overrule things that are very costly to change later, such as a public API others will depend on or a stored data format. Those deserve real up-front thought.</p>
+
+  <h3>Demeter abused: the middle man</h3>
+  <p>Followed mechanically, the law produces wrapper methods for everything: <code>customer.getWalletCashInEuros()</code>, <code>house.getHallThermostatSensorReading()</code>. A class whose methods mostly just forward to something it holds is the smell called <strong>middle man</strong>. The cure is not more forwarding. It is to ask what the caller actually <em>wants done</em> (pay, regulate) and give the friend a method that <em>does</em> it. The law also does not apply to fluent chains on one object, or to plain data and stable values (Section 3).</p>
+
+  <h3>Composition abused: forwarding for its own sake</h3>
+  <p>Replacing a working, true is-a with a wrapper that forwards ten methods cures no pain, and it is <span class="term" tabindex="0" data-def="design-wide rot in which the code has parts or machinery the problem does not need.">needless complexity</span> in the other direction. "Favor" means "when in doubt," and <code>SwitchableDevice</code> is not in doubt.</p>
+
+  <h3>Relatives and look-alikes</h3>
+  <ul>
+    <li><strong>DRY vs SRP</strong> (<a href="lesson-05-single-responsibility.html">Lesson 05</a>): SRP decides when look-alike code must stay <em>apart</em> (different actors, accidental duplication). DRY decides when different-looking code must <em>merge</em> (one fact). They are two halves of one question: "must these change together?"</li>
+    <li><strong>YAGNI vs OCP</strong> (<a href="lesson-06-open-closed.html">Lesson 06</a>): they agree. OCP tells you how to make a variation point, and YAGNI tells you to wait for the second real variant before making one.</li>
+    <li><strong>KISS vs SOLID:</strong> SOLID adds parts so that change stays local. KISS asks every part to justify itself. Lesson 10's tensions table is where they meet.</li>
+    <li><strong>Demeter vs ISP</strong> (<a href="lesson-08-interface-segregation.html">Lesson 08</a>): both make a client know less. ISP narrows <em>which methods</em> it can see, and Demeter narrows <em>which objects</em> it talks to.</li>
+    <li><strong>Demeter vs Tell, Don't Ask:</strong> Demeter is the rule ("don't talk to strangers"), and Tell, Don't Ask is the usual way to satisfy it ("ask your friend to do it").</li>
+    <li><strong>Composition vs the wrapper patterns ahead:</strong> Decorator, Proxy and Adapter (Lessons 18–22) are named, purpose-built forms of composition. They are told apart by intent, not by shape.</li>
+  </ul>
+</section>
+
+<!-- ============================== SECTION 8 ============================== -->
+<section id="s8">
+  <h2><span class="sec-num">8</span>Key takeaways</h2>
+  <ul class="takeaways">
+    <li>DRY is about knowledge, not text: each fact gets one home, and the test for merging is "if one changes, must the other change too?", never "do they look alike?"</li>
+    <li>KISS means the simplest design that fully does the job, and simple means few parts and nothing hidden, which is not the same as short or clever.</li>
+    <li>YAGNI means building features when a real need arrives, never skimping on the tests and clarity that make adding them later cheap.</li>
+    <li>The Law of Demeter says call methods only on yourself, your parameters, what you create and your own fields; the cure for a train wreck is to tell your friend what you want done.</li>
+    <li>Composition over inheritance is backed by SOLID, because wrappers keep promises they choose, add behaviour without edits and can be injected, while inheritance stays right for a true is-a with a small, stable parent.</li>
+  </ul>
+</section>
+
+<!-- ============================== SECTION 9 ============================== -->
+<section id="s9">
+  <h2><span class="sec-num">9</span>Challenge</h2>
+  <p>This heating-advice class "works." Name every companion-principle problem in it, redesign it, and predict what your design prints for a hall at 26C, together with the settings label.</p>
+  <pre class="code" data-title="HeatingAdvice.java (as written)"><code><span class="kw">public class</span> <span class="ty">HeatingAdvice</span> {
+    <span class="cmt">// Supports "text", "xml" and "json". Only "text" has ever been used.</span>
+    <span class="kw">private final</span> <span class="ty">ReportFormatterFactory</span> formatters = <span class="kw">new</span> <span class="ty">ReportFormatterFactory</span>();
+
+    <span class="kw">public</span> <span class="ty">String</span> <span class="fn">advise</span>(<span class="ty">House</span> house) {
+        <span class="kw">int</span> celsius = house.<span class="fn">getHall</span>().<span class="fn">getThermostat</span>().<span class="fn">getSensor</span>().<span class="fn">readCelsius</span>();
+        <span class="kw">if</span> (celsius &gt; <span class="num">24</span>) { <span class="kw">return</span> formatters.<span class="fn">get</span>(<span class="str">"text"</span>).<span class="fn">format</span>(<span class="str">"Hall is too warm: "</span> + celsius + <span class="str">"C (max 24C)"</span>); }
+        <span class="kw">if</span> (celsius &lt; <span class="num">18</span>) { <span class="kw">return</span> formatters.<span class="fn">get</span>(<span class="str">"text"</span>).<span class="fn">format</span>(<span class="str">"Hall is too cold: "</span> + celsius + <span class="str">"C (min 18C)"</span>); }
+        <span class="kw">return</span> formatters.<span class="fn">get</span>(<span class="str">"text"</span>).<span class="fn">format</span>(<span class="str">"Hall is fine: "</span> + celsius + <span class="str">"C"</span>);
+    }
+}
+<span class="cmt">// ...and in the settings screen, elsewhere:</span>
+label.<span class="fn">setText</span>(<span class="str">"Comfort range: 18-24C"</span>);</code></pre>
+
+  <details class="answer">
+    <summary>Click to reveal the answer</summary>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Principle</th><th>Problem</th><th>Fix</th></tr></thead>
+        <tbody>
+          <tr><td>Demeter</td><td><code>house.getHall().getThermostat().getSensor().readCelsius()</code> is a four-carriage train wreck. <code>HeatingAdvice</code> is coupled to how houses, halls and thermostats are built inside.</td><td>Inject what it really needs: a <code>TemperatureSensor</code> (the hub's own contract from Lesson 09).</td></tr>
+          <tr><td>DRY</td><td>The comfort range 18–24 appears four times: two comparisons, two messages, plus the settings label in another file. Change it to 25 and you must find all of them.</td><td>One <code>ComfortRange</code> object holds 18 and 24. The advice and the label both ask it.</td></tr>
+          <tr><td>YAGNI</td><td>XML and JSON formatters that nobody uses.</td><td>Delete them. Return plain text.</td></tr>
+          <tr><td>KISS</td><td><code>formatters.get("text").format(…)</code> wraps every return in machinery that does nothing visible.</td><td>Just return the string.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <pre class="code" data-title="redesign (sketch)"><code><span class="cmt">// The ONE home of the comfort range (DRY).</span>
+<span class="kw">public class</span> <span class="ty">ComfortRange</span> {
+    <span class="kw">private final int</span> min;
+    <span class="kw">private final int</span> max;
+    <span class="kw">public</span> <span class="fn">ComfortRange</span>(<span class="kw">int</span> min, <span class="kw">int</span> max) { <span class="kw">this</span>.min = min; <span class="kw">this</span>.max = max; }
+    <span class="kw">public boolean</span> <span class="fn">tooWarm</span>(<span class="kw">int</span> celsius) { <span class="kw">return</span> celsius &gt; max; }
+    <span class="kw">public boolean</span> <span class="fn">tooCold</span>(<span class="kw">int</span> celsius) { <span class="kw">return</span> celsius &lt; min; }
+    <span class="kw">public int</span> <span class="fn">min</span>() { <span class="kw">return</span> min; }
+    <span class="kw">public int</span> <span class="fn">max</span>() { <span class="kw">return</span> max; }
+    <span class="kw">public</span> <span class="ty">String</span> <span class="fn">describe</span>() { <span class="kw">return</span> <span class="str">"Comfort range: "</span> + min + <span class="str">"-"</span> + max + <span class="str">"C"</span>; }
+}
+
+<span class="cmt">// Talks only to friends it was given (Demeter); no formatter machinery (KISS, YAGNI).</span>
+<span class="kw">public class</span> <span class="ty">HeatingAdvice</span> {
+    <span class="kw">private final</span> <span class="ty">TemperatureSensor</span> hall;
+    <span class="kw">private final</span> <span class="ty">ComfortRange</span> range;
+    <span class="kw">public</span> <span class="fn">HeatingAdvice</span>(<span class="ty">TemperatureSensor</span> hall, <span class="ty">ComfortRange</span> range) { <span class="kw">this</span>.hall = hall; <span class="kw">this</span>.range = range; }
+    <span class="kw">public</span> <span class="ty">String</span> <span class="fn">advise</span>() {
+        <span class="kw">int</span> celsius = hall.<span class="fn">readCelsius</span>();
+        <span class="kw">if</span> (range.<span class="fn">tooWarm</span>(celsius)) { <span class="kw">return</span> <span class="str">"Hall is too warm: "</span> + celsius + <span class="str">"C (max "</span> + range.<span class="fn">max</span>() + <span class="str">"C)"</span>; }
+        <span class="kw">if</span> (range.<span class="fn">tooCold</span>(celsius)) { <span class="kw">return</span> <span class="str">"Hall is too cold: "</span> + celsius + <span class="str">"C (min "</span> + range.<span class="fn">min</span>() + <span class="str">"C)"</span>; }
+        <span class="kw">return</span> <span class="str">"Hall is fine: "</span> + celsius + <span class="str">"C"</span>;
+    }
+}
+
+<span class="cmt">// Wiring, at the composition root: one range object, shared.</span>
+<span class="ty">ComfortRange</span> range = <span class="kw">new</span> <span class="ty">ComfortRange</span>(<span class="num">18</span>, <span class="num">24</span>);
+<span class="ty">System</span>.out.<span class="fn">println</span>(<span class="kw">new</span> <span class="ty">HeatingAdvice</span>(<span class="kw">new</span> <span class="ty">SimulatedThermometer</span>(<span class="str">"Hall"</span>, <span class="num">26</span>), range).<span class="fn">advise</span>());
+<span class="ty">System</span>.out.<span class="fn">println</span>(range.<span class="fn">describe</span>());   <span class="cmt">// what the settings label shows</span></code></pre>
+    <p class="pred-label">Prediction</p>
+    <pre class="output"><code>Hall is too warm: 26C (max 24C)
+Comfort range: 18-24C</code></pre>
+    <p>Two honest notes. First, <code>ComfortRange</code> has no interface: there is one kind of range, so DIP would be speculative here (YAGNI again). Second, compare this with the hub's <code>ClimateControl</code>, which already takes an injected sensor and a min and max. In a real codebase you would check whether the advice belongs <em>there</em> before adding a new class, which is DRY at the level of whole features. If you build this in a scratch package, run it and compare. The machine is the judge.</p>
+  </details>
+</section>
+
+<!-- ============================== SECTION 10 ============================== -->
+<section id="s10">
+  <h2><span class="sec-num">10</span>Catalog update</h2>
+  <p>Five new entries in the <a href="../../pattern-catalog.html">pattern catalog</a>, bringing it to ten:</p>
+  <ul>
+    <li><a href="../../pattern-catalog.html#dry">DRY</a>: one home per piece of knowledge. The "Do NOT" field warns about accidental duplication and the wrong abstraction.</li>
+    <li><a href="../../pattern-catalog.html#kiss">KISS</a>: the simplest design that fully does the job. It warns against "simple" used as an excuse.</li>
+    <li><a href="../../pattern-catalog.html#yagni">YAGNI</a>: build features when the real need arrives. It warns that YAGNI never excuses skipping quality.</li>
+    <li><a href="../../pattern-catalog.html#lod">Law of Demeter</a>: talk only to your friends. It warns against middle men and dot-counting.</li>
+    <li><a href="../../pattern-catalog.html#composition">Favor composition over inheritance</a>: the formal entry Lesson 03 promised, now with its SOLID backing.</li>
+  </ul>
+</section>
+
+<div class="nextup">
+  <p><a href="chapter-02-summary.html"><strong>Next: Chapter 02 summary — SOLID.</strong></a> The whole chapter on one page: the hub's structure as a UML diagram, how all ten catalog entries relate, a self-check, and a boss challenge that combines every principle. Then Phase 2 begins with what a design pattern actually is.</p>
+</div>
+<p class="position">Lesson 11 · the twelfth of 45 lessons (00–44) · Phase 1, Chapter 02 · lesson 7 of 7 in this chapter (chapter complete)</p>
+
+</main>
+</div>
+</body>
+</html>

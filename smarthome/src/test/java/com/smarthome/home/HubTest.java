@@ -81,6 +81,32 @@ class HubTest {
         assertThrows(IllegalArgumentException.class, () -> hub.turnOff("Garage Light"));
     }
 
+    // unlock finds the lock by name and opens only that one (Lesson 11).
+    @Test
+    void unlockOpensOnlyTheNamedLock() {
+        // Two locks; new locks start locked.
+        DoorLock front = new DoorLock("Front Door");
+        DoorLock back = new DoorLock("Back Door");
+        // A hub with no switchables and no other devices.
+        Hub hub = new Hub(List.of(), List.of(front, back), List.of());
+        // Ask the hub, by name.
+        hub.unlock("Back Door");
+        // Only the named one changed.
+        assertTrue(front.isLocked());
+        assertFalse(back.isLocked());
+    }
+
+    // An unknown lock is refused loudly, worded by the shared lookup rule.
+    @Test
+    void unknownLockIsRefused() {
+        // A one-lock hub.
+        Hub hub = new Hub(List.of(), List.of(new DoorLock("Front Door")), List.of());
+        // assertThrows also hands back the exception, so its message can be checked.
+        IllegalArgumentException error = assertThrows(IllegalArgumentException.class, () -> hub.unlock("Garage Door"));
+        // The same wording pattern as for switchables, from the one shared helper.
+        assertEquals("No lockable device named: Garage Door", error.getMessage());
+    }
+
     // Every device is listed, but "Away" only ever touches the switchable ones.
     @Test
     void hubListsEveryDeviceButRoutinesSeeOnlySwitchables() {

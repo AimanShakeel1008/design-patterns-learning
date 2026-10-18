@@ -229,6 +229,28 @@ This page decodes the errors that actually come up while working through the cou
 
 ---
 
+## The companion principles (Lesson 11)
+
+### `incompatible types: List<DoorLock> cannot be converted to List<Lockable>`
+
+**Why:** you stored the locks in a variable first, e.g. `List<DoorLock> locks = List.of(front, back);`, then passed it to `new Hub(..., locks, ...)`. A `List<DoorLock>` is not a `List<Lockable>` in Java, even though every `DoorLock` is a `Lockable`. If it were allowed, someone could add a different kind of `Lockable` to your list of door locks. Written inline, `List.of(front, back)` works, because Java fills its type placeholder from the parameter it is passed to.
+
+**Fix:** declare the variable as `List<Lockable> locks = List.of(front, back);`, or write `List.of(...)` directly in the call.
+
+### `error: cannot find symbol ... method unlock(String)` on `Hub`
+
+**Why:** `Hub.unlock(String name)` was added in Lesson 11. An older copy of `Hub.java` is being compiled.
+
+**Fix:** make sure `smarthome/src/main/java/com/smarthome/home/Hub.java` has the Lesson 11 version (with `unlock` and the private `findNamed` helper), then run `mvn clean test` from `smarthome/`.
+
+### `error: reference to CartBanner is ambiguous` (or the wrong `CartBanner` is used)
+
+**Why:** each kata keeps a naive class with the same name in its `naive/` sub-package. In a class outside the kata, importing both `com.katas.dry.*` and `com.katas.dry.naive.*` makes the name ambiguous. Inside `com.katas.dry` itself, a wildcard `import com.katas.dry.naive.*;` loses quietly to the package's own `CartBanner`, so the refactored class is used when you meant the naive one.
+
+**Fix:** import the naive class by its exact name (`import com.katas.dry.naive.CartBanner;`), or write the full name in place, as the kata `Main` classes do (`new com.katas.dry.naive.CartBanner()`).
+
+---
+
 ## Lesson pages
 
 ### A lesson page opens with no colours or layout (plain black text)

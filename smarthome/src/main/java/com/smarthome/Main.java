@@ -55,8 +55,9 @@ public class Main {
         hub.run(new KeepOnly(List.of("Hall Thermostat")));
         // The hall is 26C, above the 24C maximum: the policy decides, and says so.
         System.out.println(climate.regulate());
-        // Someone goes out and leaves the front door (the only lock) unlocked...
-        hub.lockables().get(0).unlock();
+        // Someone goes out and leaves the front door unlocked. Asked of the hub
+        // by name (Law of Demeter), not by reaching into its list by position.
+        hub.unlock("Front Door");
         // ...and the security check warns about it.
         lockCheck.run();
 

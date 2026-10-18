@@ -82,6 +82,7 @@ mvn compile exec:java "-Dexec.mainClass=com.katas.<pattern>.Main"
 - **One class per responsibility** (`com.smarthome.home`, `com.smarthome.report`): `Hub` operates the devices, and `HouseReport` prints a **house report** (device count, how many are on, each status, and the numbered activity history).
 - **Climate control** (`com.smarthome.climate`, `com.smarthome.sensors`): `ClimateControl` keeps the hall between 18 and 24 °C by switching the heating, reading any `TemperatureSensor` (a `SimulatedThermometer` for now).
 - **Security check** (`com.smarthome.security`, `com.smarthome.alerts`): `LockCheck` warns about every unlocked door through a pluggable `AlertChannel` (printed by `ConsoleAlerts` for now).
+- **Operate devices by name:** the hub switches a device off (`hub.turnOff("Porch Light")`) or unlocks a lock (`hub.unlock("Front Door")`) by its exact name, refusing unknown names loudly. Callers ask the hub; they never reach into its lists.
 - **Dependency rule:** the core packages depend only on contracts; the composition root (`com.smarthome.Main` + `HomeSetup`) is the one place that creates concrete devices and sensors and wires everything by hand.
 
 ---

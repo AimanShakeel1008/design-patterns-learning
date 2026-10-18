@@ -20,7 +20,8 @@ import java.util.List;
 // only devices that can keep the Switchable contract. Since Lesson 10 it
 // keeps lockable devices in their own typed group too, for the security
 // check. No instanceof needed: the setup hands over each capability's
-// devices separately.
+// devices separately. Since Lesson 11 it can unlock a lock by name, and both
+// by-name lookups share one private helper.
 public class Hub {
 
     // The devices that can be switched: the only ones routines may touch.
@@ -85,15 +86,33 @@ public class Hub {
     // so the composition root can hand one device to a policy (e.g. the
     // thermostat to ClimateControl) as a Switchable, never as a concrete class.
     public Switchable switchableNamed(String name) {
-        // Check each switchable device in turn...
-        for (Switchable device : switchables) {
-            // ...and return the first whose name matches.
+        // The shared lookup rule, asked for a switchable device.
+        return findNamed(switchables, name, "switchable");
+    }
+
+    // Unlock one lock, found by its name. Added in Lesson 11 so callers ASK
+    // the hub instead of reaching into its list by position (Law of Demeter).
+    // There is no lock(name) yet, just as there is no turnOn(name): nothing
+    // needs it, so it is not built (YAGNI).
+    public void unlock(String name) {
+        // Find it (or fail loudly), then unlock it.
+        findNamed(lockables, name, "lockable").unlock();
+    }
+
+    // The ONE copy of the hub's "find a device by its exact name" rule (DRY),
+    // shared by switchableNamed and unlock. A GENERIC method: <T extends Device>
+    // is a type placeholder, so the same code searches a List<Switchable> and
+    // hands back a Switchable, or a List<Lockable> and hands back a Lockable.
+    private static <T extends Device> T findNamed(List<T> devices, String name, String kind) {
+        // Check each device in turn...
+        for (T device : devices) {
+            // ...and return the first whose name matches (getName comes from Device).
             if (device.getName().equals(name)) {
                 // Found it.
                 return device;
             }
         }
-        // No match: refuse loudly, naming what was asked for.
-        throw new IllegalArgumentException("No switchable device named: " + name);
+        // No match: refuse loudly, naming the kind and what was asked for.
+        throw new IllegalArgumentException("No " + kind + " device named: " + name);
     }
 }
