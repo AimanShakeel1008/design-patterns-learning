@@ -42,7 +42,7 @@
 <header class="banner">
   <p class="kicker">Phase 1 · Chapter 02 · Lesson 08</p>
   <h1>I — Interface Segregation Principle</h1>
-  <p class="subtitle">No class should be forced to promise what it cannot do, and no client should depend on methods it never uses. Split fat contracts into small roles.</p>
+  <p class="subtitle">No class should be forced to promise what it cannot do. No client should depend on methods it never uses. Split fat contracts into small roles.</p>
   <p class="meta">
     <strong>Kata package:</strong> <code>com.katas.isp</code> (wrong way in <code>com.katas.isp.naive</code>).<br>
     <strong>Smart Home Hub:</strong> <code>Device</code> slimmed; created <code>Switchable</code>, <code>Dimmable</code>, <code>Lockable</code>, <code>SmokeAlarm</code>, <code>DoorLock</code>; <code>AbstractDevice</code> renamed <code>SwitchableDevice</code>; modified <code>Light</code>, <code>LoggedDevice</code>, routines, <code>Hub</code>, <code>HomeSetup</code>, <code>HouseReport</code>, <code>Main</code>; contract tests reorganised.<br>
@@ -56,7 +56,7 @@
 
   <p class="lead">Lesson 07 ended with a smoke alarm that couldn't join the hub. Here is the same problem in its classic form, an office printer.</p>
 
-  <p>An office system defines one interface for "a machine": it can print, scan and fax. A multi-function machine fits it perfectly. Then someone needs to plug in an old printer that only prints:</p>
+  <p>An office system defines one interface for "a machine." It can print, scan and fax. A multi-function machine fits it perfectly. Then someone needs to plug in an old printer that only prints:</p>
 
   <pre class="code" data-title="naive/Machine.java and naive/OldPrinter.java (key lines)"><code><span class="kw">public interface</span> <span class="ty">Machine</span> {
     <span class="ty">String</span> <span class="fn">print</span>(<span class="ty">String</span> document);
@@ -72,15 +72,15 @@
 
   <p>The fat interface hurts from <strong>both sides</strong>:</p>
   <ul>
-    <li><strong>The implementer side.</strong> <code>OldPrinter</code> is forced to "implement" two jobs it cannot do, so it refuses them: two <span class="term" tabindex="0" data-def="a subclass that inherits a method it cannot honour and throws or does nothing instead.">refused bequests</span>, each a Liskov violation waiting for a client to step on it.</li>
-    <li><strong>The client side.</strong> A report module that only <em>prints</em> must still depend on <code>Machine</code>, so it is coupled to scanning and faxing it never uses. If the fax method's signature changes, the report module's code must be recompiled and re-checked anyway. Its test needs a fake that implements all three methods, two of them pointlessly.</li>
+    <li><strong>The implementer side.</strong> <code>OldPrinter</code> is forced to "implement" two jobs it cannot do, so it refuses them. Those are two <span class="term" tabindex="0" data-def="a subclass that inherits a method it cannot honour and throws or does nothing instead.">refused bequests</span>. Each is a Liskov violation, waiting for a client to step on it.</li>
+    <li><strong>The client side.</strong> A report module only <em>prints</em>, but it must still depend on <code>Machine</code>. So it is coupled to scanning and faxing, which it never uses. If the fax method's signature changes, the report module must be recompiled and re-checked anyway. Its test needs a fake that implements all three methods, two of them for nothing.</li>
   </ul>
 
   <p class="pred-label">Predicted symptom</p>
   <pre class="output"><code>Naive old printer: Printed: Invoice
 <span class="err">Naive old printer refused: Old printers cannot scan</span></code></pre>
 
-  <p>The pain, named: a <strong>fat interface</strong>, one contract bundling several unrelated jobs, so implementers must promise too much and clients must depend on too much.</p>
+  <p>The pain has a name: a <strong>fat interface</strong>. It is one contract that bundles several unrelated jobs. So implementers must promise too much, and clients must depend on too much.</p>
 
   <p class="filepath">Full wrong-way code: katas/src/main/java/com/katas/isp/naive/ (Machine, OldPrinter)</p>
 </section>
@@ -89,7 +89,7 @@
 <section id="s2">
   <h2><span class="sec-num">2</span>Real-world analogy</h2>
 
-  <p><strong>Job descriptions.</strong> A shop posts one job ad: "Must drive the van, bake the bread, <em>and</em> do the accounts." Almost nobody qualifies, and the baker who's hired fakes the accounting. Meanwhile the delivery manager, who only needs a driver, has to interview candidates on baking. The fix is separate <em>roles</em>: Driver, Baker, Bookkeeper. One talented person may hold two roles, but each manager hires only for the role they need.</p>
+  <p><strong>Job descriptions.</strong> A shop posts one job ad: "Must drive the van, bake the bread, <em>and</em> do the accounts." Almost nobody can do all three, and the baker who gets hired fakes the accounting. Meanwhile, the delivery manager only needs a driver, but has to quiz people on baking. The fix is separate <em>roles</em>: Driver, Baker, Bookkeeper. One talented person may hold two roles. But each manager hires only for the role they need.</p>
 
   <div class="table-wrap">
     <table>
@@ -110,13 +110,13 @@
   <h2><span class="sec-num">3</span>The principle explained</h2>
 
   <h3>3.1 The principle</h3>
-  <p>Robert C. Martin first wrote this principle down after consulting on a printing system at Xerox. Its one central "job" class had grown so large that every small change rippled into code that didn't care about it. His statement: <strong>"Clients should not be forced to depend upon interfaces that they do not use."</strong> The cure is to split a fat interface into several small ones, each shaped around what one kind of client needs. That is the <strong>Interface Segregation Principle (ISP)</strong>, the "I" in SOLID. ("Segregation" just means "separating.")</p>
+  <p>Robert C. Martin first wrote this principle down after helping with a printing system at Xerox. Its one central "job" class had grown huge. Every small change rippled into code that didn't care about it. His statement: <strong>"Clients should not be forced to depend upon interfaces that they do not use."</strong> The cure is to split a fat interface into several small ones. Each is shaped around what one kind of client needs. That is the <strong>Interface Segregation Principle (ISP)</strong>, the "I" in SOLID. ("Segregation" just means "separating.")</p>
 
   <h3>3.2 Role interfaces</h3>
-  <p>A small interface named after <em>one role</em> a client needs ("something that prints," "something that can be switched") is called a <strong>role interface</strong>. Three facts make it work:</p>
+  <p>Some small interfaces are named after <em>one role</em> a client needs: "something that prints," "something that can be switched." Such an interface is called a <strong>role interface</strong>. Three facts make it work:</p>
   <ul>
-    <li><strong>A class may implement many interfaces.</strong> <code>class MultiFunctionMachine implements Printer, Scanner, Fax</code>. Unlike <code>extends</code>, which allows one parent (<a href="../../phase-0-oop-foundations/chapter-01-oop/lesson-02-inheritance-polymorphism.html">Lesson 02</a>), a class can sign as many contracts as it can keep.</li>
-    <li><strong>The same object can be seen through different roles.</strong> <code>Scanner scanner = office;</code> and <code>Fax fax = office;</code> point at one object, but each variable only allows that role's methods. A client receives the object typed by the one role it needs.</li>
+    <li><strong>A class may implement many interfaces.</strong> <code>class MultiFunctionMachine implements Printer, Scanner, Fax</code>. <code>extends</code> allows only one parent (<a href="../../phase-0-oop-foundations/chapter-01-oop/lesson-02-inheritance-polymorphism.html">Lesson 02</a>). But a class can sign as many contracts as it can keep.</li>
+    <li><strong>The same object can be seen through different roles.</strong> <code>Scanner scanner = office;</code> and <code>Fax fax = office;</code> point at one object. But each variable only allows that role's methods. A client receives the object typed by the one role it needs.</li>
     <li><strong>An interface can build on another.</strong> In the hub, <code>interface Switchable extends Device</code> means "every switchable thing is also a device, plus three switching methods." Interfaces may <code>extend</code> several other interfaces. In UML this is drawn like inheritance: a solid line with a hollow triangle.</li>
   </ul>
 
@@ -168,21 +168,21 @@
       <line x1="680" y1="180" x2="664" y2="88" class="uml-dashed" marker-end="url(#f1-hollow)"/>
       <text x="545" y="275" class="fig-small fig-center">ReportPrinter depends on Printer alone</text>
     </svg>
-    <figcaption>Left (red): every machine must sign the whole fat contract, so the old printer refuses two-thirds of it. Right: three small violet roles. Each machine signs only what it can keep, and each client asks only for the role it uses.</figcaption>
+    <figcaption>Left (red): every machine must sign the whole fat contract. So the old printer refuses two-thirds of it. Right: three small violet roles. Each machine signs only what it can keep, and each client asks only for the role it uses.</figcaption>
   </figure>
 
   <h3>3.3 How to split: by client, not by implementer</h3>
-  <p>The question that draws the lines is <strong>"what does each client actually call?"</strong>, not "what can each machine do?" In the hub, routines call <code>turnOn</code>, <code>turnOff</code>, <code>isOn</code> and <code>getName</code>. The report calls <code>getName</code> and <code>status</code>. Those two client needs are the two contracts (<code>Switchable</code> and <code>Device</code>). Splitting along clients' needs keeps every interface meaningful, so you don't end up with an interface per method.</p>
+  <p>The question that draws the lines is <strong>"what does each client actually call?"</strong>, not "what can each machine do?" In the hub, routines call <code>turnOn</code>, <code>turnOff</code>, <code>isOn</code> and <code>getName</code>. The report calls <code>getName</code> and <code>status</code>. Those two client needs are the two contracts (<code>Switchable</code> and <code>Device</code>). Splitting along what clients need keeps every interface meaningful. You don't end up with an interface per method.</p>
 
   <details class="check">
     <summary>ISP and SRP (Lesson 05) both say "split." What is the difference?</summary>
-    <p>SRP looks at a <em>class</em> from the side of the people who ask for changes: one actor per class. ISP looks at an <em>interface</em> from the side of the code that uses it: no client should depend on methods it doesn't call. They often agree. A class that answers to two actors frequently ends up exposing two role interfaces. But one class (<code>MultiFunctionMachine</code>) can sign many small interfaces and still have one responsibility ("a multi-function office machine").</p>
+    <p>SRP looks at a <em>class</em> from the side of the people who ask for changes: one actor per class. ISP looks at an <em>interface</em> from the side of the code that uses it: no client should depend on methods it doesn't call. They often agree. A class that answers to two actors often ends up offering two role interfaces. But one class can sign many small interfaces and still have one responsibility. <code>MultiFunctionMachine</code> is one example: "a multi-function office machine."</p>
   </details>
 
   <h3>3.4 What each side gains</h3>
   <ul>
-    <li><strong>Implementers</strong> promise only what they can keep, so no more refused bequests, and contract tests (Lesson 07) can be split the same way.</li>
-    <li><strong>Clients</strong> depend on fewer methods: less <span class="term" tabindex="0" data-def="how strongly one piece of code depends on another, measured by how many changes in one force changes in the other; loose is good.">coupling</span>, fewer changes that ripple in, and the compiler stops them from calling something the object cannot do.</li>
+    <li><strong>Implementers</strong> promise only what they can keep. So there are no more refused bequests. Contract tests (Lesson 07) can be split the same way.</li>
+    <li><strong>Clients</strong> depend on fewer methods. That means less <span class="term" tabindex="0" data-def="how strongly one piece of code depends on another, measured by how many changes in one force changes in the other; loose is good.">coupling</span> and fewer changes that ripple in. And the compiler stops them from calling something the object cannot do.</li>
     <li><strong>Tests</strong> need tiny fakes: a print-only client's fake implements one method.</li>
   </ul>
 </section>
@@ -191,7 +191,7 @@
 <section id="s4">
   <h2><span class="sec-num">4</span>The kata</h2>
 
-  <p>Package <code>com.katas.isp</code>. <span class="filepath">Saved: Printer.java, Scanner.java, Fax.java</span> are one-method role interfaces (<code>print</code>, <code>scan</code>, <code>fax</code>). <code>Scanner</code> here is our own role; it has nothing to do with the JDK's <code>java.util.Scanner</code>. <span class="filepath">Saved: OldPrinter.java</span> now <code>implements Printer</code> only, with nothing to refuse.</p>
+  <p>Package <code>com.katas.isp</code>. <span class="filepath">Saved: Printer.java, Scanner.java, Fax.java</span> are one-method role interfaces (<code>print</code>, <code>scan</code>, <code>fax</code>). <code>Scanner</code> here is our own role. It has nothing to do with the JDK's <code>java.util.Scanner</code>. <span class="filepath">Saved: OldPrinter.java</span> now <code>implements Printer</code> only, with nothing to refuse.</p>
 
   <p class="filepath">Saved: katas/src/main/java/com/katas/isp/MultiFunctionMachine.java</p>
   <pre class="code" data-title="MultiFunctionMachine.java"><code><span class="cmt">// A machine that really does all three jobs.</span>
@@ -280,13 +280,13 @@
         <span class="ty">System</span>.out.<span class="fn">println</span>(scanner.<span class="fn">scan</span>(<span class="str">"Contract"</span>));
         <span class="cmt">// The same object, a different role.</span>
         <span class="ty">System</span>.out.<span class="fn">println</span>(fax.<span class="fn">fax</span>(<span class="str">"Contract"</span>, <span class="str">"555-0100"</span>));</code></pre>
-  <p>(The first half of <code>Main</code> runs the naive old printer through <code>Machine</code>, printing then catching the refused <code>scan</code>, as in Section 1.)</p>
+  <p>(The first half of <code>Main</code> runs the naive old printer through <code>Machine</code>. It prints, then catches the refused <code>scan</code>, as in Section 1.)</p>
 
   <h4>What happens when it runs</h4>
   <ol class="trace">
     <li>The naive <code>OldPrinter</code>, seen as a <code>Machine</code>, prints "Invoice". Asked to <code>scan</code>, it throws, and the <code>catch</code> prints the refusal.</li>
     <li><code>ReportPrinter</code> receives the new <code>OldPrinter</code> as a <code>Printer</code>. <code>printAll</code> calls <code>print</code> twice, the only method it knows, and returns both lines.</li>
-    <li><code>office</code> is one <code>MultiFunctionMachine</code>. Through the <code>Scanner</code> variable only <code>scan</code> is callable; through the <code>Fax</code> variable only <code>fax</code>. Same object, two roles.</li>
+    <li><code>office</code> is one <code>MultiFunctionMachine</code>. Through the <code>Scanner</code> variable, only <code>scan</code> can be called. Through the <code>Fax</code> variable, only <code>fax</code>. Same object, two roles.</li>
   </ol>
   <p class="pred-label">Prediction — the program's own lines</p>
   <pre class="output"><code>Naive old printer: Printed: Invoice
@@ -306,7 +306,7 @@ mvn compile exec:java <span class="str">"-Dexec.mainClass=com.katas.isp.Main"</s
   <pre class="output"><code><span class="out">[INFO] Tests run: 40, Failures: 0, Errors: 0, Skipped: 0</span>
 <span class="out">[INFO] BUILD SUCCESS</span></code></pre>
   <div class="callout tryit">
-    <p>Expect <strong>40 tests</strong> (36 earlier + 4 new) and the six demo lines. If anything differs, the machine is right. Tell me what you saw. Then try the compiler's protection: add <code>scanner.fax("x", "1")</code> to <code>Main</code> and run <code>mvn compile</code>. It refuses with <code>error: cannot find symbol … method fax(String,String)</code>, because the variable's type is <code>Scanner</code>, although the object behind it <em>can</em> fax. Undo it afterwards.</p>
+    <p>Expect <strong>40 tests</strong> (36 earlier + 4 new) and the six demo lines. If anything differs, the machine is right. Tell me what you saw. Then try the compiler's protection: add <code>scanner.fax("x", "1")</code> to <code>Main</code> and run <code>mvn compile</code>. It refuses with <code>error: cannot find symbol … method fax(String,String)</code>. The object behind the variable <em>can</em> fax, but the variable's type is <code>Scanner</code>. Undo it afterwards.</p>
   </div>
 </section>
 
@@ -315,7 +315,7 @@ mvn compile exec:java <span class="str">"-Dexec.mainClass=com.katas.isp.Main"</s
   <h2><span class="sec-num">5</span>Applied to the Smart Home Hub</h2>
 
   <h4>The pain, already in the hub</h4>
-  <p><code>Device</code> promised five things, including <code>turnOn</code> and <code>turnOff</code>, so <em>every</em> device had to be switchable. Lesson 07's smoke alarm could only join by refusing <code>turnOff</code>, which would crash "Away" mode. Now a door lock is coming, and "turn on the front door" means nothing. The tempting next step makes it worse: add <code>setBrightness</code>, <code>lock</code> and <code>unlock</code> to <code>Device</code> as well. Then every thermostat must refuse <code>lock()</code>, every lock must refuse <code>setBrightness()</code>, and the house report depends on eleven methods to print a name and a status. That is the fat <code>Machine</code>, in our own code.</p>
+  <p><code>Device</code> promised five things, including <code>turnOn</code> and <code>turnOff</code>. So <em>every</em> device had to be switchable. Lesson 07's smoke alarm could only join by refusing <code>turnOff</code>, and that would crash "Away" mode. Now a door lock is coming, and "turn on the front door" means nothing. The tempting next step makes it worse: add <code>setBrightness</code>, <code>lock</code> and <code>unlock</code> to <code>Device</code> as well. Then every thermostat must refuse <code>lock()</code>. Every lock must refuse <code>setBrightness()</code>. And the house report depends on eleven methods just to print a name and a status. That is the fat <code>Machine</code>, in our own code.</p>
 
   <h4>The split</h4>
   <p>Ask what each <em>client</em> calls. Routines switch. The report names and describes. Some future dimmer feature dims, and a security feature locks. So:</p>
@@ -378,7 +378,7 @@ mvn compile exec:java <span class="str">"-Dexec.mainClass=com.katas.isp.Main"</s
       <text x="610" y="368" class="fig-small fig-center">report → Device</text>
       <text x="610" y="386" class="fig-small fig-center">(+ Switchable to count)</text>
     </svg>
-    <figcaption>The hub after Lesson 08. The violet contracts are small and each is signed only by devices that can keep it. A solid line with a hollow triangle between interfaces means "extends": every <code>Switchable</code> and <code>Lockable</code> is also a <code>Device</code>. <code>SmokeAlarm</code> signs only <code>Device</code>; <code>DoorLock</code> signs <code>Lockable</code>; <code>Light</code> signs <code>Switchable</code> (through its parent) and <code>Dimmable</code>.</figcaption>
+    <figcaption>The hub after Lesson 08. The violet contracts are small, and each is signed only by devices that can keep it. A solid line with a hollow triangle between interfaces means "extends": every <code>Switchable</code> and <code>Lockable</code> is also a <code>Device</code>. <code>SmokeAlarm</code> signs only <code>Device</code>. <code>DoorLock</code> signs <code>Lockable</code>. <code>Light</code> signs <code>Switchable</code> (through its parent) and <code>Dimmable</code>.</figcaption>
   </figure>
 
   <p class="filepath">Saved: smarthome/src/main/java/com/smarthome/devices/Device.java (slimmed) and Switchable.java</p>
@@ -400,7 +400,7 @@ mvn compile exec:java <span class="str">"-Dexec.mainClass=com.katas.isp.Main"</s
     <span class="cmt">// PROMISE: reflects the most recent turnOn()/turnOff(); false when new.</span>
     <span class="kw">boolean</span> <span class="fn">isOn</span>();
 }</code></pre>
-  <p><span class="filepath">Saved: Lockable.java</span> (<code>extends Device</code>; <code>lock</code>, <code>unlock</code>, <code>isLocked</code>) and <span class="filepath">Dimmable.java</span> (<code>setBrightness(0..100)</code>, <code>getBrightness</code>) follow the same pattern. <code>Dimmable</code> deliberately does <em>not</em> extend <code>Device</code>: it is an add-on that a class combines with other contracts.</p>
+  <p><span class="filepath">Saved: Lockable.java</span> (<code>extends Device</code>; <code>lock</code>, <code>unlock</code>, <code>isLocked</code>) and <span class="filepath">Dimmable.java</span> (<code>setBrightness(0..100)</code>, <code>getBrightness</code>) follow the same pattern. <code>Dimmable</code> does <em>not</em> extend <code>Device</code>, on purpose. It is an add-on that a class combines with other contracts.</p>
 
   <p class="filepath">Saved: smarthome/src/main/java/com/smarthome/devices/SmokeAlarm.java</p>
   <pre class="code" data-title="SmokeAlarm.java"><code><span class="cmt">// Same package as the base Device contract.</span>
@@ -436,7 +436,7 @@ mvn compile exec:java <span class="str">"-Dexec.mainClass=com.katas.isp.Main"</s
     }
 }</code></pre>
 
-  <p><span class="filepath">Saved: DoorLock.java</span> <code>implements Lockable</code>, starts locked (the safe default), and reports "Front Door: LOCKED". <span class="filepath">Saved: SwitchableDevice.java</span> is the old <code>AbstractDevice</code>, renamed because "abstract device" stopped being true: it is the shared base for devices that <em>switch</em>. Leaving the old name would be the opacity smell from Lesson 04. <span class="filepath">Modified: Light.java</span> now <code>extends SwitchableDevice implements Dimmable</code>. Its brightness starts at 100 and is guarded to 0–100, and its status says "ON at 40%" when dimmed but still just "ON" at full brightness, so nothing that worked before changes.</p>
+  <p><span class="filepath">Saved: DoorLock.java</span> <code>implements Lockable</code>, starts locked (the safe default), and reports "Front Door: LOCKED". <span class="filepath">Saved: SwitchableDevice.java</span> is the old <code>AbstractDevice</code>, renamed. The name "abstract device" stopped being true. It is the shared base for devices that <em>switch</em>. Keeping the old name would be the opacity smell from Lesson 04. <span class="filepath">Modified: Light.java</span> now <code>extends SwitchableDevice implements Dimmable</code>. Its brightness starts at 100 and is guarded to 0–100. When dimmed, its status says "ON at 40%." At full brightness it still says just "ON," so nothing that worked before changes.</p>
 
   <p>The clients now ask for exactly what they use:</p>
   <ul>
@@ -471,10 +471,10 @@ mvn compile exec:java <span class="str">"-Dexec.mainClass=com.katas.isp.Main"</s
         <span class="cmt">// Only switchable devices are handed over.</span>
         routine.<span class="fn">applyTo</span>(switchables);
     }</code></pre>
-  <p>Why two lists, rather than one list and a check "is this one switchable?" (<code>instanceof</code>) at run time? <a href="lesson-07-liskov-substitution.html">Lesson 07</a> taught that <code>instanceof</code> in client code is a warning sign. Here, <span class="filepath">HomeSetup</span>, which already knows each device's kind because it creates them, hands them over grouped: <code>createSwitchables(log)</code> and <code>createOtherDevices()</code>. The types then carry the knowledge, and the compiler checks it. <code>Main</code> changes by two lines to pass both groups along.</p>
+  <p>Why two lists, rather than one list and a check "is this one switchable?" (<code>instanceof</code>) at run time? <a href="lesson-07-liskov-substitution.html">Lesson 07</a> taught that <code>instanceof</code> in client code is a warning sign. <span class="filepath">HomeSetup</span> creates the devices, so it already knows each one's kind. So it hands them over in groups: <code>createSwitchables(log)</code> and <code>createOtherDevices()</code>. The types then carry the knowledge, and the compiler checks it. <code>Main</code> changes by two lines to pass both groups along.</p>
 
   <div class="callout note">
-    <p><strong>An honest cost.</strong> The light reaches the hub inside a <code>LoggedDevice</code>, which is a <code>Switchable</code>, so the hub cannot see that the light is also <code>Dimmable</code>. A wrapper exposes only the contract it wraps. Nothing dims through the hub yet, so we stop here (no feature without a need). When dimming becomes a real requirement, how wrappers and extra capabilities combine is a question Lesson 19 answers properly.</p>
+    <p><strong>An honest cost.</strong> The light reaches the hub inside a <code>LoggedDevice</code>, which is a <code>Switchable</code>. So the hub cannot see that the light is also <code>Dimmable</code>. A wrapper shows only the contract it wraps. Nothing dims through the hub yet, so we stop here (no feature without a need). Later, dimming may become a real requirement. Then we need to know how wrappers and extra abilities combine. Lesson 19 answers that properly.</p>
   </div>
 
   <h4>The tests: contract tests that mirror the contracts</h4>
@@ -491,13 +491,13 @@ mvn compile exec:java <span class="str">"-Dexec.mainClass=com.katas.isp.Main"</s
   </div>
   <p>The smoke alarm now passes <em>every</em> test it runs, because it is never asked to keep a promise it didn't make. Also new or updated: <span class="filepath">DimmingTest</span> (3 tests), <span class="filepath">SwitchableDeviceTest</span> (the renamed parent test), <span class="filepath">HubTest</span> (now 4 tests, including "every device is listed, but routines only ever see the switchable ones"), <span class="filepath">HomeSetupTest</span> (2 tests), and <span class="filepath">HouseReportTest</span> with the new report lines.</p>
 
-  <p><strong>What this adds:</strong> a smoke alarm and a front-door lock in the house, safely. "Away" cannot touch them, and the compiler, not luck, guarantees it. Lights can also be dimmed (used directly for now). Every future device signs only the capabilities it really has.</p>
+  <p><strong>What this adds:</strong> a smoke alarm and a front-door lock in the house, safely. "Away" cannot touch them. The compiler guarantees it, not luck. Lights can also be dimmed (used directly for now). Every future device signs only the abilities it really has.</p>
 
   <ol class="trace">
-    <li><code>HomeSetup</code> builds two logged switchables and two other devices; <code>Hub</code> keeps them as <code>switchables</code> (2) and <code>allDevices</code> (4).</li>
-    <li><code>run(new AllOn())</code> hands the routine the 2 switchables, which records 2 log entries. The alarm and lock are never seen.</li>
-    <li><code>run(new KeepOnly(["Hall Thermostat"]))</code> switches the light off (entry 3); the thermostat is already on.</li>
-    <li><code>render(all 4, the 2 switchables, 3 entries)</code> counts 1 on out of 2 switchables, and lists all four status lines through <code>Device.status()</code>.</li>
+    <li><code>HomeSetup</code> builds two logged switchables and two other devices. <code>Hub</code> keeps them as <code>switchables</code> (2) and <code>allDevices</code> (4).</li>
+    <li><code>run(new AllOn())</code> hands the routine the 2 switchables. That records 2 log entries. The alarm and lock are never seen.</li>
+    <li><code>run(new KeepOnly(["Hall Thermostat"]))</code> switches the light off (entry 3). The thermostat is already on.</li>
+    <li><code>render(all 4, the 2 switchables, 3 entries)</code> counts 1 on out of 2 switchables. It lists all four status lines through <code>Device.status()</code>.</li>
   </ol>
   <p class="pred-label">Prediction — the hub's own lines</p>
   <pre class="output"><code>Smart Home Hub is starting up...
@@ -519,17 +519,17 @@ mvn compile exec:java</code></pre>
   <pre class="output"><code><span class="out">[INFO] Tests run: 53, Failures: 0, Errors: 0, Skipped: 0</span>
 <span class="out">[INFO] BUILD SUCCESS</span></code></pre>
   <div class="callout tryit">
-    <p>Expect <strong>53 tests</strong> and the eleven lines above. If what you see differs, your machine is right. Tell me what you saw and we will work out why. Then try to break the protection: in <code>Main</code>, add <code>new AllOff().applyTo(List.of(new SmokeAlarm("x")));</code> (plus imports for <code>AllOff</code> and <code>SmokeAlarm</code>) and run <code>mvn compile</code>. It refuses to compile (an "incompatible types" error), because a smoke alarm is not a <code>Switchable</code>, so "Away" cannot even be handed one. That compile error is ISP working. Remove the line afterwards.</p>
+    <p>Expect <strong>53 tests</strong> and the eleven lines above. If what you see differs, your machine is right. Tell me what you saw and we will work out why. Then try to break the protection: in <code>Main</code>, add <code>new AllOff().applyTo(List.of(new SmokeAlarm("x")));</code> (plus imports for <code>AllOff</code> and <code>SmokeAlarm</code>) and run <code>mvn compile</code>. It refuses to compile (an "incompatible types" error). A smoke alarm is not a <code>Switchable</code>, so "Away" cannot even be handed one. That compile error is ISP working. Remove the line afterwards.</p>
   </div>
 </section>
 
 <!-- ============================== SECTION 6 ============================== -->
 <section id="s6">
   <h2><span class="sec-num">6</span>In the wild</h2>
-  <p><strong><code>java.lang.AutoCloseable</code></strong> is a role interface with exactly one method, <code>close()</code>. Java's <em>try-with-resources</em> statement, <code>try (FileInputStream in = new FileInputStream("a.txt")) { … }</code>, closes the resource automatically at the end. It depends on nothing but that one role. Files, network sockets and database connections all sign it next to their many other contracts, and try-with-resources never needs to know what else they can do. Other one-role JDK interfaces you will keep meeting: <code>Runnable</code> (just <code>run()</code>), <code>Comparable</code> (just <code>compareTo</code>), and <code>Iterable</code> (just <code>iterator()</code>, which is all the for-each loop needs).</p>
+  <p><strong><code>java.lang.AutoCloseable</code></strong> is a role interface with exactly one method, <code>close()</code>. Java has a <em>try-with-resources</em> statement: <code>try (FileInputStream in = new FileInputStream("a.txt")) { … }</code>. It closes the resource automatically at the end. It depends on nothing but that one role. Files, network sockets and database connections all sign it, next to their many other contracts. Try-with-resources never needs to know what else they can do. You will keep meeting other one-role JDK interfaces: <code>Runnable</code> (just <code>run()</code>), <code>Comparable</code> (just <code>compareTo</code>), and <code>Iterable</code> (just <code>iterator()</code>, which is all the for-each loop needs).</p>
 
   <div class="callout realworld">
-    <p>Big codebases often grow "god interfaces" like <code>UserService</code> with forty methods, and every test of every caller needs a forty-method fake. Splitting them by client (<code>UserLookup</code>, <code>UserRegistration</code>…) is one of the cheapest, highest-value refactorings in practice, and "which methods does this caller really use?" is a good code-review question.</p>
+    <p>Big codebases often grow "god interfaces," like a <code>UserService</code> with forty methods. Then every test of every caller needs a forty-method fake. Splitting them by client (<code>UserLookup</code>, <code>UserRegistration</code>…) is one of the cheapest and most valuable refactorings in practice. "Which methods does this caller really use?" is a good code-review question.</p>
   </div>
 </section>
 
@@ -538,14 +538,22 @@ mvn compile exec:java</code></pre>
   <h2><span class="sec-num">7</span>When NOT to use it</h2>
 
   <h3>The over-application trap</h3>
-  <p>Taken to the extreme, ISP produces an interface for every method: <code>Nameable</code>, <code>Describable</code>, <code>TurnOnable</code>, <code>TurnOffable</code>… Each class then implements a dozen interfaces, and nobody can see what a "device" is any more. That is scattering again, the anemic over-split from Lesson 05, now for interfaces. Methods that are always used <em>together</em> by the same clients belong in one interface: <code>turnOn</code>, <code>turnOff</code> and <code>isOn</code> stay together in <code>Switchable</code> because every client of one uses the others.</p>
+  <p>Taken to the extreme, ISP produces an interface for every method: <code>Nameable</code>, <code>Describable</code>, <code>TurnOnable</code>, <code>TurnOffable</code>… Each class then implements a dozen interfaces, and nobody can see what a "device" is any more. That is scattering again: the anemic over-split from Lesson 05, now for interfaces. Methods that the same clients always use <em>together</em> belong in one interface. <code>turnOn</code>, <code>turnOff</code> and <code>isOn</code> stay together in <code>Switchable</code>, because every client of one uses the others.</p>
 
   <h3>The simpler alternative, and the cost</h3>
-  <p>If an interface has one implementation and one client, and they fit perfectly, there is nothing to segregate; leave it whole. Split when a real implementer can't keep part of the contract (the smoke alarm), or when real clients use clearly different subsets. The costs are real, and this lesson showed them: more types to name and navigate; classes listing several interfaces; code that must route the right objects to the right clients (our two lists); wrappers that hide extra capabilities; and, when an interface used by many classes changes, a wide edit, as this lesson's refactoring was. That last cost is the strongest argument for getting contracts small <em>before</em> many classes depend on them.</p>
+  <p>Say an interface has one implementation and one client, and they fit perfectly. Then there is nothing to split. Leave it whole. Split when a real implementer can't keep part of the contract (the smoke alarm). Or split when real clients use clearly different parts. The costs are real, and this lesson showed them:</p>
+  <ul>
+    <li>More types to name and find your way around.</li>
+    <li>Classes that list several interfaces.</li>
+    <li>Code that must send the right objects to the right clients (our two lists).</li>
+    <li>Wrappers that hide extra abilities.</li>
+    <li>A wide edit when an interface used by many classes changes, as this lesson's refactoring was.</li>
+  </ul>
+  <p>That last cost is the strongest reason to get contracts small <em>before</em> many classes depend on them.</p>
 
   <h3>Relatives and look-alikes</h3>
   <ul>
-    <li><strong>SRP</strong> (<a href="lesson-05-single-responsibility.html">Lesson 05</a>): splits <em>classes</em> by who asks for changes; ISP splits <em>interfaces</em> by who calls them.</li>
+    <li><strong>SRP</strong> (<a href="lesson-05-single-responsibility.html">Lesson 05</a>) splits <em>classes</em> by who asks for changes. ISP splits <em>interfaces</em> by who calls them.</li>
     <li><strong>LSP</strong> (<a href="lesson-07-liskov-substitution.html">Lesson 07</a>): ISP is its usual cure. A contract small enough for every implementer to keep leaves nothing to refuse.</li>
     <li><strong>Cohesion</strong> (Lesson 04): a well-segregated interface is a cohesive interface, one purpose with one sentence and no "and."</li>
   </ul>
@@ -555,18 +563,18 @@ mvn compile exec:java</code></pre>
 <section id="s8">
   <h2><span class="sec-num">8</span>Key takeaways</h2>
   <ul class="takeaways">
-    <li>The Interface Segregation Principle says no client should be forced to depend on methods it does not use, and so no class should be forced to promise methods it cannot keep.</li>
-    <li>A fat interface hurts from both sides: implementers end up refusing methods (LSP violations), and clients are coupled to methods they never call.</li>
-    <li>The cure is small role interfaces shaped by what each client calls. A class may implement several of them, and an interface may extend another to build on it.</li>
-    <li>Giving each client exactly the role it needs lets the compiler stop wrong calls before they happen, as when "Away" can no longer be handed a smoke alarm.</li>
-    <li>Do not split into one-method fragments. Methods that are always used together belong together, and every split costs more types, routing code, and capabilities hidden behind wrappers.</li>
+    <li>The Interface Segregation Principle says no client should be forced to depend on methods it does not use. So no class should be forced to promise methods it cannot keep.</li>
+    <li>A fat interface hurts from both sides. Implementers end up refusing methods (LSP violations). Clients are coupled to methods they never call.</li>
+    <li>The cure is small role interfaces, shaped by what each client calls. A class may implement several of them. An interface may extend another to build on it.</li>
+    <li>Give each client exactly the role it needs. Then the compiler stops wrong calls before they happen. For example, "Away" can no longer be handed a smoke alarm.</li>
+    <li>Do not split into one-method pieces. Methods that are always used together belong together. Every split costs more types, more routing code, and abilities hidden behind wrappers.</li>
   </ul>
 </section>
 
 <!-- ============================== SECTION 9 ============================== -->
 <section id="s9">
   <h2><span class="sec-num">9</span>Challenge</h2>
-  <p>A factory simulation has this interface. Identify both kinds of ISP pain, redesign it, and predict what the canteen code below prints in your design.</p>
+  <p>A factory simulation has this interface. Find both kinds of ISP pain. Redesign it. Then predict what the canteen code below prints in your design.</p>
   <pre class="code" data-title="Worker.java (as written)"><code><span class="kw">interface</span> <span class="ty">Worker</span> { <span class="ty">String</span> <span class="fn">work</span>(); <span class="ty">String</span> <span class="fn">eat</span>(); }
 
 <span class="kw">class</span> <span class="ty">HumanWorker</span> <span class="kw">implements</span> <span class="ty">Worker</span> {
@@ -583,7 +591,7 @@ mvn compile exec:java</code></pre>
 
   <details class="answer">
     <summary>Click to reveal the answer</summary>
-    <p><strong>Implementer-side pain:</strong> <code>RobotWorker</code> is forced to promise <code>eat()</code> and refuses it, a refused bequest. Handing the canteen a robot crashes it. <strong>Client-side pain:</strong> the canteen only ever calls <code>eat()</code>, yet depends on <code>Worker</code>, including <code>work()</code>; the production line only calls <code>work()</code>, yet depends on <code>eat()</code>.</p>
+    <p><strong>Implementer-side pain:</strong> <code>RobotWorker</code> is forced to promise <code>eat()</code>, and refuses it. That is a refused bequest. Handing the canteen a robot crashes it. <strong>Client-side pain:</strong> the canteen only ever calls <code>eat()</code>, yet depends on all of <code>Worker</code>, including <code>work()</code>. The production line only calls <code>work()</code>, yet depends on <code>eat()</code>.</p>
     <p>Split by client: the line needs "something that works," and the canteen needs "something that eats."</p>
     <pre class="code" data-title="redesign (sketch)"><code><span class="cmt">// The role the production line uses.</span>
 <span class="kw">interface</span> <span class="ty">Workable</span> { <span class="ty">String</span> <span class="fn">work</span>(); }
@@ -628,7 +636,7 @@ Human eating lunch</code></pre>
 </section>
 
 <div class="nextup">
-  <p><a href="lesson-09-dependency-inversion.html">Lesson 09 — D: the Dependency Inversion Principle.</a> Every lesson so far has quietly pointed the arrows at contracts. Now we make it a rule for the whole architecture: high-level policy must not depend on low-level detail, and we wire the hub by hand so its core never names a concrete device.</p>
+  <p><a href="lesson-09-dependency-inversion.html">Lesson 09 — D: the Dependency Inversion Principle.</a> Every lesson so far has quietly pointed the arrows at contracts. Now we make it a rule for the whole design: high-level policy must not depend on low-level detail. We wire the hub by hand, so its core never names a concrete device.</p>
 </div>
 <p class="position">Lesson 08 · the ninth of 45 lessons (00–44) · Phase 1, Chapter 02 · lesson 4 of 7 in this chapter</p>
 

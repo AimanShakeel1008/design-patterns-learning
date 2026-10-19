@@ -40,7 +40,7 @@
 <header class="banner">
   <p class="kicker">Phase 0 · Chapter 01 · Summary</p>
   <h1>The Object-Oriented Toolbox</h1>
-  <p class="subtitle">Four lessons, four tools: guarded objects, contracts, inheritance, and composition, plus the yardstick (coupling and cohesion) and the picture language (UML) to judge and show them.</p>
+  <p class="subtitle">Four lessons, four tools: guarded objects, contracts, inheritance, and composition. Plus a yardstick to judge them (coupling and cohesion), and a picture language to show them (UML).</p>
   <p class="meta">
     Lessons: <a href="lesson-01-objects-encapsulation-interfaces.html">01</a> · <a href="lesson-02-inheritance-polymorphism.html">02</a> · <a href="lesson-03-composition-vs-inheritance.html">03</a> · <a href="lesson-04-coupling-cohesion-uml.html">04</a>.
     State after this chapter: katas <strong>23 tests</strong>, hub <strong>13 tests</strong> (predicted).
@@ -151,7 +151,7 @@
       <line x1="640" y1="250" x2="640" y2="286" class="uml-line" marker-end="url(#c1-open)"/>
       <text x="650" y="273" class="uml-mult">log</text>
     </svg>
-    <figcaption>The whole hub after Chapter 01, in the notation from <a href="lesson-04-coupling-cohesion-uml.html">Lesson 04</a>. Left: the is-a family (one contract, one abstract parent, two devices). Right: the has-a feature (a wrapper that is a <code>Device</code>, holds a <code>Device</code>, and holds the log). <code>main</code> is underlined because it is <code>static</code>. <code>Main</code> also <em>creates</em> every concrete class; those dependency lines are left out to keep the picture readable.</figcaption>
+    <figcaption>The whole hub after Chapter 01, in the notation from <a href="lesson-04-coupling-cohesion-uml.html">Lesson 04</a>. Left: the is-a family (one contract, one abstract parent, two devices). Right: the has-a feature (a wrapper that is a <code>Device</code>, holds a <code>Device</code>, and holds the log). <code>main</code> is underlined because it is <code>static</code>. <code>Main</code> also <em>creates</em> every concrete class. Those dependency lines are left out to keep the picture readable.</figcaption>
   </figure>
 </section>
 
@@ -162,8 +162,8 @@
     <li><strong>Lesson 00:</strong> the hub was one banner line and a smoke test, proving the workshop works.</li>
     <li><strong>Lesson 01:</strong> it gained a <code>Device</code> contract and two devices. One loop switched everything on without knowing any concrete class, and the thermostat refused bad targets at the door.</li>
     <li><strong>Lesson 02:</strong> the two devices had copied the same fields and four methods, so that code moved into an abstract parent. We also fixed a trap our own constructor had been hiding. Behaviour was unchanged, and the untouched tests proved it: our first refactoring.</li>
-    <li><strong>Lesson 03:</strong> a new requirement, an activity log for every device. Inheritance would have meant a <code>Logging*</code> subclass per device. Instead one wrapper, chosen when the hub is assembled, logs any device, and no device class changed.</li>
-    <li><strong>Lesson 04:</strong> no code changed. We drew the hub, traced its main call, and measured it. Every class passed the cohesion test except one: <code>Main</code> is accumulating jobs. That is where the next phase begins.</li>
+    <li><strong>Lesson 03:</strong> a new requirement, an activity log for every device. Inheritance would have meant a <code>Logging*</code> subclass per device. Instead, one wrapper logs any device. It is chosen when the hub is put together, and no device class changed.</li>
+    <li><strong>Lesson 04:</strong> no code changed. We drew the hub, traced its main call, and measured it. Every class passed the cohesion test except one: <code>Main</code> keeps piling up jobs. That is where the next phase begins.</li>
   </ol>
 </section>
 
@@ -226,7 +226,7 @@
       <line x1="330" y1="76" x2="320" y2="246" class="fig-arrow-accent" marker-end="url(#c2-arrow)"/>
       <text x="330" y="222" class="fig-small">narrow doors</text>
     </svg>
-    <figcaption>Encapsulation and interfaces both loosen coupling. Interfaces enable polymorphism, and so does inheritance (Lesson 02; that arrow is left out for clarity). Inheritance's costs are why we favour composition, and composition only works through contracts. UML is how we show all of it.</figcaption>
+    <figcaption>Encapsulation and interfaces both loosen coupling. Interfaces make polymorphism possible, and so does inheritance (Lesson 02; that arrow is left out to keep it clear). Inheritance's costs are why we prefer composition. And composition only works through contracts. UML is how we show all of it.</figcaption>
   </figure>
 </section>
 
@@ -236,7 +236,7 @@
   <ul>
     <li><strong>"Program to an interface"</strong> becomes the <em>Dependency Inversion Principle</em> (Lesson 09). It is also the reason almost every pattern diagram has a violet contract box at its centre.</li>
     <li><strong>Cohesion</strong> becomes a rule, the <em>Single Responsibility Principle</em> (Lesson 05), starting with the hub's <code>Main</code>.</li>
-    <li><strong>The wrapper</strong> ("implements X, holds an X") returns as a named structural pattern in Lesson 19, and its cousins in Lessons 18 and 22 are told apart by intent, not shape.</li>
+    <li><strong>The wrapper</strong> ("implements X, holds an X") returns as a named structural pattern in Lesson 19. Its cousins come in Lessons 18 and 22. You tell them apart by their purpose, not their shape.</li>
     <li><strong>"Is-a" safety</strong>, meaning when a subclass can truly stand in for its parent, becomes the <em>Liskov Substitution Principle</em> (Lesson 07).</li>
     <li><strong>The parent calling a child's filled-in step</strong> (<code>Animal.introduce()</code> calling <code>speak()</code>; <code>AbstractList</code>) returns as a named behavioral pattern in Lesson 26.</li>
   </ul>
@@ -247,30 +247,36 @@
   <h2><span class="sec-num">7</span>Self-check</h2>
   <details class="check">
     <summary>What makes a field-plus-setter pair "encapsulation in name only"?</summary>
-    <p>A setter that stores any value without checking the invariant is just a public field with extra steps. Encapsulation means <em>every</em> path to the data, including the constructor, enforces the rule (<a href="lesson-01-objects-encapsulation-interfaces.html">Lesson 01</a>).</p>
+    <p>A setter that stores any value without checking the invariant is just a public field with extra steps. Encapsulation means <em>every</em> path to the data checks the rule, including the constructor (<a href="lesson-01-objects-encapsulation-interfaces.html">Lesson 01</a>).</p>
   </details>
   <details class="check">
     <summary><code>Animal a = new Dog("Rex");</code> Which picks the method for <code>a.speak()</code>, and which picks it for <code>vet.examine(a)</code>?</summary>
-    <p><code>a.speak()</code> is overriding: the JVM decides at run time from the actual object (Dog). <code>vet.examine(a)</code> is overloading: the compiler decides from the declared type (Animal), so the general check-up runs (<a href="lesson-02-inheritance-polymorphism.html">Lesson 02</a>).</p>
+    <p><code>a.speak()</code> is overriding. The JVM decides at run time, from the actual object (Dog). <code>vet.examine(a)</code> is overloading. The compiler decides from the declared type (Animal), so the general check-up runs (<a href="lesson-02-inheritance-polymorphism.html">Lesson 02</a>).</p>
   </details>
   <details class="check">
     <summary>Why did the inheritance-based counter double-count, but the composed one did not?</summary>
-    <p>With <code>extends</code> there is one object, so <code>Playlist.addAll</code>'s internal <code>add()</code> calls are dispatched to the child's override. With composition there are two objects, so the inner playlist's calls stay inside it (<a href="lesson-03-composition-vs-inheritance.html">Lesson 03</a>).</p>
+    <p>With <code>extends</code> there is one object. So the internal <code>add()</code> calls in <code>Playlist.addAll</code> land in the child's override. With composition there are two objects. So the inner playlist's calls stay inside it (<a href="lesson-03-composition-vs-inheritance.html">Lesson 03</a>).</p>
   </details>
   <details class="check">
     <summary>Give the one-sentence test for cohesion, and the cheapest sign of loose coupling in a sequence diagram.</summary>
-    <p>Cohesion: describe the class in one sentence without "and." Coupling: few arrows leave each lifeline, and those that do point at contracts or parameters (<a href="lesson-04-coupling-cohesion-uml.html">Lesson 04</a>).</p>
+    <p>Cohesion: describe the class in one sentence without "and." Coupling: few arrows leave each lifeline. The ones that do point at contracts or parameters (<a href="lesson-04-coupling-cohesion-uml.html">Lesson 04</a>).</p>
   </details>
   <details class="check">
     <summary>The hub kept <code>AbstractDevice</code> even after "favor composition." Why is that not a contradiction?</summary>
-    <p>"Favor" is not "always." <code>AbstractDevice</code> is a true is-a with a small, stable core that we own and designed for extension. The <em>optional, combinable</em> feature (logging) is the part that was composed. Replacing working inheritance with forwarding code would cure no pain, which is needless complexity.</p>
+    <p>"Favor" is not "always." <code>AbstractDevice</code> is a true is-a. It has a small, stable core that we own and designed for extension. The <em>optional, combinable</em> feature (logging) is the part that was composed. Replacing working inheritance with forwarding code would cure no pain. That would be needless complexity.</p>
   </details>
 </section>
 
 <!-- ============================== SECTION 8 ============================== -->
 <section id="s8">
   <h2><span class="sec-num">8</span>Boss challenge</h2>
-  <p>A garden-watering module arrived from another team. It "works." Find <strong>every</strong> problem using this chapter's vocabulary, predict what <code>new Garden().water()</code> prints today, then redesign it so that: the flow rate can never be invalid, logging can be added to any sprinkler without a subclass, and a test can check what was logged without reading the console. Sketch the UML of your design.</p>
+  <p>A garden-watering module arrived from another team. It "works." First, find <strong>every</strong> problem, using this chapter's words. Then predict what <code>new Garden().water()</code> prints today. Then redesign it to meet three goals:</p>
+  <ul>
+    <li>The flow rate can never be invalid.</li>
+    <li>Logging can be added to any sprinkler without a subclass.</li>
+    <li>A test can check what was logged without reading the console.</li>
+  </ul>
+  <p>Sketch the UML of your design.</p>
 
   <pre class="code" data-title="the module as delivered"><code><span class="kw">public class</span> <span class="ty">Sprinkler</span> {
     <span class="kw">public int</span> litresPerMinute;
@@ -298,7 +304,7 @@
     <pre class="output"><code>Starting 2 zones
 Sprinkler started
 Sprinkler started</code></pre>
-    <p>The two "Sprinkler started" lines exist only because <code>Sprinkler.startZones</code> happens to call <code>start()</code> (self-use) and dynamic dispatch routes those calls into the child's override. If the parent author changes that loop, the log changes too.</p>
+    <p>The two "Sprinkler started" lines exist only by accident. <code>Sprinkler.startZones</code> happens to call <code>start()</code> (self-use). Dynamic dispatch then sends those calls into the child's override. If the parent author changes that loop, the log changes too.</p>
 
     <h4>Every problem, named</h4>
     <div class="table-wrap">
@@ -350,7 +356,7 @@ Sprinkler started</code></pre>
     <span class="kw">public void</span> <span class="fn">water</span>() { <span class="kw">for</span> (<span class="ty">Sprinkler</span> zone : zones) { zone.<span class="fn">start</span>(); } }
 }</code></pre>
 
-    <p>Notice that "zones" stopped being a method on the sprinkler. A garden <em>has</em> several sprinklers, one per zone, which is a cohesion fix: the sprinkler sprinkles, the garden organises. With no <code>startZones</code> calling <code>start</code>, there is no self-use for anything to depend on.</p>
+    <p>Notice that "zones" stopped being a method on the sprinkler. A garden <em>has</em> several sprinklers, one per zone. That is a cohesion fix: the sprinkler sprinkles, and the garden organises. With no <code>startZones</code> calling <code>start</code>, there is no self-use for anything to depend on.</p>
 
     <pre class="ascii"><code>           «interface» Sprinkler  &lt;- - - - - - - - - - - - - - - - -.
              ^                ^                                   :
@@ -365,7 +371,7 @@ Sprinkler started</code></pre>
     <p class="pred-label">Prediction — the redesigned water()</p>
     <pre class="output"><code>Sprinkler started
 Sprinkler started</code></pre>
-    <p>One line per zone that actually started, and that stays true however the classes are refactored inside. A test passes a <code>RecordingLog</code> (like <code>RecordingNotifier</code> in <a href="lesson-04-coupling-cohesion-uml.html">Lesson 04</a>) and asserts the list of lines. <code>new GardenSprinkler(-5)</code> now throws, so the invariant can no longer be broken from outside. If you code this up in a scratch package, run it and compare with the predictions. The machine is the judge.</p>
+    <p>One line per zone that actually started. That stays true however the classes are refactored inside. A test passes a <code>RecordingLog</code> (like <code>RecordingNotifier</code> in <a href="lesson-04-coupling-cohesion-uml.html">Lesson 04</a>) and asserts the list of lines. <code>new GardenSprinkler(-5)</code> now throws, so the invariant can no longer be broken from outside. If you code this up in a scratch package, run it and compare with the predictions. The machine is the judge.</p>
   </details>
 </section>
 

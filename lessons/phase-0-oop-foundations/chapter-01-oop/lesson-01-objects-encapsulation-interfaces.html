@@ -83,7 +83,7 @@
 
   <p>Now a fan arrives. <code>pressPower</code> cannot accept a fan, so you copy it as <code>pressPower(Fan fan)</code>. A heater arrives: another copy. Every new device means editing the remote, and every fix must be repeated in every copy.</p>
 
-  <p>The two pains, named: <strong>unguarded data</strong> (any code can put an object into an impossible state) and <strong>code tied to a concrete class</strong> (the remote depends on <em>which</em> device it has, instead of on <em>what a device can do</em>). This lesson cures both.</p>
+  <p>The two pains have names. The first is <strong>unguarded data</strong>: any code can put an object into an impossible state. The second is <strong>code tied to a concrete class</strong>: the remote depends on <em>which</em> device it has, instead of on <em>what a device can do</em>. This lesson cures both.</p>
 
   <p class="filepath">Full wrong-way code: katas/src/main/java/com/katas/oopbasics/naive/BankAccount.java</p>
 </section>
@@ -134,13 +134,13 @@
 
   <p>Java lets you choose who may touch each field and method. Two keywords do the choosing:</p>
   <ul>
-    <li>Marking a field so that only code <em>inside the same class</em> can read or change it is done with the keyword <strong><code>private</code></strong>. Try <code>account.balance = -500</code> from another class and the compiler refuses: <code>balance has private access in BankAccount</code>.</li>
-    <li>Marking a method (or class) so that <em>any code anywhere</em> can use it is done with <strong><code>public</code></strong>. That is the teller's window.</li>
+    <li>To let only code <em>inside the same class</em> read or change a field, you mark it with the keyword <strong><code>private</code></strong>. Try <code>account.balance = -500</code> from another class and the compiler refuses: <code>balance has private access in BankAccount</code>.</li>
+    <li>To let <em>any code anywhere</em> use a method (or class), you mark it <strong><code>public</code></strong>. That is the teller's window.</li>
   </ul>
 
   <p>Every object has rules that must stay true for its whole life, from the moment it is built until it is thrown away. For an account: "the balance is never negative." For a thermostat: "the target is between 5 and 30 degrees." A rule like this, one that must <em>always</em> hold, is called an <strong>invariant</strong>.</p>
 
-  <p>Now put the pieces together. Make the data <code>private</code>, so nothing outside can touch it. Make every way of changing it a <code>public</code> method that checks the invariant first, including the constructor. Then the rule cannot be walked around, because there is no other way in. Hiding an object's data behind guarded methods so it can only change in rule-respecting ways is called <strong>encapsulation</strong>.</p>
+  <p>Now put the pieces together. Make the data <code>private</code>, so nothing outside can touch it. Make every way of changing it a <code>public</code> method that checks the invariant first, including the constructor. Then the rule cannot be walked around, because there is no other way in. The data can only change in ways that follow the rules. Hiding an object's data behind guarded methods like this is called <strong>encapsulation</strong>.</p>
 
   <figure class="fig">
     <svg viewBox="0 0 720 270" role="img" aria-label="Before and after. Left, the naive account: outside code writes the public balance field directly, bypassing withdraw. Right, the encapsulated account: outside code can only call withdraw, which checks the rule before touching the private balance.">
@@ -190,13 +190,13 @@
 }
 balance = balance - amount;   <span class="cmt">// never reached when the throw happens</span></code></pre>
 
-  <p><code>IllegalArgumentException</code> is a ready-made exception from Java's standard library. It means "you passed me a value I cannot accept." The caller can deal with a thrown exception by wrapping the risky call in <code>try { … }</code> and handling it in <code>catch (IllegalArgumentException e) { … }</code>. There, <code>e.getMessage()</code> gives back the message text. If nobody catches it, the program stops and prints the message. Either way, nobody is left believing a lie.</p>
+  <p><code>IllegalArgumentException</code> is a ready-made exception from Java's standard library. It means "you passed me a value I cannot accept." The caller can deal with a thrown exception. It wraps the risky call in <code>try { … }</code>, and handles the exception in <code>catch (IllegalArgumentException e) { … }</code>. There, <code>e.getMessage()</code> gives back the message text. If nobody catches it, the program stops and prints the message. Either way, nobody is left believing a lie.</p>
 
   <p>Finally, other code often needs to <em>read</em> the balance. A small <code>public</code> method that only returns a field's value, <code>getBalance()</code>, gives read access without write access. A method like this is called a <strong>getter</strong>.</p>
 
   <details class="check">
     <summary>The guarded <code>BankAccount</code> has <code>private int balance</code>. If someone adds <code>public void setBalance(int b) { balance = b; }</code>, is the class still encapsulated?</summary>
-    <p>Only in name. The field is still marked <code>private</code>, but <code>setBalance(-500)</code> is just <code>balance = -500</code> with extra steps. Encapsulation is not about the keyword; it is about <em>every</em> path to the data enforcing the invariant. A setter must check the rule (as <code>Thermostat.setTargetCelsius</code> does in Section 5), or it should not exist.</p>
+    <p>Only in name. The field is still marked <code>private</code>, but <code>setBalance(-500)</code> is just <code>balance = -500</code> with extra steps. Encapsulation is not about the keyword. It means <em>every</em> path to the data checks the invariant. A setter must check the rule (as <code>Thermostat.setTargetCelsius</code> does in Section 5), or it should not exist.</p>
   </details>
 
   <h3>3.3 Interfaces: depend on what, not on which</h3>
@@ -210,9 +210,9 @@ balance = balance - amount;   <span class="cmt">// never reached when the throw 
     <span class="ty">String</span> <span class="fn">describe</span>();
 }</code></pre>
 
-  <p>A promise about <em>what</em> will be provided, with the <em>how</em> left open, is called a <strong>contract</strong>. A Java type that is nothing but such a list of method promises, with no bodies, is called an <strong>interface</strong>.</p>
+  <p>A promise about <em>what</em> will be provided, with the <em>how</em> left open, is called a <strong>contract</strong>. In Java, a type that holds only a list of method promises, with no bodies, is called an <strong>interface</strong>.</p>
 
-  <p>A class signs the contract by writing <code>implements Switchable</code> after its name. That is a promise the compiler checks: the class must provide a real body for every method the interface lists, or it will not compile. The actual working code that fulfils a contract is called an <strong>implementation</strong>. <code>Lamp</code> and <code>Fan</code> are two implementations of <code>Switchable</code>. Above each fulfilling method you will see <code>@Override</code>. It is an <span class="term" tabindex="0" data-def="a tag stuck onto code that tools read (e.g. @Test tells JUnit &quot;run this as a test&quot;).">annotation</span> that says "this method fulfils one that was promised." If you misspell <code>turnOn</code> as <code>turnon</code>, <code>@Override</code> makes the compiler report the mistake instead of silently creating a second, unrelated method.</p>
+  <p>A class signs the contract by writing <code>implements Switchable</code> after its name. The compiler checks this promise. The class must give a real body to every method the interface lists, or it will not compile. The actual working code that fulfils a contract is called an <strong>implementation</strong>. <code>Lamp</code> and <code>Fan</code> are two implementations of <code>Switchable</code>. Above each fulfilling method you will see <code>@Override</code>. It is an <span class="term" tabindex="0" data-def="a tag stuck onto code that tools read (e.g. @Test tells JUnit &quot;run this as a test&quot;).">annotation</span> that says "this method fulfils one that was promised." Say you misspell <code>turnOn</code> as <code>turnon</code>. Without <code>@Override</code>, Java quietly creates a second, unrelated method. With it, the compiler reports the mistake.</p>
 
   <p>Now the remote can be written against the contract:</p>
   <pre class="code" data-title="the cured remote"><code><span class="kw">void</span> <span class="fn">pressPower</span>(<span class="ty">Switchable</span> thing) { thing.<span class="fn">turnOn</span>(); }   <span class="cmt">// lamp, fan, heater: all fine</span></code></pre>
@@ -256,14 +256,14 @@ balance = balance - amount;   <span class="cmt">// never reached when the throw 
       <text x="640" y="186" class="fig-small fig-center">Add a Heater here:</text>
       <text x="640" y="204" class="fig-small fig-center">Main does not change.</text>
     </svg>
-    <figcaption>Grey = client code; violet = the contract; blue = concrete classes. Every arrow points <em>at the interface</em>, and nothing points at <code>Lamp</code> or <code>Fan</code> from outside. The arrow shapes are standard UML: a dashed line with a hollow triangle means "implements," and a dashed line with an open arrowhead means "uses." Lesson 04 covers the full arrow vocabulary; for now, read only the direction.</figcaption>
+    <figcaption>Grey = client code; violet = the contract; blue = concrete classes. Every arrow points <em>at the interface</em>, and nothing points at <code>Lamp</code> or <code>Fan</code> from outside. The arrow shapes are standard UML. A dashed line with a hollow triangle means "implements." A dashed line with an open arrowhead means "uses." Lesson 04 covers all the arrow types. For now, read only the direction.</figcaption>
   </figure>
 
   <h3>3.4 Polymorphism (a first look) and abstraction</h3>
 
-  <p>Look at what <code>thing.turnOn()</code> does inside a loop over <code>{ new Lamp(), new Fan() }</code>. The line is written once. On the first pass it runs <code>Lamp</code>'s code; on the second, <code>Fan</code>'s. Which code runs is not decided when you write the line. It is decided while the program runs, by which object is actually there. It works like a single "play" button that plays whatever disc is in the machine. One call that behaves in many ways, decided at run time by the actual object, is called <strong>polymorphism</strong> (Greek for "many shapes"). It is the reward for programming to an interface. <em>How</em> the <span class="term" tabindex="0" data-def="the program that runs bytecode on a real computer; each operating system has its own, so the same .class file runs anywhere.">JVM</span> picks the right method gets traced step by step in Lesson 02.</p>
+  <p>Look at what <code>thing.turnOn()</code> does inside a loop over <code>{ new Lamp(), new Fan() }</code>. The line is written once. On the first pass it runs <code>Lamp</code>'s code; on the second, <code>Fan</code>'s. Which code runs is not decided when you write the line. It is decided while the program runs, by which object is actually there. It works like a single "play" button that plays whatever disc is in the machine. So one call can behave in many ways, and the actual object decides which while the program runs. This is called <strong>polymorphism</strong> (Greek for "many shapes"). It is the reward for programming to an interface. Lesson 02 traces, step by step, <em>how</em> the <span class="term" tabindex="0" data-def="the program that runs bytecode on a real computer; each operating system has its own, so the same .class file runs anywhere.">JVM</span> picks the right method.</p>
 
-  <p>The interface also gives us one more idea. <code>Switchable</code> shows four simple operations and hides everything messy behind them: wiring, motors, bulbs. Hiding <em>complexity</em> behind a small set of operations is called <strong>abstraction</strong>. It is a cousin of encapsulation: encapsulation hides <em>data</em> to protect a rule, and abstraction hides <em>complexity</em> to make something simple to use. Lesson 04 sharpens the difference.</p>
+  <p>The interface also gives us one more idea. <code>Switchable</code> shows four simple operations and hides everything messy behind them: wiring, motors, bulbs. Hiding <em>complexity</em> behind a small set of operations is called <strong>abstraction</strong>. It is a cousin of encapsulation. Encapsulation hides <em>data</em> to protect a rule. Abstraction hides <em>complexity</em> to make something simple to use. Lesson 04 sharpens the difference.</p>
 
   <details class="check">
     <summary>A new <code>Heater implements Switchable</code> is added. Which of these must change: <code>Switchable</code>, <code>Lamp</code>, <code>Fan</code>, the loop in <code>Main</code>?</summary>
@@ -478,7 +478,7 @@ Lamp is glowing
 Fan is spinning</code></pre>
 
   <h4>The tests</h4>
-  <p>The tests below use one new tool. <code>assertThrows(IllegalArgumentException.class, () -&gt; account.withdraw(500))</code> passes only if running the code throws that exception. The piece <code>() -&gt; account.withdraw(500)</code> is a small bundle of code handed to <code>assertThrows</code> so that <em>it</em> can run the code at the right moment and watch what happens. Such a bundle is called a <strong>lambda</strong>. Lambdas get their full story in the Strategy lesson; here you only need to read it as "the code to try."</p>
+  <p>The tests below use one new tool. <code>assertThrows(IllegalArgumentException.class, () -&gt; account.withdraw(500))</code> passes only if running the code throws that exception. The piece <code>() -&gt; account.withdraw(500)</code> is a small bundle of code. We hand it to <code>assertThrows</code>, so that <em>it</em> can run the code at the right moment and watch what happens. Such a bundle is called a <strong>lambda</strong>. Lambdas get their full story in the Strategy lesson. Here, just read it as "the code to try."</p>
 
   <p class="filepath">Saved: katas/src/test/java/com/katas/oopbasics/BankAccountTest.java</p>
   <pre class="code" data-title="BankAccountTest.java"><code><span class="cmt">// Tests live in the same package as the class they check.</span>
@@ -571,7 +571,7 @@ mvn compile exec:java <span class="str">"-Dexec.mainClass=com.katas.oopbasics.Ma
 <span class="out">[INFO] BUILD SUCCESS</span></code></pre>
 
   <div class="callout tryit">
-    <p>Run both commands from <code>katas/</code>. Check <strong>9 tests, 0 failures</strong>, and the six demo lines above. If anything differs, the machine is right. Tell me what you saw and we will work out why. For extra proof, add <code>safe.balance = -500;</code> to <code>Main</code> and run <code>mvn compile</code>. The compiler should refuse with <code>balance has private access in com.katas.oopbasics.BankAccount</code>. Encapsulation, enforced by the compiler. (Delete the line afterwards.)</p>
+    <p>Run both commands from <code>katas/</code>. Check <strong>9 tests, 0 failures</strong>, and the six demo lines above. If anything differs, the machine is right. Tell me what you saw and we will work out why. For extra proof, add <code>safe.balance = -500;</code> to <code>Main</code> and run <code>mvn compile</code>. The compiler should refuse with <code>balance has private access in com.katas.oopbasics.BankAccount</code>. The compiler itself protects the field. (Delete the line afterwards.)</p>
   </div>
 </section>
 
@@ -579,7 +579,7 @@ mvn compile exec:java <span class="str">"-Dexec.mainClass=com.katas.oopbasics.Ma
 <section id="s5">
   <h2><span class="sec-num">5</span>Applied to the Smart Home Hub</h2>
 
-  <p>The hub's whole job is to control many kinds of device: lights today, thermostats, locks and cameras later. If the hub's code named <code>Light</code> and <code>Thermostat</code> everywhere, every new device would mean editing the hub, which is pain two exactly. So the hub's very first code is a contract. It is a genuine need, not a pattern for its own sake.</p>
+  <p>The hub's whole job is to control many kinds of device: lights today, thermostats, locks and cameras later. Suppose the hub's code named <code>Light</code> and <code>Thermostat</code> everywhere. Then every new device would mean editing the hub. That is exactly pain two. So the hub's very first code is a contract. We add it because the hub really needs it, not for its own sake.</p>
 
   <figure class="fig">
     <svg viewBox="0 0 720 250" role="img" aria-label="Hub structure: Main uses the Device interface. Light and Thermostat implement Device. A dashed box marks future devices such as Lock and Camera, which will also implement Device.">
@@ -649,7 +649,7 @@ mvn compile exec:java <span class="str">"-Dexec.mainClass=com.katas.oopbasics.Ma
 }</code></pre>
 
   <p class="filepath">Saved: smarthome/src/main/java/com/smarthome/devices/Light.java</p>
-  <p><code>Light</code> follows the same shape as the kata's <code>Lamp</code>, plus a name. It has a <code>private final String name</code> and a <code>private boolean on</code>, and <code>status()</code> returns e.g. <code>"Living Room Light: ON"</code>. The new word is <code>final</code>. A field marked <strong><code>final</code></strong> can be given a value only once, in the constructor, and never changed after that, so a light cannot be renamed by accident. The thermostat is more interesting, because it has a real invariant to guard:</p>
+  <p><code>Light</code> follows the same shape as the kata's <code>Lamp</code>, plus a name. It has a <code>private final String name</code> and a <code>private boolean on</code>, and <code>status()</code> returns e.g. <code>"Living Room Light: ON"</code>. The new word is <code>final</code>. A field marked <strong><code>final</code></strong> gets its value only once, in the constructor. It can never change after that, so a light cannot be renamed by accident. The thermostat is more interesting, because it has a real invariant to guard:</p>
 
   <p class="filepath">Saved: smarthome/src/main/java/com/smarthome/devices/Thermostat.java</p>
   <pre class="code" data-title="Thermostat.java"><code><span class="cmt">// Same package as the Device contract it fulfils.</span>
@@ -783,7 +783,7 @@ mvn compile exec:java <span class="str">"-Dexec.mainClass=com.katas.oopbasics.Ma
   <p class="filepath">Saved: smarthome/src/test/java/com/smarthome/devices/DeviceTest.java</p>
   <p>Five tests. <code>lightTurnsOnAndOff</code> checks <code>"Porch Light: ON"</code>, then <code>"Porch Light: OFF"</code>. <code>thermostatReportsItsTargetWhenOn</code> checks <code>"Hall Thermostat: OFF"</code>, then <code>"Hall Thermostat: regulating to 21C"</code>. <code>thermostatRefusesAnOutOfRangeStartingTarget</code> expects <code>new Thermostat("Attic", 40)</code> to throw. <code>thermostatRefusesAnOutOfRangeChangeAndKeepsItsTarget</code> expects <code>setTargetCelsius(2)</code> to throw and the target to stay 21. <code>everyDeviceStartsOffAndTurnsOnThroughTheContract</code> loops over both devices through the <code>Device</code> type.</p>
 
-  <p><strong>What this adds:</strong> the hub can now hold any number of devices of any kind, and control them all through one loop that will never need editing for a new kind of device. Each device guards its own rules, so a typo like a 40-degree target is refused at the door instead of reaching the heating.</p>
+  <p><strong>What this adds:</strong> the hub can now hold any number of devices of any kind. One loop controls them all, and a new kind of device will never need an edit to that loop. Each device guards its own rules. So a typo like a 40-degree target is refused at the door and never reaches the heating.</p>
 
   <ol class="trace">
     <li><code>main</code> prints the banner.</li>
@@ -820,7 +820,7 @@ mvn compile exec:java</code></pre>
   <pre class="code" data-title="the JDK's collections"><code><span class="ty">List</span>&lt;<span class="ty">String</span>&gt; names = <span class="kw">new</span> <span class="ty">ArrayList</span>&lt;&gt;();   <span class="cmt">// the variable is typed by the CONTRACT</span>
 names.<span class="fn">add</span>(<span class="str">"Ada"</span>);</code></pre>
 
-  <p><code>java.util.List</code> is an <em>interface</em>: a contract for "an ordered collection you can add to, read by position, and loop over." <code>ArrayList</code> and <code>LinkedList</code> are two implementations with very different insides. Because the variable says <code>List</code>, switching implementations is a one-word change on the right-hand side, and none of the code that uses <code>names</code> notices. (The <code>&lt;String&gt;</code> part says "a list of text." That feature has its own story later.) The JDK is full of this shape: <code>Map</code>/<code>HashMap</code>, <code>Set</code>/<code>HashSet</code>, <code>Runnable</code>, <code>Comparable</code>.</p>
+  <p><code>java.util.List</code> is an <em>interface</em>: a contract for "an ordered collection you can add to, read by position, and loop over." <code>ArrayList</code> and <code>LinkedList</code> are two implementations with very different insides. The variable says <code>List</code>, so switching implementations is a one-word change on the right-hand side. None of the code that uses <code>names</code> notices. (The <code>&lt;String&gt;</code> part says "a list of text." That feature has its own story later.) The JDK is full of this shape: <code>Map</code>/<code>HashMap</code>, <code>Set</code>/<code>HashSet</code>, <code>Runnable</code>, <code>Comparable</code>.</p>
 
   <div class="callout realworld">
     <p>In code reviews, <code>ArrayList&lt;String&gt; names = new ArrayList&lt;&gt;()</code> in a method signature or field often gets the comment "type it as <code>List</code>." In interviews, "what is the difference between encapsulation and abstraction?" is a classic opening question. Section 3.4 is your answer: one hides data to protect rules, the other hides complexity to make something simple to use.</p>
@@ -833,9 +833,9 @@ names.<span class="fn">add</span>(<span class="str">"Ada"</span>);</code></pre>
   <ul>
     <li><strong>"Private field + getter + setter" is not automatically encapsulation.</strong> Many tools generate a getter and a setter for every field, so people assume that is the rule. A setter with no check is a public field in disguise. Only add a setter if it guards the invariant, and often there should be none (<code>BankAccount</code> has <code>deposit</code>/<code>withdraw</code>, not <code>setBalance</code>).</li>
     <li><strong>Refusing silently.</strong> The naive <code>withdraw</code> did nothing when it could not do the job, so the caller believed it worked. When a request breaks the rules, throw an exception with a message that names the bad value.</li>
-    <li><strong>Forgetting the constructor is a door too.</strong> Guarding every method but letting the constructor store anything means a broken object can be <em>born</em> broken. Check the invariant in the constructor, ideally by reusing the same guarded method (as <code>Thermostat</code> does).</li>
+    <li><strong>Forgetting the constructor is a door too.</strong> If every method is guarded but the constructor stores anything, an object can be <em>born</em> broken. Check the invariant in the constructor, ideally by reusing the same guarded method (as <code>Thermostat</code> does).</li>
     <li><strong>Typing variables by the concrete class out of habit.</strong> <code>Lamp lamp = new Lamp()</code> works, but ties that code to <code>Lamp</code>. If you only use the contract's methods, type it as <code>Switchable</code>.</li>
-    <li><strong>An interface for everything.</strong> The opposite mistake: wrapping every class in an interface "just in case." An interface earns its keep when there is a real second implementation, or a client that genuinely must not know which one it has (like the hub's loop). An interface with exactly one implementation that will never have another is just an extra file to read. This is the first appearance of the course's theme: <strong>every abstraction costs something, so pay only when a real pain asks for it.</strong></li>
+    <li><strong>An interface for everything.</strong> The opposite mistake: wrapping every class in an interface "just in case." An interface is worth it when there is a real second implementation. It is also worth it when a client truly must not know which one it has (like the hub's loop). An interface with one implementation, and no second one ever coming, is just an extra file to read. This is the first appearance of the course's theme: <strong>every abstraction costs something, so pay only when a real pain asks for it.</strong></li>
   </ul>
 </section>
 
@@ -843,11 +843,11 @@ names.<span class="fn">add</span>(<span class="str">"Ada"</span>);</code></pre>
 <section id="s8">
   <h2><span class="sec-num">8</span>Key takeaways</h2>
   <ul class="takeaways">
-    <li>An object is data plus the behaviour that guards it: fields hold the data, methods are the only way to act on it, and the constructor sets up a valid starting state.</li>
-    <li>Encapsulation means making fields <code>private</code> and every way of changing them a guarded <code>public</code> method, so an invariant (like "balance never negative") cannot be walked around.</li>
-    <li>When a request breaks the rules, refuse it loudly by throwing an exception with a clear message, and never by silently doing nothing.</li>
-    <li>An interface is a contract that says <em>what</em> an object can do and never <em>how</em>. Programming to that interface lets one piece of client code work with every present and future implementation.</li>
-    <li>Polymorphism, one call running different code depending on the actual object, is the reward for programming to an interface. But an interface still costs an extra layer, so add one when a real second implementation or a real client need is there.</li>
+    <li>An object is data plus the behaviour that guards it. Fields hold the data. Methods are the only way to act on it. The constructor sets up a valid starting state.</li>
+    <li>Encapsulation means the fields are <code>private</code> and every way to change them is a guarded <code>public</code> method. Then an invariant (like "balance never negative") cannot be walked around.</li>
+    <li>When a request breaks the rules, refuse it loudly: throw an exception with a clear message. Never just do nothing.</li>
+    <li>An interface is a contract. It says <em>what</em> an object can do, never <em>how</em>. If client code uses only the interface, it works with every implementation, now and in the future.</li>
+    <li>Polymorphism means one call runs different code, depending on the actual object. It is the reward for programming to an interface. But an interface adds an extra layer, so add one only when a real second implementation or a real client need is there.</li>
   </ul>
 </section>
 
@@ -902,18 +902,18 @@ names.<span class="fn">add</span>(<span class="str">"Ada"</span>);</code></pre>
   Living Room Light: ON
   Hall Thermostat: regulating to 21C
   Kitchen Speaker: playing at volume 40</code></pre>
-    <p>A good test to go with it: <code>assertThrows(IllegalArgumentException.class, () -&gt; new Speaker("Loud", 101))</code>. If you type this solution in, run <code>mvn test</code> and <code>mvn compile exec:java</code> from <code>smarthome/</code> and compare. The machine is the judge. (The real hub gets its own speaker in a later lesson, so feel free to delete your copy afterwards to keep the project in step with the lessons.)</p>
+    <p>A good test to go with it: <code>assertThrows(IllegalArgumentException.class, () -&gt; new Speaker("Loud", 101))</code>. If you type this solution in, run <code>mvn test</code> and <code>mvn compile exec:java</code> from <code>smarthome/</code> and compare. The machine is the judge. (The real hub gets its own speaker in a later lesson. So feel free to delete your copy afterwards, to keep the project in step with the lessons.)</p>
   </details>
 </section>
 
 <!-- ============================== SECTION 10 ============================== -->
 <section id="s10">
   <h2><span class="sec-num">10</span>Catalog update</h2>
-  <p>No entry this lesson. These are foundations, not yet a principle or a pattern. "Program to an interface" comes back with a name and a full catalog entry as the <strong>Dependency Inversion Principle</strong> in Lesson 09. Every pattern from Lesson 13 on is, underneath, a clever arrangement of the two tools from this page: guarded objects and contracts.</p>
+  <p>No entry this lesson. These are foundations, not yet a principle or a pattern. "Program to an interface" comes back with a name and a full catalog entry as the <strong>Dependency Inversion Principle</strong> in Lesson 09. Underneath, every pattern from Lesson 13 on is a clever mix of the two tools from this page: guarded objects and contracts.</p>
 </section>
 
 <div class="nextup">
-  <p><a href="lesson-02-inheritance-polymorphism.html">Lesson 02 — Inheritance and Polymorphism.</a> There is a second way to share behaviour between classes: <code>extends</code>. We will see what it gives, what it silently costs, and trace step by step how the JVM decides which method a polymorphic call actually runs.</p>
+  <p><a href="lesson-02-inheritance-polymorphism.html">Lesson 02 — Inheritance and Polymorphism.</a> There is a second way to share behaviour between classes: <code>extends</code>. We will see what it gives and what it quietly costs. We will also trace, step by step, how the JVM picks the method a polymorphic call actually runs.</p>
 </div>
 <p class="position">Lesson 01 · the second of 45 lessons (00–44) · Phase 0, Chapter 01 · lesson 1 of 4 in this chapter</p>
 

@@ -74,7 +74,7 @@
   <pre class="output"><code>I am Rex, age 3, and I say Woof
 <span class="err">I am Tom and I say Meow          &lt;- the copy nobody remembered</span></code></pre>
 
-  <p>The pain, named: <strong>duplicated code</strong>. One change means editing many places, which is called <em>shotgun surgery</em>. And our own hub already has it: <code>Light</code> and <code>Thermostat</code> from Lesson 01 both carry an identical <code>name</code> field, <code>on</code> field, and four identical methods.</p>
+  <p>The pain, named: <strong>duplicated code</strong>. One change means editing many places, which is called <em>shotgun surgery</em>. And our own hub already has it. <code>Light</code> and <code>Thermostat</code> from Lesson 01 both carry the same <code>name</code> field, the same <code>on</code> field, and four identical methods.</p>
 
   <p class="filepath">Full wrong-way code: katas/src/main/java/com/katas/inheritance/naive/Dog.java and Cat.java</p>
 </section>
@@ -108,19 +108,19 @@
 
   <h3>3.1 Inheritance: write it once in a parent</h3>
 
-  <p>Dogs and cats share a name and an introduction; only the sound differs. So we write the shared parts once, in a class called <code>Animal</code>. Then <code>Dog</code> says "I am an <code>Animal</code>, plus my sound." Writing <code>class Dog extends Animal</code> makes every <code>Dog</code> object automatically have all of <code>Animal</code>'s fields and methods, as if they were written inside <code>Dog</code>. A class receiving everything from another class this way is called <strong>inheritance</strong>.</p>
+  <p>Dogs and cats share a name and an introduction. Only the sound differs. So we write the shared parts once, in a class called <code>Animal</code>. Then <code>Dog</code> says "I am an <code>Animal</code>, plus my sound." You write this as <code>class Dog extends Animal</code>. Now every <code>Dog</code> object automatically gets all of <code>Animal</code>'s fields and methods, as if they were written inside <code>Dog</code>. A class receiving everything from another class this way is called <strong>inheritance</strong>.</p>
 
   <p>The class that gives is the <strong>superclass</strong> (or <em>parent</em>). The class that receives is the <strong>subclass</strong> (or <em>child</em>). The test for whether inheritance makes sense is one sentence: "a <code>Dog</code> <em>is an</em> <code>Animal</code>." If that sentence sounds true in plain English, the relationship is called <strong>is-a</strong>, and inheritance may fit. "A <code>Thermostat</code> is a <code>Light</code>" sounds wrong, so <code>Thermostat</code> must never extend <code>Light</code>, even though both switch on and off.</p>
 
   <p>Two details about building a child object:</p>
   <ul>
     <li>A <code>Dog</code> object contains an <code>Animal</code> part, and that part must be set up first. The child's <span class="term" tabindex="0" data-def="the special block that runs once when new builds an object; its job is to give the object a valid starting state.">constructor</span> does this by calling the parent's constructor on its first line, with <code>super(name)</code>. The word <code>super</code> means "my parent's version."</li>
-    <li><code>Animal</code>'s <code>name</code> field is <code>private</code>, so even <code>Dog</code>'s own code cannot touch it directly. It uses <code>getName()</code> like everybody else. <span class="term" tabindex="0" data-def="hiding an object's data (private) behind guarded methods, so it can only change in rule-respecting ways.">Encapsulation</span> holds even inside a family. If a parent wants something usable by its children but not by the outside world, it marks it with a third access keyword. That keyword means "this class, its subclasses, and its package," and it is called <strong><code>protected</code></strong>. <code>Animal</code>'s constructor is <code>protected</code>: only subclasses need to call it.</li>
+    <li><code>Animal</code>'s <code>name</code> field is <code>private</code>, so even <code>Dog</code>'s own code cannot touch it directly. It uses <code>getName()</code> like everybody else. <span class="term" tabindex="0" data-def="hiding an object's data (private) behind guarded methods, so it can only change in rule-respecting ways.">Encapsulation</span> holds even inside a family. Sometimes a parent wants its children to use something, but not the outside world. Then it uses a third access keyword. That keyword means "this class, its subclasses, and its package." It is called <strong><code>protected</code></strong>. <code>Animal</code>'s constructor is <code>protected</code>: only subclasses need to call it.</li>
   </ul>
 
   <h3>3.2 Abstract classes: a parent with a blank to fill in</h3>
 
-  <p><code>Animal.introduce()</code> needs a sound, but "an animal" in general has no sound. We want to say: "every animal has a <code>speak()</code> method, and every <em>real</em> kind of animal must write its own." Marking a method <code>abstract</code> gives it a signature and no body: <code>public abstract String speak();</code>. That is an <strong>abstract method</strong>. A class holding one is incomplete, so it must itself be marked <code>abstract</code>, and <code>new Animal("x")</code> will not compile. A class that cannot be built directly, and exists only to be extended, is called an <strong>abstract class</strong>. Any subclass that does not fill in every blank will not compile either.</p>
+  <p><code>Animal.introduce()</code> needs a sound, but "an animal" in general has no sound. We want to say: "every animal has a <code>speak()</code> method, and every <em>real</em> kind of animal must write its own." Marking a method <code>abstract</code> gives it a signature and no body: <code>public abstract String speak();</code>. That is an <strong>abstract method</strong>. A class that holds one is incomplete. So the class itself must be marked <code>abstract</code>, and <code>new Animal("x")</code> will not compile. A class that cannot be built directly, and exists only to be extended, is called an <strong>abstract class</strong>. Any subclass that does not fill in every blank will not compile either.</p>
 
   <div class="table-wrap">
     <table>
@@ -145,7 +145,7 @@
 
   <h3>3.4 Overriding: a child replaces a parent's method</h3>
 
-  <p>A subclass can write a method with exactly the same name and parameters as one it inherited. For its objects, that new version replaces the parent's. Writing a same-signature method in a subclass to replace the inherited one is called <strong>overriding</strong>. You met <code>@Override</code> in Lesson 01, fulfilling an interface's promise; it works the same here. Mark every override with it, so a misspelling becomes a compile error instead of a silent new method (Section 7). Inside an override, <code>super.speak()</code> still reaches the parent's version. <code>Puppy</code> uses this: <code>"Yip (learning to " + super.speak() + ")"</code>.</p>
+  <p>A subclass can write a method with exactly the same name and parameters as one it inherited. For its objects, that new version replaces the parent's. Replacing an inherited method this way is called <strong>overriding</strong>. You met <code>@Override</code> in Lesson 01, where it marked a method that fulfils an interface's promise. It works the same way here. Mark every override with it, so a misspelling becomes a compile error instead of a silent new method (Section 7). Inside an override, <code>super.speak()</code> still reaches the parent's version. <code>Puppy</code> uses this: <code>"Yip (learning to " + super.speak() + ")"</code>.</p>
 
   <figure class="fig">
     <svg viewBox="0 0 720 430" role="img" aria-label="Class tree: Object at the top. Animal, abstract, extends Object and has name, introduce, abstract speak, and toString. Dog and Cat extend Animal and each override speak. Puppy extends Dog and overrides speak again.">
@@ -210,7 +210,7 @@
     <li>The results flow back: <code>"I am Bit and I say Yip (learning to Woof)"</code>.</li>
   </ol>
 
-  <p>Choosing which method body runs from the object's actual type, while the program runs, is called <strong>dynamic dispatch</strong>. It is the machinery under <span class="term" tabindex="0" data-def="one call that runs different code depending on the actual object present at run time.">polymorphism</span>.</p>
+  <p>So the object's actual type picks which method body runs, while the program runs. This is called <strong>dynamic dispatch</strong>. It is the machinery under <span class="term" tabindex="0" data-def="one call that runs different code depending on the actual object present at run time.">polymorphism</span>.</p>
 
   <figure class="fig">
     <svg viewBox="0 0 720 300" role="img" aria-label="Compile time: the compiler checks the declared type Animal has introduce. Run time: the JVM searches the actual object's class chain, Puppy, then Dog, then Animal, where introduce is found. Inside introduce, speak is searched again from Puppy, where it is found.">
@@ -249,11 +249,11 @@
       <text x="520" y="262" class="fig-small fig-center">4 · inside introduce(), speak() is searched</text>
       <text x="520" y="280" class="fig-small fig-center">again from Puppy ✓ (the actual object)</text>
     </svg>
-    <figcaption>The compiler checks the <em>declared</em> type, and the JVM searches upward from the <em>actual</em> class. The right column lists only the methods each class itself defines. Every new call starts its search from the actual object again, which is why parent code can run child methods.</figcaption>
+    <figcaption>The compiler checks the <em>declared</em> type, and the JVM searches upward from the <em>actual</em> class. The right column lists only the methods each class itself defines. Every new call starts its search from the actual object again. That is why parent code can run child methods.</figcaption>
   </figure>
 
   <div class="callout note">
-    <p>The "walk up the chain" is the honest <em>model</em> of the result. For speed, the real JVM builds a lookup table per class ahead of time (often called a <em>vtable</em>), so it does not literally search on every call. You never see the table; you only see that the result always matches the walk.</p>
+    <p>The "walk up the chain" is the honest <em>model</em> of the result. For speed, the real JVM builds a lookup table for each class ahead of time (often called a <em>vtable</em>). So it does not really search on every call. You never see the table. You only see that the result always matches the walk.</p>
   </div>
 
   <div class="sim" id="sim1">
@@ -370,20 +370,20 @@ vet.<span class="fn">examine</span>(sameRex);   <span class="cmt">// "General ch
 
   <details class="check">
     <summary><code>Animal a = new Puppy("Bit");</code> Which <code>speak()</code> runs for <code>a.speak()</code>, and which method runs for <code>vet.examine(a)</code>?</summary>
-    <p><code>a.speak()</code> is overriding, decided at run time by the actual object: Puppy's <code>speak()</code>, giving <code>Yip (learning to Woof)</code>. <code>vet.examine(a)</code> is overloading, decided at compile time by the declared type: <code>examine(Animal)</code>, giving <code>General check-up for Bit</code>. Even though a Puppy is a Dog, the compiler only saw "Animal."</p>
+    <p><code>a.speak()</code> is overriding, so the actual object decides at run time. Puppy's <code>speak()</code> runs, giving <code>Yip (learning to Woof)</code>. <code>vet.examine(a)</code> is overloading, so the declared type decides at compile time. <code>examine(Animal)</code> runs, giving <code>General check-up for Bit</code>. Even though a Puppy is a Dog, the compiler only saw "Animal."</p>
   </details>
 
   <h3>3.7 What inheritance silently costs</h3>
 
   <p>Inheritance removed the duplication in a few lines. It also quietly signed a long contract:</p>
   <ul>
-    <li><strong>Tight coupling.</strong> The child depends on the parent's <em>insides</em>, not just its promises. Change how the parent's methods call each other, and a child can break without being touched. This is so common it has a name, the <em>fragile base class problem</em>, and Lesson 03 breaks one in front of you.</li>
+    <li><strong>Tight coupling.</strong> The child depends on the parent's <em>insides</em>, not just its promises. Change how the parent's methods call each other, and a child can break without being touched. This is so common it has a name: the <em>fragile base class problem</em>. Lesson 03 breaks one in front of you.</li>
     <li><strong>One parent only.</strong> Java allows <code>extends</code> just once. A device that is "both a <code>Recorder</code> and a <code>Camera</code>" cannot extend both.</li>
     <li><strong>Fixed when you write the code.</strong> A <code>Light</code> is a <code>Light</code> forever. You cannot swap in different behaviour while the program runs.</li>
-    <li><strong>Everything comes along.</strong> The child inherits every public method, wanted or not. A child that must refuse some of them is a warning sign; Lesson 07 names it.</li>
+    <li><strong>Everything comes along.</strong> The child inherits every public method, wanted or not. A child that must refuse some of them is a warning sign. Lesson 07 names it.</li>
     <li><strong>Deep trees are hard to read.</strong> To understand <code>Puppy.introduce()</code> you open three files. Every extra level adds another.</li>
   </ul>
-  <p>None of these makes inheritance wrong. It is the right tool when the is-a sentence is true, the shared code really is shared, and you control both parent and child. It just is not free. Lesson 03 shows the alternative that avoids most of these costs.</p>
+  <p>None of these makes inheritance wrong. It is the right tool when three things are true. The is-a sentence holds. The shared code really is shared. And you control both parent and child. It just is not free. Lesson 03 shows the alternative that avoids most of these costs.</p>
 </section>
 
 <!-- ============================== SECTION 4 ============================== -->
@@ -631,7 +631,7 @@ mvn compile exec:java <span class="str">"-Dexec.mainClass=com.katas.inheritance.
 <section id="s5">
   <h2><span class="sec-num">5</span>Applied to the Smart Home Hub</h2>
 
-  <p>The hub has the exact pain from Section 1. <code>Light</code> and <code>Thermostat</code> each carry their own <code>name</code> and <code>on</code> fields and identical <code>getName</code>/<code>turnOn</code>/<code>turnOff</code>/<code>isOn</code> methods. With locks, cameras and speakers on the way, that is six-plus copies waiting to drift apart. "A light <em>is a</em> device" is true, and we control every class, so an abstract parent genuinely fits.</p>
+  <p>The hub has the exact pain from Section 1. <code>Light</code> and <code>Thermostat</code> each carry their own <code>name</code> and <code>on</code> fields and identical <code>getName</code>/<code>turnOn</code>/<code>turnOff</code>/<code>isOn</code> methods. With locks, cameras and speakers on the way, that is six-plus copies waiting to drift apart. "A light <em>is a</em> device" is true, and we control every class. So an abstract parent really fits.</p>
 
   <p>One new word first. We are about to change how the hub's code is <em>arranged</em> without changing what it <em>does</em>: same output, same test results. Improving a program's internal structure while keeping its behaviour exactly the same is called <strong>refactoring</strong>. The tests are what make it safe. <code>DeviceTest</code> from Lesson 01 is not edited at all, and it must still pass. That is the proof that behaviour did not change.</p>
 
@@ -758,7 +758,7 @@ mvn compile exec:java <span class="str">"-Dexec.mainClass=com.katas.inheritance.
 }</code></pre>
 
   <p class="filepath">Saved: smarthome/src/main/java/com/smarthome/devices/Thermostat.java (modified)</p>
-  <p><code>Thermostat</code> now <code>extends AbstractDevice</code>, drops its own <code>name</code>/<code>on</code> fields and the four shared methods, and builds its status from <code>getName()</code> and <code>isOn()</code>. It also fixes a trap that was hiding in our Lesson 01 code. The constructor used to call the <em>public</em> <code>setTargetCelsius(...)</code>. Now that classes have children, a subclass could override that method, and the override would run <em>before the subclass's own fields were set up</em> (Section 7). So the rule moves into a <code>private static</code> helper that no subclass can override, and both doors call it:</p>
+  <p><code>Thermostat</code> now <code>extends AbstractDevice</code>. It drops its own <code>name</code>/<code>on</code> fields and the four shared methods. It builds its status from <code>getName()</code> and <code>isOn()</code>. It also fixes a trap that was hiding in our Lesson 01 code. The constructor used to call the <em>public</em> <code>setTargetCelsius(...)</code>. Now that classes have children, a subclass could override that method. The override would then run <em>before the subclass's own fields were set up</em> (Section 7). So the rule moves into a <code>private static</code> helper that no subclass can override, and both doors call it:</p>
   <pre class="code" data-title="Thermostat.java (the changed parts)"><code>    <span class="kw">public</span> <span class="fn">Thermostat</span>(<span class="ty">String</span> name, <span class="kw">int</span> targetCelsius) {
         <span class="cmt">// Build the AbstractDevice part first (name, on/off state).</span>
         <span class="kw">super</span>(name);
@@ -840,10 +840,10 @@ mvn compile exec:java <span class="str">"-Dexec.mainClass=com.katas.inheritance.
     }
 }</code></pre>
 
-  <p><strong>What this adds:</strong> a new device now only needs a constructor and a <code>status()</code>. The switching code exists once, so a fix to it reaches every device. <span class="term" tabindex="0" data-def="any code that uses an object (the hub's loop is a client of Device).">Clients</span> like <code>Main</code> notice nothing, because they never depended on <em>how</em> devices were built, only on the <code>Device</code> contract. That is Lesson 01's habit paying off.</p>
+  <p><strong>What this adds:</strong> a new device now only needs a constructor and a <code>status()</code>. The switching code exists once, so a fix to it reaches every device. <span class="term" tabindex="0" data-def="any code that uses an object (the hub's loop is a client of Device).">Clients</span> like <code>Main</code> notice nothing. They never depended on <em>how</em> devices were built. They only depended on the <code>Device</code> contract. That is Lesson 01's habit paying off.</p>
 
   <ol class="trace">
-    <li><code>new Light("Living Room Light")</code> runs Light's constructor, whose first line <code>super(name)</code> runs AbstractDevice's constructor and stores the name. <code>on</code> starts false.</li>
+    <li><code>new Light("Living Room Light")</code> runs Light's constructor. Its first line, <code>super(name)</code>, runs AbstractDevice's constructor, which stores the name. <code>on</code> starts false.</li>
     <li><code>new Thermostat("Hall Thermostat", 21)</code> runs <code>super(name)</code>, then <code>checkedTarget(21)</code>. 21 is within 5–30, so it is returned and stored.</li>
     <li>Loop pass one: <code>device.turnOn()</code> on the Light. Light defines no <code>turnOn()</code>, so the lookup reaches AbstractDevice and runs it. <code>device.status()</code> is found in Light: <code>Living Room Light: ON</code>.</li>
     <li>Pass two: the same inherited <code>turnOn()</code>, then Thermostat's own <code>status()</code>: <code>Hall Thermostat: regulating to 21C</code>.</li>
@@ -871,12 +871,12 @@ mvn compile exec:java</code></pre>
 <section id="s6">
   <h2><span class="sec-num">6</span>In the wild</h2>
 
-  <p>The JDK uses exactly the hub's shape for its own lists. <code>java.util.List</code> is an interface with dozens of methods. <code>java.util.AbstractList</code> is an abstract class that implements almost all of them, including <code>contains</code>, <code>indexOf</code>, looping and more, in terms of just two abstract methods: <code>get(int index)</code> and <code>size()</code>. To make your own read-only list you extend <code>AbstractList</code>, fill in those two, and inherit everything else. That is <code>Device</code> → <code>AbstractDevice</code> → <code>Light</code>, at JDK scale. (The parent's code calling the child's filled-in steps is itself a famous pattern. It gets its own name in the Template Method lesson.)</p>
+  <p>The JDK uses exactly the hub's shape for its own lists. <code>java.util.List</code> is an interface with dozens of methods. <code>java.util.AbstractList</code> is an abstract class that implements almost all of them: <code>contains</code>, <code>indexOf</code>, looping and more. It builds them all on just two abstract methods, <code>get(int index)</code> and <code>size()</code>. To make your own read-only list you extend <code>AbstractList</code>, fill in those two, and inherit everything else. That is <code>Device</code> → <code>AbstractDevice</code> → <code>Light</code>, at JDK scale. (The parent's code calling the child's filled-in steps is itself a famous pattern. It gets its own name in the Template Method lesson.)</p>
 
   <p>And every class you have written already uses inheritance: each one silently <code>extends Object</code>. That is why <code>println</code> can call <code>toString()</code> on anything.</p>
 
   <div class="callout realworld">
-    <p>"What is the difference between overloading and overriding?" is one of the most common Java interview questions. The answer that impresses is the <em>when</em>: overloading is resolved by the compiler from declared types, and overriding is resolved by the JVM from the actual object. The <code>Vet</code> trap is the example to give.</p>
+    <p>"What is the difference between overloading and overriding?" is one of the most common Java interview questions. The answer that impresses is about <em>when</em> each is chosen. The compiler picks an overload from the declared types. The JVM picks an override from the actual object. The <code>Vet</code> trap is the example to give.</p>
   </div>
 </section>
 
@@ -886,8 +886,8 @@ mvn compile exec:java</code></pre>
   <ul>
     <li><strong>Overloads are chosen by the declared type.</strong> <code>vet.examine(sameRex)</code> runs the <code>Animal</code> version even though the object is a Dog (Section 3.6). If behaviour must depend on the actual object, use overriding, not overloading.</li>
     <li><strong>A misspelled override silently becomes a new method.</strong> Write <code>public String tostring()</code> (small <code>s</code>) without <code>@Override</code>. It compiles, nobody calls it, and <code>println(cat)</code> prints something like <code>Cat@1b6d3586</code> (the number differs each run). With <code>@Override</code>, the compiler refuses: <code>method does not override or implement a method from a supertype</code>. Always write <code>@Override</code>.</li>
-    <li><strong>Calling an overridable method from a constructor.</strong> The parent's constructor runs <em>before</em> the child's fields are set. If it calls a method the child overrides, the child's version runs against half-built fields: <code>null</code> text, zero numbers. Our Lesson 01 <code>Thermostat</code> did this; Section 5 fixed it with a private helper. In constructors, only call <code>private</code>, <code>static</code>, or <code>final</code> methods.</li>
-    <li><strong><code>static</code> methods and fields are not dispatched dynamically.</strong> Only ordinary methods take part in the actual-type lookup. A <code>static</code> method with the same signature in a child <em>hides</em> the parent's, and the declared type decides which one runs. So do not expect polymorphism from <code>static</code>.</li>
+    <li><strong>Calling an overridable method from a constructor.</strong> The parent's constructor runs <em>before</em> the child's fields are set. If it calls a method the child overrides, the child's version runs against half-built fields: <code>null</code> text, zero numbers. Our Lesson 01 <code>Thermostat</code> did this. Section 5 fixed it with a private helper. In constructors, only call <code>private</code>, <code>static</code>, or <code>final</code> methods.</li>
+    <li><strong><code>static</code> methods and fields are not dispatched dynamically.</strong> Only ordinary methods take part in the actual-type lookup. A <code>static</code> method with the same signature in a child <em>hides</em> the parent's. The declared type then decides which one runs. So do not expect polymorphism from <code>static</code>.</li>
     <li><strong>Inheriting just to reuse code.</strong> "<code>Thermostat extends Light</code>, because both switch on and off" saves a few lines and breaks the is-a test. Every caller of <code>Light</code> would then also receive thermostats. If the sentence "X is a Y" sounds wrong, do not extend. Lesson 03 shows the better tool.</li>
   </ul>
 </section>
@@ -897,10 +897,10 @@ mvn compile exec:java</code></pre>
   <h2><span class="sec-num">8</span>Key takeaways</h2>
   <ul class="takeaways">
     <li>Inheritance (<code>extends</code>) lets a subclass receive a superclass's fields and methods, so shared code is written once. It fits only when "child is a parent" is true in plain English.</li>
-    <li>An abstract class is a parent with blanks (abstract methods) that every concrete child must fill in. Unlike an interface, it can hold fields, constructors and real code, but a class can extend only one.</li>
-    <li>The compiler checks a call against the declared type, and the JVM then runs the method found first when searching upward from the actual object's class. This is dynamic dispatch, the machinery of polymorphism.</li>
-    <li>Overriding (same signature in a child) is chosen at run time by the actual object, while overloading (same name, different parameters) is chosen at compile time by the declared types. Mixing them up causes the classic <code>Vet</code> trap.</li>
-    <li>Inheritance is never free. It couples child to parent internals, allows one parent only, is fixed at compile time, and hands down everything. Use it deliberately, mark every override with <code>@Override</code>, and never call overridable methods from a constructor.</li>
+    <li>An abstract class is a parent with blanks (abstract methods) that every concrete child must fill in. Unlike an interface, it can hold fields, constructors and real code. But a class can extend only one.</li>
+    <li>The compiler checks a call against the declared type. Then the JVM searches upward from the actual object's class and runs the first method it finds. This is dynamic dispatch, the machinery of polymorphism.</li>
+    <li>Overriding (same signature in a child) is chosen at run time by the actual object. Overloading (same name, different parameters) is chosen at compile time by the declared types. Mixing them up causes the classic <code>Vet</code> trap.</li>
+    <li>Inheritance is never free. It ties the child to the parent's insides, allows one parent only, is fixed at compile time, and hands down everything. Use it on purpose. Mark every override with <code>@Override</code>. Never call overridable methods from a constructor.</li>
   </ul>
 </section>
 
@@ -924,24 +924,24 @@ Dog check-up for Bit
 Yip (learning to Woof)
 Puppy Bit</code></pre>
     <ol class="trace">
-      <li><code>vet.examine(a)</code> is <strong>overloading</strong>. <code>a</code> is declared <code>Animal</code>, so the compiler picks <code>examine(Animal)</code>. That the object is a Puppy (a kind of Dog) is irrelevant.</li>
+      <li><code>vet.examine(a)</code> is <strong>overloading</strong>. <code>a</code> is declared <code>Animal</code>, so the compiler picks <code>examine(Animal)</code>. It does not matter that the object is a Puppy (a kind of Dog).</li>
       <li><code>vet.examine(d)</code> is <strong>overloading</strong>. <code>d</code> is declared <code>Dog</code>, so the compiler picks <code>examine(Dog)</code>. Same kind of object as line 1, different method: the trap again.</li>
-      <li><code>d.speak()</code> is <strong>overriding</strong>. The compiler checks that <code>Dog</code> has <code>speak()</code> (yes), then the JVM searches from the actual class <code>Puppy</code> and finds Puppy's version, which calls <code>super.speak()</code> in Dog.</li>
+      <li><code>d.speak()</code> is <strong>overriding</strong>. The compiler checks that <code>Dog</code> has <code>speak()</code> (yes). Then the JVM searches from the actual class, <code>Puppy</code>, and finds Puppy's version. That version calls <code>super.speak()</code> in Dog.</li>
       <li><code>println(a)</code> is <strong>overriding</strong> too. <code>toString()</code> is found in Animal, where <code>getClass()</code> reports the actual class, Puppy.</li>
     </ol>
-    <p><strong>The design question.</strong> Say no, and give the reason in one sentence: "a thermostat is not a light." If <code>Thermostat extends Light</code>, every piece of code that accepts a <code>Light</code> (say, <code>dimAllLights(Light[] lights)</code>) would also accept thermostats and try to dim them. Any change to <code>Light</code>, like adding brightness, would land on thermostats too. The code they genuinely share already lives in <code>AbstractDevice</code>, a parent they both truly <em>are</em>. When the only motive is "save code" and the is-a sentence is false, the right tool is the subject of Lesson 03: give the class the shared part as a <em>component</em> instead of a parent.</p>
-    <p>Check lines 1–4 by pasting the snippet at the end of <code>com.katas.inheritance.Main</code> and running <code>mvn compile exec:java "-Dexec.mainClass=com.katas.inheritance.Main"</code> from <code>katas/</code>. The machine is the judge. Remove the lines afterwards, since katas stay frozen.</p>
+    <p><strong>The design question.</strong> Say no, and give the reason in one sentence: "a thermostat is not a light." If <code>Thermostat extends Light</code>, every piece of code that accepts a <code>Light</code> (say, <code>dimAllLights(Light[] lights)</code>) would also accept thermostats and try to dim them. Any change to <code>Light</code>, like adding brightness, would land on thermostats too. The code they really share already lives in <code>AbstractDevice</code>, a parent they both truly <em>are</em>. Sometimes the only reason is "save code," and the is-a sentence is false. Then the right tool is the subject of Lesson 03: give the class the shared part as a <em>component</em> instead of a parent.</p>
+    <p>To check lines 1–4, paste the snippet at the end of <code>com.katas.inheritance.Main</code>. Then run <code>mvn compile exec:java "-Dexec.mainClass=com.katas.inheritance.Main"</code> from <code>katas/</code>. The machine is the judge. Remove the lines afterwards, since katas stay frozen.</p>
   </details>
 </section>
 
 <!-- ============================== SECTION 10 ============================== -->
 <section id="s10">
   <h2><span class="sec-num">10</span>Catalog update</h2>
-  <p>No entry this lesson. Inheritance and polymorphism are the raw mechanics every pattern is built from, not patterns themselves. Their costs come back as principles: "favor composition over inheritance" (Lesson 03, then as a principle in Lesson 11), and the rules for safe subclassing as the Liskov Substitution Principle (Lesson 07), which gets the first catalog entry about inheritance.</p>
+  <p>No entry this lesson. Inheritance and polymorphism are the raw mechanics every pattern is built from, not patterns themselves. Their costs come back later as principles. "Favor composition over inheritance" comes in Lesson 03, and again as a principle in Lesson 11. The rules for safe subclassing become the Liskov Substitution Principle in Lesson 07. That gets the first catalog entry about inheritance.</p>
 </section>
 
 <div class="nextup">
-  <p><a href="lesson-03-composition-vs-inheritance.html">Lesson 03 — Composition versus Inheritance.</a> We break a subclass by changing nothing but its parent, the fragile base class problem shown live. Then we meet the alternative: building objects out of other objects ("has-a" instead of "is-a"), and why the Gang of Four's first piece of advice is to favour it.</p>
+  <p><a href="lesson-03-composition-vs-inheritance.html">Lesson 03 — Composition versus Inheritance.</a> We break a subclass by changing nothing but its parent: the fragile base class problem, shown live. Then we meet the alternative: building objects out of other objects ("has-a" instead of "is-a"). We also see why the Gang of Four's first piece of advice is to prefer it.</p>
 </div>
 <p class="position">Lesson 02 · the third of 45 lessons (00–44) · Phase 0, Chapter 01 · lesson 2 of 4 in this chapter</p>
 

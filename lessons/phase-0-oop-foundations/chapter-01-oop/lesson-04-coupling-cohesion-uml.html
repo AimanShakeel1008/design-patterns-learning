@@ -75,13 +75,13 @@
 
   <p>Now three ordinary requests arrive in one week. Add a dessert section. Announce orders by text message instead of on the screen. And the test team asks: "can we check what <code>placeOrder</code> announced, without reading the console?"</p>
 
-  <p>Every one of them lands on <code>OrderManager</code>. The dessert edits the price ladder. The text message edits <code>placeOrder</code>. The test cannot check the announcement at all, because it is welded to <code>System.out</code>. Three unrelated jobs live in one class, so every change touches it, and one of its jobs is glued to one specific output channel.</p>
+  <p>Every one of them lands on <code>OrderManager</code>. The dessert edits the price ladder. The text message edits <code>placeOrder</code>. The test cannot check the announcement at all, because it is welded to <code>System.out</code>. Three unrelated jobs live in one class, so every change touches it. And one of its jobs is glued to one specific output channel.</p>
 
   <p class="pred-label">Predicted symptom</p>
   <pre class="output"><code><span class="err">3 unrelated changes → 3 edits to the same class → 3 chances to break the other 2 jobs
 1 test the team wants → impossible without capturing the console</span></code></pre>
 
-  <p>This lesson names the two measures this code fails: it has <strong>low cohesion</strong> and <strong>tight coupling</strong>. It also gives the rot its proper vocabulary, and teaches the picture language (UML) for showing a better design at a glance.</p>
+  <p>This lesson names the two measures this code fails: it has <strong>low cohesion</strong> and <strong>tight coupling</strong>. It also gives the rot its proper names. And it teaches a picture language (UML) that shows a better design at a glance.</p>
 
   <p class="filepath">Full wrong-way code: katas/src/main/java/com/katas/coupling/naive/OrderManager.java</p>
 </section>
@@ -90,7 +90,7 @@
 <section id="s2">
   <h2><span class="sec-num">2</span>Real-world analogy</h2>
 
-  <p><strong>A restaurant kitchen.</strong> In a good kitchen each station does one thing: the pastry station makes desserts, the grill grills. That is <em>cohesion</em>. Stations talk to each other only through the order tickets at the pass, never by walking over and rearranging each other's fridges. That is <em>loose coupling</em>. Hire a new grill chef, and the pastry station never notices. And when the head chef explains the kitchen to a new hire, they don't walk them through every pan. They sketch the stations and arrows on a whiteboard. That sketch is <em>UML</em>.</p>
+  <p><strong>A restaurant kitchen.</strong> In a good kitchen each station does one thing. The pastry station makes desserts, and the grill grills. That is <em>cohesion</em>. Stations talk to each other only through the order tickets at the pass. They never walk over and rearrange each other's fridges. That is <em>loose coupling</em>. Hire a new grill chef, and the pastry station never notices. And when the head chef explains the kitchen to a new hire, they don't show them every pan. They sketch the stations and arrows on a whiteboard. That sketch is <em>UML</em>.</p>
 
   <div class="table-wrap">
     <table>
@@ -113,7 +113,7 @@
 
   <h3>3.1 Coupling: how much one piece knows about another</h3>
 
-  <p>If class A uses class B, then A <em>knows</em> something about B: its name, its methods, maybe its insides. The more A knows, the more likely a change to B forces a change to A. In Lesson 01 the remote knew the exact class <code>Lamp</code>, so a fan forced a new remote method. How strongly one piece of code depends on another, measured by how many changes in one force changes in the other, is called <strong>coupling</strong>. Little knowledge is <em>loose</em> coupling; a lot is <em>tight</em> coupling.</p>
+  <p>If class A uses class B, then A <em>knows</em> something about B: its name, its methods, maybe its insides. The more A knows, the more likely a change to B forces a change to A. In Lesson 01 the remote knew the exact class <code>Lamp</code>, so a fan forced a new remote method. How strongly one piece of code depends on another is called <strong>coupling</strong>. You measure it by how often a change in one forces a change in the other. Little knowledge is <em>loose</em> coupling. A lot is <em>tight</em> coupling.</p>
 
   <p>Coupling comes in degrees. You have already met every one of them in this course:</p>
   <div class="table-wrap">
@@ -132,23 +132,23 @@
 
   <h3>3.2 Cohesion: how well the insides of one piece belong together</h3>
 
-  <p>Look inside a single class and ask: do all of its fields and methods serve one purpose? <code>ActivityLog</code> from Lesson 03 records and returns entries, nothing else; every line serves "keep the history." <code>OrderManager</code> mixes menu prices, order totals and console output, which are three purposes that change for three different reasons. How strongly the parts inside one class belong to a single, clear purpose is called <strong>cohesion</strong>. One purpose is <em>high</em> cohesion; a grab-bag is <em>low</em> cohesion.</p>
+  <p>Look inside a single class and ask: do all of its fields and methods serve one purpose? <code>ActivityLog</code> from Lesson 03 records and returns entries, nothing else. Every line serves "keep the history." <code>OrderManager</code> mixes menu prices, order totals and console output. Those are three purposes that change for three different reasons. How strongly the parts inside one class belong to a single, clear purpose is called <strong>cohesion</strong>. One purpose is <em>high</em> cohesion. A grab-bag is <em>low</em> cohesion.</p>
 
-  <p>A quick test: describe the class in one sentence without using "and." "An <code>Order</code> keeps its lines and adds them up" passes (adding up <em>is</em> keeping an order). "<code>OrderManager</code> knows prices <em>and</em> totals orders <em>and</em> prints announcements" fails three times. Classes named <code>Utils</code>, <code>Helper</code> or <code>Manager</code> often fail it; the vague name hides that there is no single purpose.</p>
+  <p>A quick test: describe the class in one sentence without using "and." "An <code>Order</code> keeps its lines and adds them up" passes (adding up <em>is</em> keeping an order). "<code>OrderManager</code> knows prices <em>and</em> totals orders <em>and</em> prints announcements" fails three times. Classes named <code>Utils</code>, <code>Helper</code> or <code>Manager</code> often fail it. The vague name hides that there is no single purpose.</p>
 
   <h3>3.3 Why "loose coupling, high cohesion" is the goal of every pattern</h3>
 
-  <p>Put the two together and you get the property that matters: <strong>a change stays local</strong>. High cohesion means each kind of change has <em>one</em> obvious place to go. Loose coupling means that change does not ripple out to other classes. In the cured kata, a new dessert is a new <code>MenuItem</code>, a text message is a new <code>Notifier</code>, and the test plugs in a recording <code>Notifier</code>. Each change touches one small place.</p>
-  <p>Every principle and pattern ahead is a specific move toward this goal, aimed at a specific kind of change. And every one has the same price: <strong>indirection</strong>, an extra interface or class between the caller and the work. The cured kata has nine small classes where the naive one had one. That trade is worth it only when the changes really come. Section 7 says when they don't.</p>
+  <p>Put the two together and you get the property that matters: <strong>a change stays local</strong>. High cohesion means each kind of change has <em>one</em> obvious place to go. Loose coupling means that change does not ripple out to other classes. In the cured kata, a new dessert is a new <code>MenuItem</code>. A text message is a new <code>Notifier</code>. The test plugs in a recording <code>Notifier</code>. Each change touches one small place.</p>
+  <p>Every principle and pattern ahead is a move toward this goal, aimed at one kind of change. And every one has the same price. It adds an extra interface or class between the caller and the work. That extra step is called <strong>indirection</strong>. The cured kata has nine small classes where the naive one had one. That trade is worth it only when the changes really come. Section 7 says when they don't.</p>
 
   <details class="check">
     <summary>Lesson 03's <code>LoggedDevice</code> holds an <code>ActivityLog</code> (a concrete class) and a <code>Device</code> (an interface). Which link is tighter, and does it matter?</summary>
-    <p>The link to <code>ActivityLog</code> is tighter: <code>LoggedDevice</code> names its exact class, so a different kind of log would mean editing <code>LoggedDevice</code>. The link to <code>Device</code> is loose, since any device fits. Does it matter? Not yet. There is one kind of log, and no request to vary it. Loosening it now would be indirection with no pain to cure. If a second kind of log ever appears, that is the moment to put an interface there.</p>
+    <p>The link to <code>ActivityLog</code> is tighter. <code>LoggedDevice</code> names its exact class, so a different kind of log would mean editing <code>LoggedDevice</code>. The link to <code>Device</code> is loose, since any device fits. Does it matter? Not yet. There is one kind of log, and no request to vary it. Loosening it now would be indirection with no pain to cure. If a second kind of log ever appears, that is the moment to put an interface there.</p>
   </details>
 
   <h3>3.4 The vocabulary of rot: smells</h3>
 
-  <p>Bad design rarely announces itself. It shows up as small signs on the surface: a long if-else ladder, a class you dread opening, a fix that keeps needing repeating. A surface sign in code that <em>usually</em> points to a deeper design problem is called a <strong>code smell</strong>. Like a real smell, it is a hint to investigate, not proof. Robert C. Martin collected the bigger, design-wide versions into seven <em>design smells</em>. You have met every one already:</p>
+  <p>Bad design rarely announces itself. It shows up as small signs on the surface: a long if-else ladder, a class you dread opening, a fix you keep having to repeat. Such a sign <em>usually</em> points to a deeper design problem. It is called a <strong>code smell</strong>. Like a real smell, it is a hint to investigate, not proof. Robert C. Martin gathered the bigger, design-wide ones into a list of seven <em>design smells</em>. You have met every one already:</p>
 
   <div class="table-wrap">
     <table>
@@ -171,7 +171,7 @@
   <p>Teams need to talk about designs without pasting code. In the 1990s, several competing diagram styles were merged into one standard picture language for software. That language is <strong>UML</strong> (Unified Modeling Language). Of its many diagram kinds, two matter for this course. A picture of the classes and how they are linked is a <strong>class diagram</strong>. A picture of which object calls which, in time order, is a <strong>sequence diagram</strong> (3.6).</p>
 
   <h4>One box = one class</h4>
-  <p>A class box has up to three stacked compartments: the name, then the fields, then the methods. Each member starts with a symbol for who may use it: <code>+</code> public, <code>-</code> private, <code>#</code> protected, <code>~</code> <em>package-private</em>. Package-private is Java's access level when you write <em>no</em> keyword: only classes in the same package can use the member. <code>OrderLine</code>'s constructor uses it, so only <code>Order</code> can create lines. Types come after a colon: <code>- price : int</code>, <code>+ total() : int</code>. Three more marks: an <em>italic</em> name (often with «abstract») means an abstract class; «interface» above the name means an interface; an <u>underlined</u> member is <code>static</code>. Diagrams usually show only the members that matter to the point being made.</p>
+  <p>A class box has up to three stacked compartments: the name, then the fields, then the methods. Each member starts with a symbol for who may use it: <code>+</code> public, <code>-</code> private, <code>#</code> protected, <code>~</code> <em>package-private</em>. Package-private is what you get when you write <em>no</em> keyword. Only classes in the same package can use the member. <code>OrderLine</code>'s constructor uses it, so only <code>Order</code> can create lines. Types come after a colon: <code>- price : int</code>, <code>+ total() : int</code>. Three more marks. An <em>italic</em> name (often with «abstract») means an abstract class. «interface» above the name means an interface. An <u>underlined</u> member is <code>static</code>. Diagrams usually show only the members that matter to the point being made.</p>
 
   <h4>The six relationship lines</h4>
   <p>The lines say how classes know each other. Each has its own line style and arrowhead. Read them as sentences, and remember the code each one comes from:</p>
@@ -237,13 +237,13 @@
       <text x="440" y="330" class="fig-label"><tspan font-weight="700">Dependency</tspan> — "uses briefly"</text>
       <text x="440" y="348" class="fig-small fig-mono">parameter: place(Order order)</text>
     </svg>
-    <figcaption>The six lines, each taken from this lesson's kata. Triangles point at the parent or contract. Diamonds sit at the <em>whole</em> end (hollow = shared parts, filled = owned parts). Open arrowheads point at the class being known or used. Solid means a lasting link; dashed means "implements" or "uses briefly." («i» abbreviates «interface» to fit.)</figcaption>
+    <figcaption>The six lines, each taken from this lesson's kata. Triangles point at the parent or contract. Diamonds sit at the <em>whole</em> end (hollow = shared parts, filled = owned parts). Open arrowheads point at the class being known or used. Solid means a lasting link. Dashed means "implements" or "uses briefly." («i» abbreviates «interface» to fit.)</figcaption>
   </figure>
 
-  <p>The arrow always points <strong>from the class that knows to the class that is known</strong>. <code>Pizza</code> knows its parent; <code>MenuItem</code> has no idea which children exist. So the arrows show the direction of dependency, and therefore which way a change can ripple: a change at the arrowhead end can force a change at the tail. Numbers at a line's end give the <em>multiplicity</em>, how many objects take part: <code>1</code> (exactly one), <code>0..1</code> (none or one), <code>*</code> (any number), <code>1..*</code> (at least one).</p>
+  <p>The arrow always points <strong>from the class that knows to the class that is known</strong>. <code>Pizza</code> knows its parent. <code>MenuItem</code> has no idea which children exist. So the arrows show the direction of dependency. That also shows which way a change can ripple: a change at the arrowhead end can force a change at the tail. Numbers at the end of a line give the <em>multiplicity</em>, which means how many objects take part: <code>1</code> (exactly one), <code>0..1</code> (none or one), <code>*</code> (any number), <code>1..*</code> (at least one).</p>
 
   <div class="callout note">
-    <p>Aggregation versus plain association is famously fuzzy. The UML standard itself leaves "shared aggregation" loosely defined, and many teams never draw the hollow diamond. This course uses it only when "a whole gathering independent parts" is the point. Composition's filled diamond, by contrast, is precise: the whole creates the parts and they die with it.</p>
+    <p>The line between aggregation and plain association is famously fuzzy. The UML standard itself defines "shared aggregation" only loosely, and many teams never draw the hollow diamond. This course uses it only when "a whole gathering independent parts" is the point. Composition's filled diamond, on the other hand, is exact: the whole creates the parts, and they die with it.</p>
   </div>
 
   <h4>Reading a whole diagram</h4>
@@ -331,7 +331,7 @@
 
   <details class="check">
     <summary>In the diagram, why is the line from <code>Checkout</code> to <code>Order</code> dashed, but the line from <code>Checkout</code> to <code>Notifier</code> solid?</summary>
-    <p><code>Checkout</code> only receives an <code>Order</code> as a parameter of <code>place</code> and forgets it afterwards, which is a <em>dependency</em> (dashed, "uses briefly"). It keeps the <code>Notifier</code> in a field for its whole life, which is an <em>association</em> (solid, "holds a reference to"). Same class, two different strengths of knowing.</p>
+    <p><code>Checkout</code> only receives an <code>Order</code> as a parameter of <code>place</code>, and forgets it afterwards. That is a <em>dependency</em> (dashed, "uses briefly"). It keeps the <code>Notifier</code> in a field for its whole life. That is an <em>association</em> (solid, "holds a reference to"). Same class, two different strengths of knowing.</p>
   </details>
 
   <h3>3.6 Reading a UML sequence diagram</h3>
@@ -413,7 +413,7 @@
       <line x1="204" y1="394" x2="72" y2="394" class="seq-return" marker-end="url(#f3-ret)"/>
       <text x="136" y="388" class="seq-label" text-anchor="middle">done</text>
     </svg>
-    <figcaption>What <code>checkout.place(order)</code> does, top to bottom. Solid arrows with filled heads are calls; dashed arrows are returns. Bars show who is busy. The violet frame repeats once per order line: the first pass returns 18, the second returns 3. <code>checkout</code> never talks to an <code>OrderLine</code>: it only knows <code>Order</code> and <code>Notifier</code>, exactly as the class diagram promised.</figcaption>
+    <figcaption>What <code>checkout.place(order)</code> does, top to bottom. Solid arrows with filled heads are calls; dashed arrows are returns. Bars show who is busy. The violet frame repeats once per order line: the first pass returns 18, the second returns 3. <code>checkout</code> never talks to an <code>OrderLine</code>. It only knows <code>Order</code> and <code>Notifier</code>, just as the class diagram promised.</figcaption>
   </figure>
 
   <p>Read it aloud. Main asks checkout to place the order. Checkout asks the order for its item count (3), then its total. To work out the total, the order asks each line for its subtotal (18, then 3) and returns 21. Checkout then sends one message to the notifier, and returns. Notice what the picture proves: <code>checkout</code>'s only arrows go to <code>order</code> and <code>notifier</code>. Low coupling is visible as <em>few arrows leaving each lifeline</em>.</p>
@@ -423,12 +423,12 @@
 <section id="s4">
   <h2><span class="sec-num">4</span>The kata</h2>
 
-  <p>Package <code>com.katas.coupling</code>: the naive <code>OrderManager</code> split into small classes that each do one job and know each other through the narrowest door. Here are the files, and the diagram arrow each one stands for:</p>
+  <p>Package <code>com.katas.coupling</code>: the naive <code>OrderManager</code>, split into small classes. Each does one job, and they know each other through the narrowest door. Here are the files, and the diagram arrow each one stands for:</p>
 
   <ul>
     <li><span class="filepath">Saved: katas/src/main/java/com/katas/coupling/MenuItem.java</span> Abstract parent: private <code>name</code> and <code>price</code>, getters, abstract <code>category()</code>.</li>
     <li><span class="filepath">Saved: katas/src/main/java/com/katas/coupling/Pizza.java</span> and <span class="filepath">Drink.java</span>: <code>extends MenuItem</code>, returning <code>"pizza"</code> / <code>"drink"</code>. These are the <em>inheritance</em> lines.</li>
-    <li><span class="filepath">Saved: katas/src/main/java/com/katas/coupling/Menu.java</span> Receives a <code>List&lt;MenuItem&gt;</code> in its constructor and keeps a <code>List.copyOf</code>; <code>find(name)</code> returns the match or throws. The items were made elsewhere: <em>aggregation</em>.</li>
+    <li><span class="filepath">Saved: katas/src/main/java/com/katas/coupling/Menu.java</span> Receives a <code>List&lt;MenuItem&gt;</code> in its constructor and keeps a <code>List.copyOf</code>. <code>find(name)</code> returns the match or throws. The items were made elsewhere: <em>aggregation</em>.</li>
     <li><span class="filepath">Saved: katas/src/main/java/com/katas/coupling/Notifier.java</span> and <span class="filepath">ConsoleNotifier.java</span>: the one-method contract <code>send(String)</code>, and the only class in the kata that touches <code>System.out</code>. This is the <em>implementation</em> line.</li>
   </ul>
 
@@ -676,7 +676,7 @@ mvn compile exec:java <span class="str">"-Dexec.mainClass=com.katas.coupling.Mai
 <section id="s5">
   <h2><span class="sec-num">5</span>Applied to the Smart Home Hub</h2>
 
-  <p><strong>No code changes this lesson, on purpose.</strong> Coupling and cohesion are <em>measures</em>, not features. Nothing in the hub hurts yet, and changing working code just to "score better" would be exactly the needless complexity smell from 3.4. Instead we use today's tools on the hub: draw it, read it, and measure it.</p>
+  <p><strong>No code changes this lesson, on purpose.</strong> Coupling and cohesion are <em>measures</em>, not features. Nothing in the hub hurts yet. Changing working code just to "score better" would be the needless complexity smell from 3.4. Instead we use today's tools on the hub: draw it, read it, and measure it.</p>
 
   <h4>The hub's main call, as a sequence diagram</h4>
   <figure class="fig">
@@ -740,7 +740,7 @@ mvn compile exec:java <span class="str">"-Dexec.mainClass=com.katas.coupling.Mai
       </tbody>
     </table>
   </div>
-  <p>The measurement found something real. <code>Main</code> is the one place that names every concrete class, which is fine for an assembly point. But it also keeps gaining jobs. It is the hub's first low-cohesion smell, and it is exactly the pain the next lesson opens with.</p>
+  <p>The measurement found something real. <code>Main</code> is the one place that names every concrete class. That is fine for the place where things are put together. But it also keeps gaining jobs. It is the hub's first low-cohesion smell, and it is exactly the pain the next lesson opens with.</p>
 
   <pre class="terminal" data-title="terminal — confirm nothing changed"><code>cd smarthome
 mvn test</code></pre>
@@ -754,12 +754,12 @@ mvn test</code></pre>
 <section id="s6">
   <h2><span class="sec-num">6</span>In the wild</h2>
 
-  <p><strong>JDBC, Java's database access, is loose coupling at industrial scale.</strong> Your code asks <code>DriverManager.getConnection(url)</code> for a connection and gets back a <code>java.sql.Connection</code>, which is an <em>interface</em>. The real class behind it comes from whichever database vendor's driver is on the classpath: PostgreSQL, MySQL, Oracle. Your code knows only the interface, so switching databases changes a URL and a driver dependency, not your queries' Java code. That is <code>Checkout</code> → <code>Notifier</code>, with a database in place of the console.</p>
+  <p><strong>JDBC, Java's database access, is loose coupling on a huge scale.</strong> Your code asks <code>DriverManager.getConnection(url)</code> for a connection. It gets back a <code>java.sql.Connection</code>, which is an <em>interface</em>. The real class behind it comes from the database maker's driver that your project includes: PostgreSQL, MySQL, Oracle. Your code knows only the interface. So switching databases changes a URL and a driver dependency, not the Java code of your queries. That is <code>Checkout</code> → <code>Notifier</code>, with a database in place of the console.</p>
 
-  <p><strong>Cohesion in the JDK.</strong> <code>java.lang.Math</code> holds only mathematical functions (<code>max</code>, <code>abs</code>, <code>sqrt</code>…): one purpose, one sentence. Compare it with the <code>Utils</code> class every project eventually grows, which holds date parsing and string padding and file helpers. That is a grab-bag that changes for every reason at once.</p>
+  <p><strong>Cohesion in the JDK.</strong> <code>java.lang.Math</code> holds only mathematical functions (<code>max</code>, <code>abs</code>, <code>sqrt</code>…): one purpose, one sentence. Compare it with the <code>Utils</code> class every project grows sooner or later. It holds date parsing and string padding and file helpers. That is a grab-bag that changes for every reason at once.</p>
 
   <div class="callout realworld">
-    <p>In design interviews, "draw the classes" means a UML class diagram, and "walk me through what happens when…" means a sequence diagram, even if no one says "UML." In code review, "this class does too much" is a cohesion complaint, and "this is hard to test" is very often a coupling complaint. You now have the words for both.</p>
+    <p>In design interviews, "draw the classes" means a UML class diagram. "Walk me through what happens when…" means a sequence diagram, even if no one says "UML." In code review, "this class does too much" is a cohesion complaint. "This is hard to test" is very often a coupling complaint. You now have the words for both.</p>
   </div>
 </section>
 
@@ -768,7 +768,7 @@ mvn test</code></pre>
   <h2><span class="sec-num">7</span>When NOT to, and gotchas</h2>
 
   <h3>When not to decouple</h3>
-  <p>Loose coupling costs indirection: every interface is another file to read and another hop when tracing a bug. Decouple at the joints that actually change, or that tests need to swap (like <code>Notifier</code>). Do not decouple every class from every other "for flexibility." A one-off script, a class with one obvious implementation forever, or a value like <code>String</code> needs no interface. Splitting a class into ten one-line classes does not raise cohesion either. It just scatters one purpose across ten files. That trap gets its own section in Lesson 05.</p>
+  <p>Loose coupling costs indirection. Every interface is another file to read, and another hop when you trace a bug. Decouple at the joints that really change, or that tests need to swap (like <code>Notifier</code>). Do not decouple every class from every other "for flexibility." Some things need no interface: a one-off script, a class that will only ever have one obvious implementation, or a value like <code>String</code>. Splitting a class into ten one-line classes does not raise cohesion either. It just scatters one purpose across ten files. That trap gets its own section in Lesson 05.</p>
 
   <h3>Gotchas</h3>
   <ul>
@@ -776,7 +776,7 @@ mvn test</code></pre>
     <li><strong>Diamonds sit at the whole.</strong> <code>Order ◆— OrderLine</code>: the diamond touches the owner, not the part.</li>
     <li><strong>A diagram is not the code.</strong> Show what matters to the point you are making. A diagram listing every getter is as hard to read as the code it replaced. Keep it honest, though: every arrow you do draw must exist in the code.</li>
     <li><strong>Sequence diagrams show one scenario.</strong> The one in 3.6 is <em>this</em> order with two lines. A different order means a different run, even though the classes are the same.</li>
-    <li><strong>Cohesion is not size.</strong> A big class can be cohesive (one deep purpose); a tiny class can be a grab-bag. Use the one-sentence test, not the line count.</li>
+    <li><strong>Cohesion is not size.</strong> A big class can be cohesive (one deep purpose). A tiny class can be a grab-bag. Use the one-sentence test, not the line count.</li>
   </ul>
 </section>
 
@@ -784,18 +784,18 @@ mvn test</code></pre>
 <section id="s8">
   <h2><span class="sec-num">8</span>Key takeaways</h2>
   <ul class="takeaways">
-    <li>Coupling measures how much one class knows about another, from reaching into its data (tightest) down to using only an interface or a passed-in value (loosest). Less knowledge means fewer ripples when things change.</li>
-    <li>Cohesion measures how well the parts inside one class serve a single purpose. A class you cannot describe in one sentence without "and" usually has low cohesion.</li>
-    <li>Loose coupling plus high cohesion keeps each change local. Every pattern ahead buys that at the price of indirection, which is worth paying only where change really happens.</li>
-    <li>Design smells (rigidity, fragility, immobility, viscosity, needless complexity, needless repetition, opacity) are the vocabulary of rot, and over-design is on that list too.</li>
-    <li>A UML class diagram shows structure through six relationship lines (inheritance, implementation, association, aggregation, composition, dependency). A sequence diagram shows one scenario's calls in time order, top to bottom.</li>
+    <li>Coupling measures how much one class knows about another. Reaching into its data is the tightest. Using only an interface or a passed-in value is the loosest. Less knowledge means fewer ripples when things change.</li>
+    <li>Cohesion measures how well the parts inside one class serve a single purpose. If you cannot describe a class in one sentence without "and," it usually has low cohesion.</li>
+    <li>Loose coupling plus high cohesion keeps each change local. Every pattern ahead buys that at the price of indirection. That price is worth paying only where change really happens.</li>
+    <li>Design smells are the names for rot: rigidity, fragility, immobility, viscosity, needless complexity, needless repetition, opacity. Over-design is on that list too.</li>
+    <li>A UML class diagram shows structure through six relationship lines: inheritance, implementation, association, aggregation, composition, dependency. A sequence diagram shows the calls of one scenario in time order, top to bottom.</li>
   </ul>
 </section>
 
 <!-- ============================== SECTION 9 ============================== -->
 <section id="s9">
   <h2><span class="sec-num">9</span>Challenge</h2>
-  <p>Read this code and (a) name every relationship it creates, the UML line you would draw, and which end gets the arrowhead or diamond; (b) say which relationship is the tightest coupling, and how to loosen it if a test needed a fake gate.</p>
+  <p>Read this code and answer two questions. (a) Name every relationship it creates. For each, give the UML line you would draw, and say which end gets the arrowhead or diamond. (b) Which relationship is the tightest coupling? How would you loosen it if a test needed a fake gate?</p>
   <pre class="code" data-title="Garage.java and friends"><code><span class="kw">class</span> <span class="ty">Car</span> <span class="kw">extends</span> <span class="ty">Vehicle</span> { }
 <span class="kw">class</span> <span class="ty">Gate</span> <span class="kw">implements</span> <span class="ty">Openable</span> { <span class="kw">public void</span> <span class="fn">open</span>() { } }
 
@@ -814,27 +814,27 @@ mvn test</code></pre>
         <tbody>
           <tr><td><code>Car</code> → <code>Vehicle</code></td><td>Inheritance: solid, hollow triangle at <code>Vehicle</code></td><td><code>extends</code></td></tr>
           <tr><td><code>Gate</code> → <code>Openable</code></td><td>Implementation: dashed, hollow triangle at <code>Openable</code></td><td><code>implements</code></td></tr>
-          <tr><td><code>Garage</code> ◇— <code>Car</code>, multiplicity <code>*</code></td><td>Aggregation: hollow diamond at <code>Garage</code></td><td>Cars are created elsewhere, handed in, and drive away (they outlive the garage's interest)</td></tr>
-          <tr><td><code>Garage</code> ◆— <code>Gate</code>, multiplicity <code>1</code></td><td>Composition: filled diamond at <code>Garage</code></td><td>The garage creates its gate and nobody else holds it; it lives and dies with the garage</td></tr>
+          <tr><td><code>Garage</code> ◇— <code>Car</code>, multiplicity <code>*</code></td><td>Aggregation: hollow diamond at <code>Garage</code></td><td>Cars are created elsewhere, handed in, and drive away again. They live on without the garage.</td></tr>
+          <tr><td><code>Garage</code> ◆— <code>Gate</code>, multiplicity <code>1</code></td><td>Composition: filled diamond at <code>Garage</code></td><td>The garage creates its gate, and nobody else holds it. It lives and dies with the garage.</td></tr>
           <tr><td><code>Garage</code> ⇢ <code>Printer</code></td><td>Dependency: dashed, open arrowhead at <code>Printer</code></td><td>Only a parameter of <code>report</code>, used briefly</td></tr>
         </tbody>
       </table>
     </div>
-    <p><strong>(b) The tightest coupling is <code>new Gate()</code> inside <code>Garage</code>.</strong> <code>Garage</code> names a concrete class <em>and</em> creates it itself, so no other gate can ever be used. A test cannot substitute a fake gate that, say, records that <code>open()</code> was called. To loosen it, depend on the contract and let the caller choose, exactly like <code>Checkout</code> and <code>Notifier</code>:</p>
+    <p><strong>(b) The tightest coupling is <code>new Gate()</code> inside <code>Garage</code>.</strong> <code>Garage</code> names a concrete class <em>and</em> creates it itself. So no other gate can ever be used. A test cannot swap in a fake gate, for example one that records that <code>open()</code> was called. To loosen it, depend on the contract and let the caller choose, just like <code>Checkout</code> and <code>Notifier</code>:</p>
     <pre class="code" data-title="loosened"><code><span class="kw">private final</span> <span class="ty">Openable</span> gate;                           <span class="cmt">// the contract, not the class</span>
 <span class="kw">public</span> <span class="fn">Garage</span>(<span class="ty">Openable</span> gate) { <span class="kw">this</span>.gate = gate; }      <span class="cmt">// the caller chooses</span></code></pre>
-    <p>Notice how the diagram changes: the filled diamond to <code>Gate</code> becomes a plain association to the <code>Openable</code> interface, because <code>Garage</code> no longer creates or owns a specific gate. This exact move, "depend on an abstraction handed in from outside," becomes a named principle in Lesson 09.</p>
+    <p>Notice how the diagram changes. The filled diamond to <code>Gate</code> becomes a plain association to the <code>Openable</code> interface. That is because <code>Garage</code> no longer creates or owns a specific gate. This exact move, "depend on an abstraction handed in from outside," becomes a named principle in Lesson 09.</p>
   </details>
 </section>
 
 <!-- ============================== SECTION 10 ============================== -->
 <section id="s10">
   <h2><span class="sec-num">10</span>Catalog update</h2>
-  <p>No entry this lesson. Coupling and cohesion are the <em>yardstick</em> every entry will be measured against, not entries themselves. The first entry arrives in Lesson 05, the Single Responsibility Principle, which is cohesion turned into a rule. From then on, every catalog entry's "The cost" field is, at heart, the indirection described in 3.3.</p>
+  <p>No entry this lesson. Coupling and cohesion are the <em>yardstick</em> every entry will be measured against, not entries themselves. The first entry arrives in Lesson 05: the Single Responsibility Principle, which is cohesion turned into a rule. From then on, every catalog entry has a "The cost" field. At heart, that cost is always the indirection described in 3.3.</p>
 </section>
 
 <div class="nextup">
-  <p><a href="chapter-01-summary.html">Chapter 01 summary — The Object-Oriented Toolbox.</a> Everything from Lessons 01–04 on one page: what we built, the hub's full class diagram, how the ideas connect, a self-check, and a chapter boss challenge. Then Phase 1 begins with the Single Responsibility Principle.</p>
+  <p><a href="chapter-01-summary.html">Chapter 01 summary — The Object-Oriented Toolbox.</a> Everything from Lessons 01–04 on one page. It shows what we built, the hub's full class diagram, and how the ideas connect. It ends with a self-check and a chapter boss challenge. Then Phase 1 begins with the Single Responsibility Principle.</p>
 </div>
 <p class="position">Lesson 04 · the fifth of 45 lessons (00–44) · Phase 0, Chapter 01 · lesson 4 of 4 in this chapter</p>
 

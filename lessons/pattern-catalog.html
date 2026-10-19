@@ -50,7 +50,7 @@
     <li><strong>Intent</strong>: what it is, in one plain sentence.</li>
     <li><strong>The pain it cures</strong>: the specific problem that makes you reach for it.</li>
     <li><strong>Use it when…</strong>: the concrete signals that it fits.</li>
-    <li><strong>Do NOT use it when…</strong>: the equally concrete signals that it is the wrong tool. Over-applying patterns is the classic beginner mistake, so this field is never left thin.</li>
+    <li><strong>Do NOT use it when…</strong>: the equally concrete signs that it is the wrong tool. Over-using patterns is the classic beginner mistake. So this field is never left thin.</li>
     <li><strong>The cost</strong>: the indirection or complexity it always adds. Nothing is free.</li>
     <li><strong>Relatives</strong>: what it resembles, and the one-line difference.</li>
     <li><strong>Seen in the wild</strong>: one place the JDK or a popular framework already uses it.</li>
@@ -87,7 +87,7 @@
   <p class="catalog-intent">A class should have one reason to change. Put another way, it should answer to one group of people who might ask for changes.</p>
   <dl class="catalog-fields">
     <dt>The pain it cures</dt>
-    <dd>A "god class" serving several groups at once: one group's change silently breaks another group's feature (often through a shared helper), every change touches the same file, and the class is hard to test because every test needs everything.</dd>
+    <dd>A "god class" serves several groups at once. One group's change quietly breaks another group's feature, often through a shared helper. Every change touches the same file. And the class is hard to test, because every test needs everything.</dd>
     <dt>Use it when…</dt>
     <dd><ul>
       <li>You cannot describe the class in one sentence without "and."</li>
@@ -103,12 +103,12 @@
       <li>It is a short script or prototype that will be thrown away.</li>
     </ul></dd>
     <dt>The cost</dt>
-    <dd>More classes and files; wiring code somewhere (an assembly point like <code>Main</code>) to put the pieces together; callers may have to know several objects instead of one; navigating the design takes more hops.</dd>
+    <dd>More classes and files. Wiring code somewhere (an assembly point like <code>Main</code>) to put the pieces together. Callers may have to know several objects instead of one. Finding your way around takes more hops.</dd>
     <dt>Relatives</dt>
     <dd><ul>
       <li><strong>Cohesion</strong> (Lesson 04): SRP is cohesion turned into a rule, with "reason to change" as the measuring stick.</li>
-      <li><strong>Interface Segregation</strong> (Lesson 08): the same idea seen from the <em>client's</em> side: no client should depend on methods it does not use.</li>
-      <li><strong>DRY</strong> (Lesson 11): SRP sometimes <em>keeps</em> look-alike code apart, because it changes for different reasons (accidental duplication).</li>
+      <li><strong>Interface Segregation</strong> (Lesson 08): the same idea, seen from the <em>client's</em> side. No client should depend on methods it does not use.</li>
+      <li><strong>DRY</strong> (Lesson 11): SRP sometimes <em>keeps</em> look-alike code apart, because the copies change for different reasons (accidental duplication).</li>
     </ul></dd>
     <dt>Seen in the wild</dt>
     <dd><code>java.time</code> keeps <code>LocalDate</code> (the date value and its arithmetic) separate from <code>DateTimeFormatter</code> (how a date looks as text). Display rules change for different reasons than calendar rules, so they live in different classes.</dd>
@@ -119,10 +119,10 @@
 
 <article class="catalog-entry" id="ocp">
   <h2>Open/Closed Principle (OCP) <span class="family-badge principle">principle</span></h2>
-  <p class="catalog-intent">Code should be open for extension but closed for modification: add new behaviour by adding new code, not by editing code that already works.</p>
+  <p class="catalog-intent">Code should be open for extension but closed for modification. Add new behaviour by adding new code, not by editing code that already works.</p>
   <dl class="catalog-fields">
     <dt>The pain it cures</dt>
-    <dd>A class that must be opened and edited for every new variant, usually through an if-else (or switch) on a type name that is repeated in several places. Every edit risks breaking the variants that already worked, and forgetting one ladder breaks the new one.</dd>
+    <dd>A class must be opened and edited for every new variant. Usually the cause is an if-else (or switch) on a type name, repeated in several places. Every edit risks breaking the variants that already worked. Forgetting one ladder breaks the new one.</dd>
     <dt>Use it when…</dt>
     <dd><ul>
       <li>A second variant has arrived and more are clearly coming (shipping methods, house modes, payment providers).</li>
@@ -132,22 +132,22 @@
     </ul></dd>
     <dt class="not">Do NOT use it when…</dt>
     <dd><ul>
-      <li>The set of variants is small and genuinely fixed (days of the week, on/off). A plain switch is clearer.</li>
+      <li>The set of variants is small and truly fixed (days of the week, on/off). A plain switch is clearer.</li>
       <li>Only one variant exists so far. Wait for the second ("take the first bullet") so you know what really varies.</li>
       <li>It is one local if-else that is not repeated and not growing.</li>
       <li>The interface would be a guess about future needs (speculative generality).</li>
     </ul></dd>
     <dt>The cost</dt>
-    <dd>More classes and files; indirection (the rule for one variant is in its own file, not on the screen with the others); loss of overview across variants; and it protects against only one chosen kind of change. A different kind, such as a new question every variant must answer, still edits the interface and every implementation.</dd>
+    <dd>More classes and files. Indirection: the rule for one variant is in its own file, not on the screen with the others. Loss of overview across variants. And it protects against only one chosen kind of change. A different kind, such as a new question every variant must answer, still means editing the interface and every implementation.</dd>
     <dt>Relatives</dt>
     <dd><ul>
-      <li><strong>SRP</strong> (Lesson 05) decides where code lives; OCP decides how it grows. Each variant class is also one responsibility.</li>
-      <li><strong>Liskov Substitution</strong> (Lesson 07) is OCP's safety rule: new implementations must keep the contract the closed code trusts.</li>
-      <li><strong>Dependency Inversion</strong> (Lesson 09) is the same "point the arrows at the contract" move, seen at the scale of a whole architecture.</li>
+      <li><strong>SRP</strong> (Lesson 05) decides where code lives. OCP decides how it grows. Each variant class is also one responsibility.</li>
+      <li><strong>Liskov Substitution</strong> (Lesson 07) is OCP's safety rule. New implementations must keep the contract the closed code trusts.</li>
+      <li><strong>Dependency Inversion</strong> (Lesson 09) is the same "point the arrows at the contract" move, seen across a whole program.</li>
       <li>Most patterns ahead are ready-made OCP variation points for one particular kind of change.</li>
     </ul></dd>
     <dt>Seen in the wild</dt>
-    <dd><code>List.sort(Comparator)</code>: the JDK's sorting algorithm is closed; what "before" means is open, supplied as a <code>Comparator</code> (e.g. <code>Comparator.reverseOrder()</code>). Plugin systems (browser extensions, IDE plugins) are OCP turned into products.</dd>
+    <dd><code>List.sort(Comparator)</code>: the JDK's sorting algorithm is closed. What "before" means is open. You supply it as a <code>Comparator</code> (e.g. <code>Comparator.reverseOrder()</code>). Plugin systems (browser extensions, IDE plugins) are OCP turned into products.</dd>
     <dt>Where it lives</dt>
     <dd>Kata: <code>com.katas.ocp</code> (<code>ShippingMethod</code> + four methods, <code>ShippingQuoter</code>; ladders in <code>naive/ShippingQuoter</code>; test-only <code>PickupInStore</code>). Hub: <code>routines.Routine</code> (<code>AllOn</code>, <code>AllOff</code>, <code>KeepOnly</code>) run by <code>home.Hub.run</code>. Lesson: <a href="phase-1-solid/chapter-02-solid/lesson-06-open-closed.html">06</a>.</dd>
   </dl>
@@ -155,35 +155,35 @@
 
 <article class="catalog-entry" id="lsp">
   <h2>Liskov Substitution Principle (LSP) <span class="family-badge principle">principle</span></h2>
-  <p class="catalog-intent">Code that works with a type must keep working with any subtype or implementation, without knowing the difference: every substitute keeps every promise of the type it stands in for.</p>
+  <p class="catalog-intent">Code that works with a type must keep working with any subtype or implementation, without noticing the difference. Every substitute keeps every promise of the type it stands in for.</p>
   <dl class="catalog-fields">
     <dt>The pain it cures</dt>
-    <dd>Honest client code, written only against a type's promises, breaks or silently gives wrong answers when handed a subclass or implementation that claims the type but breaks one of its promises (Square in place of Rectangle; a device that refuses <code>turnOff()</code>).</dd>
+    <dd>Honest client code is written only against a type's promises. Then it is handed a subclass or implementation that claims the type but breaks one of its promises. The client breaks, or quietly gives wrong answers. Examples: Square in place of Rectangle, or a device that refuses <code>turnOff()</code>.</dd>
     <dt>Use it when…</dt>
     <dd><ul>
       <li>Designing any class hierarchy or interface that has, or will have, more than one implementation.</li>
-      <li>Reviewing an override: does it demand more, promise less, throw where the parent succeeded, or change state the parent promised to leave alone?</li>
+      <li>Reviewing an override. Does it demand more? Promise less? Throw where the parent succeeded? Change state the parent promised to leave alone?</li>
       <li>You see <code>instanceof</code> checks in client code, or overrides that throw <code>UnsupportedOperationException</code> or do nothing.</li>
-      <li>Others will implement your interface: write the contract down and give them a contract test.</li>
+      <li>Others will implement your interface. Write the contract down and give them a contract test.</li>
     </ul></dd>
     <dt class="not">Do NOT use it when…</dt>
     <dd><ul>
       <li>You are tempted to demand <em>identical</em> behaviour. Different behaviour inside the promise is the point of polymorphism.</li>
       <li>You are writing contracts so detailed that no second implementation could fit them.</li>
-      <li>A type has one implementation and no prospect of more: clear names and ordinary tests are enough, without a formal contract suite.</li>
+      <li>A type has one implementation and no more are expected. Clear names and ordinary tests are enough, without a formal contract suite.</li>
       <li>You are tempted to ban inheritance outright out of fear. Fix the contract instead.</li>
     </ul></dd>
     <dt>The cost</dt>
-    <dd>Contracts must be written down and kept in sync with the code; contract tests are an extra (abstract) test class per contract; sometimes an "obvious" inheritance must be given up for siblings or immutability, which can feel less natural at first.</dd>
+    <dd>Contracts must be written down and kept in step with the code. Contract tests add an extra (abstract) test class per contract. Sometimes an "obvious" inheritance must be given up for siblings or immutability, which can feel less natural at first.</dd>
     <dt>Relatives</dt>
     <dd><ul>
       <li><strong>OCP</strong> (Lesson 06): LSP is what makes plugging new classes into closed code safe.</li>
-      <li><strong>Fragile base class</strong> (Lesson 03): the danger from the parent's side; LSP is the danger from the child's side.</li>
-      <li><strong>Interface Segregation</strong> (Lesson 08): the usual cure for refused bequests, contracts small enough for every implementer to keep.</li>
+      <li><strong>Fragile base class</strong> (Lesson 03): the danger from the parent's side. LSP is the danger from the child's side.</li>
+      <li><strong>Interface Segregation</strong> (Lesson 08): the usual cure for refused bequests. It makes contracts small enough for every implementer to keep.</li>
       <li><strong>Design by Contract</strong> (Meyer): the pre-/postcondition toolset LSP is stated in.</li>
     </ul></dd>
     <dt>Seen in the wild</dt>
-    <dd><code>java.util.List.add</code> is documented as an "optional operation" that may throw <code>UnsupportedOperationException</code>, so <code>List.of(...)</code> can refuse it while still being a <code>List</code>. It is a refused bequest made legal by writing it into the contract. <code>java.util.Stack extends Vector</code> is an older misstep; its documentation now points to <code>Deque</code>.</dd>
+    <dd><code>java.util.List.add</code> is documented as an "optional operation" that may throw <code>UnsupportedOperationException</code>. So <code>List.of(...)</code> can refuse it and still be a <code>List</code>. It is a refused bequest, made legal by writing it into the contract. <code>java.util.Stack extends Vector</code> is an older mistake. Its documentation now points to <code>Deque</code>.</dd>
     <dt>Where it lives</dt>
     <dd>Kata: <code>com.katas.lsp</code> (<code>Shape</code>, immutable <code>Rectangle</code> and <code>Square</code> as siblings, <code>AreaTotaller</code>; the broken hierarchy in <code>naive/</code>). Hub: <code>devices.Device</code>'s written contract, checked by <code>DeviceContractTest</code> for <code>Light</code>, <code>Thermostat</code> and <code>LoggedDevice</code>. Lesson: <a href="phase-1-solid/chapter-02-solid/lesson-07-liskov-substitution.html">07</a>.</dd>
   </dl>
@@ -191,10 +191,10 @@
 
 <article class="catalog-entry" id="isp">
   <h2>Interface Segregation Principle (ISP) <span class="family-badge principle">principle</span></h2>
-  <p class="catalog-intent">No client should be forced to depend on methods it does not use, so split fat interfaces into small role interfaces, each signed only by classes that can keep it.</p>
+  <p class="catalog-intent">No client should be forced to depend on methods it does not use. So split fat interfaces into small role interfaces, each signed only by classes that can keep it.</p>
   <dl class="catalog-fields">
     <dt>The pain it cures</dt>
-    <dd>A fat interface hurts from both sides: implementers are forced to "implement" methods they cannot honour (refused bequests, which are LSP violations), and clients are coupled to methods they never call, so unrelated changes ripple into them and their test fakes must implement everything.</dd>
+    <dd>A fat interface hurts from both sides. Implementers are forced to "implement" methods they cannot honour (refused bequests, which are LSP violations). Clients are coupled to methods they never call. So unrelated changes ripple into them, and their test fakes must implement everything.</dd>
     <dt>Use it when…</dt>
     <dd><ul>
       <li>An implementer cannot keep part of a contract and is tempted to throw or do nothing (an old printer that can't scan; a smoke alarm that must never switch off).</li>
@@ -205,20 +205,20 @@
     <dt class="not">Do NOT use it when…</dt>
     <dd><ul>
       <li>The methods are always used together by the same clients (<code>turnOn</code>, <code>turnOff</code> and <code>isOn</code> stay together).</li>
-      <li>One implementation and one client fit the interface perfectly: there is nothing to segregate.</li>
-      <li>It would produce one interface per method, which scatters a concept into fragments nobody can see whole.</li>
-      <li>You are splitting by what implementers happen to do rather than by what clients actually call.</li>
+      <li>One implementation and one client fit the interface perfectly. There is nothing to split.</li>
+      <li>It would produce one interface per method. That scatters an idea into pieces nobody can see whole.</li>
+      <li>You are splitting by what implementers happen to do, instead of by what clients actually call.</li>
     </ul></dd>
     <dt>The cost</dt>
-    <dd>More types to name and navigate; classes that list several interfaces; code that must route the right objects to the right clients (e.g. separate typed lists); wrappers that expose only the contract they wrap, hiding other capabilities; and a wide edit when an interface many classes depend on is split late.</dd>
+    <dd>More types to name and find your way around. Classes that list several interfaces. Code that must send the right objects to the right clients (e.g. separate typed lists). Wrappers that show only the contract they wrap, hiding other abilities. And a wide edit when an interface that many classes depend on is split late.</dd>
     <dt>Relatives</dt>
     <dd><ul>
-      <li><strong>SRP</strong> (Lesson 05): splits classes by who asks for changes; ISP splits interfaces by who calls them.</li>
+      <li><strong>SRP</strong> (Lesson 05): splits classes by who asks for changes. ISP splits interfaces by who calls them.</li>
       <li><strong>LSP</strong> (Lesson 07): ISP is the usual cure for refused bequests. A contract small enough to keep leaves nothing to refuse.</li>
       <li><strong>Cohesion</strong> (Lesson 04): a well-segregated interface is a cohesive one.</li>
     </ul></dd>
     <dt>Seen in the wild</dt>
-    <dd><code>java.lang.AutoCloseable</code>: one method, <code>close()</code>, and all that try-with-resources needs. Files, sockets and database connections sign it beside their other contracts. Also <code>Runnable</code>, <code>Comparable</code>, and <code>Iterable</code> (all the for-each loop needs).</dd>
+    <dd><code>java.lang.AutoCloseable</code>: one method, <code>close()</code>. That is all try-with-resources needs. Files, sockets and database connections sign it beside their other contracts. Also <code>Runnable</code>, <code>Comparable</code>, and <code>Iterable</code> (all the for-each loop needs).</dd>
     <dt>Where it lives</dt>
     <dd>Kata: <code>com.katas.isp</code> (<code>Printer</code>, <code>Scanner</code>, <code>Fax</code>, <code>OldPrinter</code>, <code>MultiFunctionMachine</code>, <code>ReportPrinter</code>; fat <code>Machine</code> in <code>naive/</code>). Hub: <code>Device</code> (name, status) + <code>Switchable</code> / <code>Lockable</code> (both extend <code>Device</code>) + <code>Dimmable</code>; <code>SmokeAlarm</code>, <code>DoorLock</code>; routines take <code>List&lt;Switchable&gt;</code>; contract tests split per capability. Lesson: <a href="phase-1-solid/chapter-02-solid/lesson-08-interface-segregation.html">08</a>.</dd>
   </dl>
@@ -226,13 +226,13 @@
 
 <article class="catalog-entry" id="dip">
   <h2>Dependency Inversion Principle (DIP) <span class="family-badge principle">principle</span></h2>
-  <p class="catalog-intent">High-level policy should not depend on low-level details; both should depend on abstractions owned by the policy, with the details injected from one composition root.</p>
+  <p class="catalog-intent">High-level policy should not depend on low-level details. Both should depend on abstractions that belong to the policy. The details are injected from one composition root.</p>
   <dl class="catalog-fields">
     <dt>The pain it cures</dt>
-    <dd>A valuable, stable rule names and creates a volatile mechanism (<code>new EmailSender()</code> inside the alert policy), so the mechanism can't be swapped without editing the rule, the rule can't be tested without the real mechanism, and the rule can't be reused elsewhere.</dd>
+    <dd>A valuable, stable rule names and creates a mechanism that changes often (<code>new EmailSender()</code> inside the alert policy). So the mechanism can't be swapped without editing the rule. The rule can't be tested without the real mechanism. And the rule can't be reused elsewhere.</dd>
     <dt>Use it when…</dt>
     <dd><ul>
-      <li>Policy code depends on something that genuinely varies: devices, sensors, networks, storage, clocks, third-party services.</li>
+      <li>Policy code depends on something that really varies: devices, sensors, networks, storage, clocks, third-party services.</li>
       <li>You need to test a rule without its real collaborators (a recording channel, a fixed sensor).</li>
       <li>A second implementation of a detail has arrived or is clearly coming.</li>
       <li>You want the core of an application to stay free of vendor and infrastructure names.</li>
@@ -241,20 +241,20 @@
     <dd><ul>
       <li>The dependency is stable and will never be swapped: <code>String</code>, <code>List</code>, <code>java.time</code>, your own small value classes.</li>
       <li>There is one implementation and no testing pain. Plain <code>new</code> is simpler until the second one arrives.</li>
-      <li>You would be wrapping the detail in an interface shaped like the detail (<code>sendEmail(to, subject, body)</code>). That is not inversion; write it in the policy's terms or don't bother.</li>
-      <li>A class needs so many injected dependencies that the real problem is too many responsibilities (fix with SRP first).</li>
+      <li>You would be wrapping the detail in an interface shaped like the detail (<code>sendEmail(to, subject, body)</code>). That is not inversion. Write it in the policy's terms, or don't bother.</li>
+      <li>A class needs so many injected dependencies that the real problem is too many responsibilities. Fix that with SRP first.</li>
     </ul></dd>
     <dt>The cost</dt>
-    <dd>An interface per inverted boundary; wiring code in the composition root that grows with the program; an extra hop when reading ("which implementation is this at run time?"), answered only in the composition root; and, with frameworks, the risk of wiring that feels like magic.</dd>
+    <dd>An interface per inverted boundary. Wiring code in the composition root, which grows with the program. An extra hop when reading: "which implementation is this at run time?" Only the composition root can answer. And with frameworks, the risk of wiring that feels like magic.</dd>
     <dt>Relatives</dt>
     <dd><ul>
-      <li><strong>Dependency Injection</strong>: the technique (hand dependencies in from outside) usually used to achieve DIP. You can inject a concrete class, which is DI without DIP.</li>
-      <li><strong>Inversion of Control</strong>: the broad idea of a framework calling your code; DI containers are one example.</li>
-      <li><strong>OCP</strong> (Lesson 06) and <strong>ISP</strong> (Lesson 08): the policy-owned abstraction is the variation point, and it should be small.</li>
-      <li><strong>Factories</strong> (Lessons 14–15) and <strong>Service Locator</strong> (Lesson 37) deal with the creating side, the latter less cleanly.</li>
+      <li><strong>Dependency Injection</strong>: the technique usually used to achieve DIP. You hand dependencies in from outside. You can also inject a concrete class. That is DI without DIP.</li>
+      <li><strong>Inversion of Control</strong>: the broad idea of a framework calling your code. DI containers are one example.</li>
+      <li><strong>OCP</strong> (Lesson 06) and <strong>ISP</strong> (Lesson 08): the abstraction owned by the policy is the variation point. It should be small.</li>
+      <li><strong>Factories</strong> (Lessons 14–15) and <strong>Service Locator</strong> (Lesson 37) deal with the creating side. Service Locator does it less cleanly.</li>
     </ul></dd>
     <dt>Seen in the wild</dt>
-    <dd>Spring's constructor injection: a class with a constructor taking an interface gets a matching bean passed in by the container. That is the composition root, automated. Logging facades such as SLF4J let libraries depend on an interface while the application plugs in the real logging engine.</dd>
+    <dd>Spring's constructor injection. A class has a constructor that takes an interface. The container passes in a matching object (a "bean"). That is the composition root, automated. Logging facades such as SLF4J let libraries depend on an interface while the application plugs in the real logging engine.</dd>
     <dt>Where it lives</dt>
     <dd>Kata: <code>com.katas.dip</code> (<code>AlertChannel</code> owned by the policy, <code>TemperatureMonitor</code>, <code>Main</code> as composition root) + <code>com.katas.dip.channels</code> (<code>EmailChannel</code>, <code>SmsChannel</code>); welded version in <code>naive/</code>. Hub: <code>climate.TemperatureSensor</code> (policy-owned) + <code>climate.ClimateControl</code>, implemented by <code>sensors.SimulatedThermometer</code>; composition root <code>com.smarthome.Main</code> + <code>HomeSetup</code>; core packages import only device contracts. Lesson: <a href="phase-1-solid/chapter-02-solid/lesson-09-dependency-inversion.html">09</a>.</dd>
   </dl>
@@ -262,10 +262,10 @@
 
 <article class="catalog-entry" id="dry">
   <h2>DRY — Don't Repeat Yourself <span class="family-badge principle">principle</span></h2>
-  <p class="catalog-intent">Every piece of knowledge (a rule, a meaningful number, a format) is written down in exactly one place, and everything that needs it asks that place.</p>
+  <p class="catalog-intent">Every piece of knowledge (a rule, a number with meaning, a format) is written down in exactly one place. Everything that needs it asks that place.</p>
   <dl class="catalog-fields">
     <dt>The pain it cures</dt>
-    <dd>One fact typed in several places: every change must be made in all of them (shotgun surgery), and the day one is missed the program contradicts itself, like a banner promising free delivery while the checkout charges for it.</dd>
+    <dd>One fact is typed in several places. Every change must be made in all of them (shotgun surgery). The day one is missed, the program contradicts itself. For example, a banner promises free delivery while the checkout charges for it.</dd>
     <dt>Use it when…</dt>
     <dd><ul>
       <li>Changing one copy means you <em>must</em> change the other, or the program is wrong.</li>
@@ -275,21 +275,21 @@
     </ul></dd>
     <dt class="not">Do NOT use it when…</dt>
     <dd><ul>
-      <li>The look-alike code serves different actors and will change for different reasons (accidental duplication, Lesson 05). Merging couples them.</li>
-      <li>Merging would need flags or parameters to cover each caller's differences. That is the wrong abstraction, and duplication is cheaper.</li>
+      <li>The code that looks alike serves different actors and will change for different reasons (accidental duplication, Lesson 05). Merging couples them.</li>
+      <li>Merging would need flags or parameters to cover each caller's differences. That is the wrong abstraction. Duplication is cheaper.</li>
       <li>There are only two copies and you can't yet see what really repeats. Wait for the third.</li>
       <li>It is test code, where a little repetition often makes each test readable on its own.</li>
     </ul></dd>
     <dt>The cost</dt>
-    <dd>A new home (a class, constant or method) that both callers depend on, which couples them to it; one more hop when reading; and the risk of a premature, flag-ridden shared helper that is harder to change than the copies were.</dd>
+    <dd>A new home (a class, constant or method) that both callers depend on, which couples them to it. One more hop when reading. And the risk of merging too early: a shared helper full of flags, harder to change than the copies were.</dd>
     <dt>Relatives</dt>
     <dd><ul>
-      <li><strong>SRP</strong> (Lesson 05): the other half of the question "must these change together?" SRP keeps look-alikes apart when the answer is no.</li>
+      <li><strong>SRP</strong> (Lesson 05): the other half of the question "must these change together?" When the answer is no, SRP keeps look-alikes apart.</li>
       <li><strong>Single source of truth</strong>: the name for the one place that holds a fact.</li>
       <li><strong>Template Method</strong> (Lesson 26): a pattern for writing a shared skeleton once.</li>
     </ul></dd>
     <dt>Seen in the wild</dt>
-    <dd><code>java.util.AbstractList</code> implements <code>indexOf</code>, <code>equals</code>, <code>hashCode</code> and its iterator once, on top of each list's own <code>get</code> and <code>size</code>. Coined by Hunt and Thomas in <em>The Pragmatic Programmer</em> (1999).</dd>
+    <dd><code>java.util.AbstractList</code> implements <code>indexOf</code>, <code>equals</code>, <code>hashCode</code> and its iterator once. It builds them on each list's own <code>get</code> and <code>size</code>. The name DRY comes from Hunt and Thomas, <em>The Pragmatic Programmer</em> (1999).</dd>
     <dt>Where it lives</dt>
     <dd>Kata: <code>com.katas.dry</code> (<code>DeliveryPolicy</code> shared by <code>CartBanner</code> and <code>Checkout</code>; drifted copies in <code>naive/</code>). Hub: <code>home.Hub.findNamed</code>, the one by-name lookup shared by <code>switchableNamed</code> and <code>unlock</code>. Lesson: <a href="phase-1-solid/chapter-02-solid/lesson-11-companion-principles.html">11</a>.</dd>
   </dl>
@@ -297,10 +297,10 @@
 
 <article class="catalog-entry" id="kiss">
   <h2>KISS — Keep It Simple <span class="family-badge principle">principle</span></h2>
-  <p class="catalog-intent">Of the designs that fully do the job, choose the one with the fewest parts and nothing hidden; every extra part must earn its place.</p>
+  <p class="catalog-intent">Of the designs that fully do the job, choose the one with the fewest parts and nothing hidden. Every extra part must earn its place.</p>
   <dl class="catalog-fields">
     <dt>The pain it cures</dt>
-    <dd>Machinery bigger than the problem (registries, plug-in rules, configuration) that must be read, tested and understood, and that hides the thing that decides the answer, so the first extension goes wrong.</dd>
+    <dd>Machinery bigger than the problem: registries, plug-in rules, configuration. It must be read, tested and understood. It also hides the thing that decides the answer, so the first extension goes wrong.</dd>
     <dt>Use it when…</dt>
     <dd><ul>
       <li>A newcomer can't predict the output by reading the code once, top to bottom.</li>
@@ -316,12 +316,12 @@
       <li>You would delete a variation point that two or more real variants already use.</li>
     </ul></dd>
     <dt>The cost</dt>
-    <dd>Code may need restructuring later when real complexity arrives, and simple code can look "naive" to people who equate quality with machinery, so you may have to defend it in review.</dd>
+    <dd>Code may need restructuring later, when real complexity arrives. And some people think quality means machinery. To them, simple code can look "naive," so you may have to defend it in review.</dd>
     <dt>Relatives</dt>
     <dd><ul>
-      <li><strong>YAGNI</strong>: KISS is about how a solution is built; YAGNI is about whether to build a feature at all.</li>
+      <li><strong>YAGNI</strong>: KISS is about how a solution is built. YAGNI is about whether to build a feature at all.</li>
       <li><strong>Needless complexity</strong> (Lesson 04): the design smell KISS prevents.</li>
-      <li><strong>SOLID</strong> (Lessons 05–10): adds parts so change stays local; KISS asks each part to justify itself.</li>
+      <li><strong>SOLID</strong> (Lessons 05–10): adds parts so change stays local. KISS asks each part to justify itself.</li>
     </ul></dd>
     <dt>Seen in the wild</dt>
     <dd>A motto usually credited to the aircraft engineer Kelly Johnson. In code it shows up mostly in review comments ("can this just be an <code>if</code>?") and in libraries that offer a plain method beside the configurable one.</dd>
@@ -335,7 +335,7 @@
   <p class="catalog-intent">Don't build a feature, option or extension point until a real need for it arrives.</p>
   <dl class="catalog-fields">
     <dt>The pain it cures</dt>
-    <dd>Speculative features that cost effort now, burden every caller (knobs to choose), rot untested, and usually guess wrong: the real request turns out to be something none of the guesses covered.</dd>
+    <dd>Guessed features cost effort now. They burden every caller (knobs to choose). They rot untested. And they usually guess wrong: the real request turns out to be something none of the guesses covered.</dd>
     <dt>Use it when…</dt>
     <dd><ul>
       <li>The justification is "in case," "one day," or "to be flexible."</li>
@@ -367,10 +367,10 @@
 
 <article class="catalog-entry" id="lod">
   <h2>Law of Demeter (principle of least knowledge) <span class="family-badge principle">principle</span></h2>
-  <p class="catalog-intent">Talk only to your friends: a method calls methods only on its own object, its parameters, objects it creates, and its own fields, never on objects those friends hand back.</p>
+  <p class="catalog-intent">Talk only to your friends. A method calls methods only on its own object, its parameters, objects it creates, and its own fields. It never calls methods on objects those friends hand back.</p>
   <dl class="catalog-fields">
     <dt>The pain it cures</dt>
-    <dd>Train-wreck calls (<code>customer.getWallet().take(2)</code>) that couple a class to the inside structure of other objects. When that structure changes, every class that reaches through breaks, often silently, without being edited.</dd>
+    <dd>Train-wreck calls (<code>customer.getWallet().take(2)</code>) couple a class to the inside structure of other objects. When that structure changes, every class that reaches through breaks, often quietly, without being edited.</dd>
     <dt>Use it when…</dt>
     <dd><ul>
       <li>You see a chain of getters ending in an action: <code>a.getB().getC().doD()</code>.</li>
@@ -386,16 +386,16 @@
       <li>The code is a composition root that only passes objects along without calling them.</li>
     </ul></dd>
     <dt>The cost</dt>
-    <dd>Friends gain task-shaped methods (<code>pay</code>, <code>unlock(name)</code>), so their interfaces grow; done mechanically, it produces forwarding boilerplate; and a caller can no longer improvise with another object's insides.</dd>
+    <dd>Friends gain methods shaped like tasks (<code>pay</code>, <code>unlock(name)</code>), so their interfaces grow. Done mechanically, it produces piles of forwarding code. And a caller can no longer improvise with another object's insides.</dd>
     <dt>Relatives</dt>
     <dd><ul>
       <li><strong>Tell, Don't Ask</strong>: the usual way to obey it. Tell the friend what you want done.</li>
       <li><strong>Encapsulation</strong> (Lesson 01): Demeter is encapsulation seen from the caller's side.</li>
-      <li><strong>ISP</strong> (Lesson 08): both make clients know less. ISP limits methods, Demeter limits objects.</li>
+      <li><strong>ISP</strong> (Lesson 08): both make clients know less. ISP limits methods. Demeter limits objects.</li>
       <li><strong>Message chains</strong> and <strong>middle man</strong>: Fowler's names for the violation and for the over-correction.</li>
     </ul></dd>
     <dt>Seen in the wild</dt>
-    <dd>Named after the Demeter project at Northeastern University (Ian Holland, 1987). David Bock's short paper <em>The Paperboy, The Wallet, and The Law of Demeter</em> is the classic illustration, and this course's kata borrows its story.</dd>
+    <dd>Named after the Demeter project at Northeastern University (Ian Holland, 1987). David Bock's short paper <em>The Paperboy, The Wallet, and The Law of Demeter</em> is the classic example. This course's kata borrows its story.</dd>
     <dt>Where it lives</dt>
     <dd>Kata: <code>com.katas.demeter</code> (<code>Paperboy</code> → <code>Customer.pay</code>; the reaching paperboy in <code>naive/</code>). Hub: <code>Main</code> calls <code>hub.unlock("Front Door")</code> instead of <code>hub.lockables().get(0).unlock()</code>. Lesson: <a href="phase-1-solid/chapter-02-solid/lesson-11-companion-principles.html">11</a>.</dd>
   </dl>
@@ -406,7 +406,7 @@
   <p class="catalog-intent">When in doubt, build behaviour by holding other objects and delegating to them (has-a), rather than by extending a class (is-a).</p>
   <dl class="catalog-fields">
     <dt>The pain it cures</dt>
-    <dd>Subclasses broken by changes inside their parent (the fragile base class problem), class explosion when features combine (<code>LoggingLight</code>, <code>LoggingThermostat</code>…), and behaviour fixed at compile time that cannot be swapped or injected.</dd>
+    <dd>Three pains. Subclasses broken by changes inside their parent (the fragile base class problem). Class explosion when features combine (<code>LoggingLight</code>, <code>LoggingThermostat</code>…). And behaviour fixed at compile time, which cannot be swapped or injected.</dd>
     <dt>Use it when…</dt>
     <dd><ul>
       <li>You want to add a feature (logging, counting, retrying) to several existing classes.</li>
@@ -422,15 +422,15 @@
       <li>You are replacing working inheritance that causes no pain, just to follow the slogan. "Favor" is not "always."</li>
     </ul></dd>
     <dt>The cost</dt>
-    <dd>Forwarding methods for every operation of the interface; two objects where there was one; an interface is needed for the held object to be swappable; and the parts must be wired together, usually at the composition root.</dd>
+    <dd>Forwarding methods for every operation of the interface. Two objects where there was one. An interface, so the held object can be swapped. And the parts must be wired together, usually at the composition root.</dd>
     <dt>Relatives</dt>
     <dd><ul>
-      <li><strong>LSP / OCP / DIP</strong> (Lessons 07, 06, 09): a wrapper promises only the interface it signs, adds behaviour without edits, and its parts can be injected.</li>
+      <li><strong>LSP / OCP / DIP</strong> (Lessons 07, 06, 09): a wrapper promises only the interface it signs. It adds behaviour without edits. Its parts can be injected.</li>
       <li><strong>Delegation</strong> and <strong>wrapper</strong> (Lesson 03): the mechanics it uses.</li>
-      <li><strong>Decorator, Proxy, Adapter, Strategy</strong> (Lessons 18–25): named patterns built on composition, told apart by intent.</li>
+      <li><strong>Decorator, Proxy, Adapter, Strategy</strong> (Lessons 18–25): named patterns built on composition. You tell them apart by their purpose.</li>
     </ul></dd>
     <dt>Seen in the wild</dt>
-    <dd>Stated in the Gang of Four's <em>Design Patterns</em> (1994). Joshua Bloch's <em>Effective Java</em> has an item of the same name (Item 18 in the 3rd edition; verify the number), citing <code>Stack extends Vector</code> and <code>Properties extends Hashtable</code> as JDK missteps.</dd>
+    <dd>Stated in the Gang of Four's <em>Design Patterns</em> (1994). Joshua Bloch's <em>Effective Java</em> has an item of the same name (Item 18 in the 3rd edition; check the number). It names <code>Stack extends Vector</code> and <code>Properties extends Hashtable</code> as JDK mistakes.</dd>
     <dt>Where it lives</dt>
     <dd>Kata: <code>com.katas.composition</code> (<code>CountingPlaylist</code> wrapping a <code>SongList</code>; the double-counting subclass in <code>naive/</code>). Hub: <code>activity.LoggedDevice</code> logs any switchable device by wrapping it. Lessons: <a href="phase-0-oop-foundations/chapter-01-oop/lesson-03-composition-vs-inheritance.html">03</a>, <a href="phase-1-solid/chapter-02-solid/lesson-11-companion-principles.html">11</a>.</dd>
   </dl>

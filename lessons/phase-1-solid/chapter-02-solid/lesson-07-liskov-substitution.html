@@ -42,7 +42,7 @@
 <header class="banner">
   <p class="kicker">Phase 1 · Chapter 02 · Lesson 07</p>
   <h1>L — Liskov Substitution Principle</h1>
-  <p class="subtitle">A subclass, or any implementation of a contract, must keep every promise its parent makes, so code written for the parent keeps working when handed the substitute.</p>
+  <p class="subtitle">A subclass, or any implementation of a contract, must keep every promise its parent makes. Then code written for the parent keeps working when it is handed the substitute.</p>
   <p class="meta">
     <strong>Kata package:</strong> <code>com.katas.lsp</code> (wrong way in <code>com.katas.lsp.naive</code>).<br>
     <strong>Smart Home Hub:</strong> modified <code>devices/Device.java</code> (contract written down); created test files <code>DeviceContractTest</code>, <code>LightContractTest</code>, <code>ThermostatContractTest</code>, <code>activity/LoggedDeviceContractTest</code>.<br>
@@ -54,7 +54,7 @@
 <section id="s1">
   <h2><span class="sec-num">1</span>The pain</h2>
 
-  <p class="lead">In school geometry, a square <em>is</em> a rectangle. So in code, <code>Square extends Rectangle</code> must be right. It compiles, it passes its own tests, and it breaks someone else's code that was never wrong.</p>
+  <p class="lead">In school geometry, a square <em>is</em> a rectangle. So in code, <code>Square extends Rectangle</code> must be right. It compiles, and it passes its own tests. Yet it breaks someone else's code that was never wrong.</p>
 
   <p>A <code>Rectangle</code> has <code>setWidth</code> and <code>setHeight</code>. A square must keep its sides equal, so <code>Square</code> overrides both setters to change <em>both</em> sides at once. Meanwhile, a colleague writes this perfectly reasonable code against <code>Rectangle</code>:</p>
 
@@ -64,13 +64,13 @@
     <span class="kw">return</span> rectangle.<span class="fn">area</span>();    <span class="cmt">// so this must be 20</span>
 }</code></pre>
 
-  <p>Hand it a real rectangle: 20. Hand it a <code>Square</code>, which Java happily accepts because a Square <em>is a</em> Rectangle: <code>setWidth(5)</code> makes it 5×5, and <code>setHeight(4)</code> makes it 4×4.</p>
+  <p>Hand it a real rectangle: 20. Now hand it a <code>Square</code>. Java happily accepts it, because a Square <em>is a</em> Rectangle. <code>setWidth(5)</code> makes it 5×5, and <code>setHeight(4)</code> makes it 4×4.</p>
 
   <p class="pred-label">Predicted symptom</p>
   <pre class="output"><code>Naive rectangle stretched to 5x4: area 20
 <span class="err">Naive square stretched to 5x4: area 16</span></code></pre>
 
-  <p>The bug is not in <code>Resizer</code>; it relied only on what <code>Rectangle</code> promised. It is not exactly in <code>Square</code> either; Square keeps its own rule perfectly. The bug is the <em>relationship</em>: Square claims to be a Rectangle but breaks one of Rectangle's promises. The OCP code from <a href="lesson-06-open-closed.html">Lesson 06</a> trusted every new class to keep the contract. This is what happens when one doesn't.</p>
+  <p>The bug is not in <code>Resizer</code>. It relied only on what <code>Rectangle</code> promised. It is not exactly in <code>Square</code> either. Square keeps its own rule perfectly. The bug is the <em>relationship</em>. Square claims to be a Rectangle, but breaks one of Rectangle's promises. The OCP code from <a href="lesson-06-open-closed.html">Lesson 06</a> trusted every new class to keep the contract. This is what happens when one doesn't.</p>
 
   <p class="filepath">Full wrong-way code: katas/src/main/java/com/katas/lsp/naive/ (Rectangle, Square, Resizer)</p>
 </section>
@@ -79,7 +79,7 @@
 <section id="s2">
   <h2><span class="sec-num">2</span>Real-world analogy</h2>
 
-  <p><strong>A replacement worker.</strong> Your usual courier is off sick and the company sends a replacement. That is fine, as long as the replacement does <em>everything</em> the usual courier promised. They may be <em>more</em> flexible: they also accept parcels after 5 pm, or they also deliver on Sundays. They may not be <em>less</em>: they refuse parcels over 2 kg, or they deliver to the right street but the wrong house number. You should never have to ask "is this the usual courier or the replacement?" before handing over a parcel.</p>
+  <p><strong>A replacement worker.</strong> Your usual courier is off sick, and the company sends a replacement. That is fine, as long as the replacement does <em>everything</em> the usual courier promised. They may do <em>more</em>: maybe they also take parcels after 5 pm, or also deliver on Sundays. They may not do <em>less</em>: refuse parcels over 2 kg, or deliver to the right street but the wrong house number. You should never have to ask "is this the usual courier or the replacement?" before handing over a parcel.</p>
 
   <div class="table-wrap">
     <table>
@@ -101,13 +101,13 @@
   <h2><span class="sec-num">3</span>The principle explained</h2>
 
   <h3>3.1 The principle</h3>
-  <p>In 1987 the computer scientist Barbara Liskov gave a talk about what it really means for one type to be a "subtype" of another. She later wrote it up precisely with Jeannette Wing in 1994. In plain words: <strong>if some code works correctly with objects of a type, it must keep working correctly when given objects of any subtype, without knowing the difference.</strong> A subtype is a safe <em>substitute</em> only if it keeps every promise its parent makes. That is the <strong>Liskov Substitution Principle (LSP)</strong>, the "L" in SOLID. It applies to subclasses <em>and</em> to classes implementing an interface: both promise to stand in for something.</p>
+  <p>In 1987 the computer scientist Barbara Liskov gave a talk about what it really means for one type to be a "subtype" of another. In 1994 she wrote it up exactly, with Jeannette Wing. In plain words: <strong>if some code works with objects of a type, it must keep working when given objects of any subtype. It should not even notice the difference.</strong> A subtype is a safe <em>substitute</em> only if it keeps every promise its parent makes. That is the <strong>Liskov Substitution Principle (LSP)</strong>, the "L" in SOLID. It applies to subclasses <em>and</em> to classes that implement an interface. Both promise to stand in for something.</p>
 
   <h3>3.2 Promises, written as contracts</h3>
   <p>To check a substitute, we need the promises written down. Lesson 01 called the whole bundle of promises a <span class="term" tabindex="0" data-def="a promise about what will be provided, with the how left open.">contract</span>. Each method's part of the contract has two halves, plus one rule for the whole object:</p>
   <ul>
-    <li>What must be true <em>before</em> you may call a method, which is the caller's job to ensure. For <code>new Rectangle(w, h)</code>: "both sides are positive." Calling without meeting it is the caller's fault. This is called a <strong>precondition</strong>.</li>
-    <li>What the method guarantees will be true <em>after</em> it returns, which is the method's job. For <code>setWidth(w)</code>: "the width is now <code>w</code>, <em>and the height is unchanged</em>." This is called a <strong>postcondition</strong>.</li>
+    <li>What must be true <em>before</em> you may call a method. Making it true is the caller's job. For <code>new Rectangle(w, h)</code>: "both sides are positive." If the caller does not meet it, that is the caller's fault. This is called a <strong>precondition</strong>.</li>
+    <li>What the method guarantees will be true <em>after</em> it returns. Making it true is the method's job. For <code>setWidth(w)</code>: "the width is now <code>w</code>, <em>and the height is unchanged</em>." This is called a <strong>postcondition</strong>.</li>
     <li>What is true about the object at all times, between any two calls. For a rectangle: "both sides are positive." You met this in Lesson 01 as an <span class="term" tabindex="0" data-def="a rule about an object that must always be true for its whole life (e.g. &quot;balance is never negative&quot;).">invariant</span>.</li>
   </ul>
 
@@ -129,12 +129,12 @@
   <h3>3.4 The Square/Rectangle problem, worked in full</h3>
   <p>Trace <code>stretchTo5By4(new Square(2))</code> against the rules:</p>
   <ol class="trace">
-    <li>The parameter's declared type is <code>Rectangle</code>; the actual object is a <code>Square</code> with sides 2×2.</li>
+    <li>The parameter's declared type is <code>Rectangle</code>. The actual object is a <code>Square</code> with sides 2×2.</li>
     <li><code>setWidth(5)</code>: <span class="term" tabindex="0" data-def="choosing which method body runs from the object's actual type at run time: search upward from the actual class.">dynamic dispatch</span> runs <code>Square.setWidth</code>, which sets width 5 <em>and</em> height 5. Rectangle's postcondition said "height unchanged." The postcondition has been weakened, and the substitute broke its first promise.</li>
     <li><code>setHeight(4)</code> runs <code>Square.setHeight</code>, which sets both sides to 4. The same promise is broken again, in the other direction.</li>
-    <li><code>area()</code> returns 4 × 4 = 16. The client's conclusion ("must be 20") was correct reasoning from the contract; the substitute made it false.</li>
+    <li><code>area()</code> returns 4 × 4 = 16. The client reasoned correctly from the contract that it "must be 20." The substitute made that false.</li>
   </ol>
-  <p>Can Square be fixed while staying a subclass? Try the options. Let <code>setWidth</code> change only the width, and the object stops being square (its own invariant breaks). Make <code>setWidth</code> throw for squares, and it now refuses something the parent accepted (a stricter precondition). Every option breaks a rule. The honest conclusion: <strong>"is-a" in code means "behaves as," for every promise.</strong> A <em>changeable</em> square does not behave as a changeable rectangle, whatever geometry says.</p>
+  <p>Can Square be fixed while staying a subclass? Try the options. Let <code>setWidth</code> change only the width, and the object stops being square. Its own invariant breaks. Make <code>setWidth</code> throw for squares, and it now refuses something the parent accepted. That is a stricter precondition. Every option breaks a rule. The honest conclusion: <strong>"is-a" in code means "behaves as," for every promise.</strong> A <em>changeable</em> square does not behave as a changeable rectangle, whatever geometry says.</p>
 
   <figure class="fig">
     <svg viewBox="0 0 720 280" role="img" aria-label="Before: Square extends Rectangle, and Resizer depends on Rectangle; Square's setters change both sides. After: Rectangle and Square are siblings that both implement the Shape interface, which AreaTotaller depends on; both are immutable.">
@@ -185,26 +185,26 @@
       <line x1="655" y1="170" x2="645" y2="102" class="uml-dashed" marker-end="url(#f1-hollow)"/>
       <text x="590" y="266" class="fig-small fig-center">immutable: "resizing" returns a new object</text>
     </svg>
-    <figcaption>Left (red): Square inherits promises it cannot keep. Right (blue): both shapes promise only what both can keep (an area, a description), so each is a safe substitute for <code>Shape</code>. Neither can be passed to code that expects to set one side alone, so the broken promise cannot happen.</figcaption>
+    <figcaption>Left (red): Square inherits promises it cannot keep. Right (blue): both shapes promise only what both can keep (an area, a description). So each is a safe substitute for <code>Shape</code>. Neither can be passed to code that expects to set one side alone. So the broken promise cannot happen.</figcaption>
   </figure>
 
   <details class="check">
     <summary>A subclass of <code>Rectangle</code> overrides <code>setWidth</code> to also log "width changed" to the console. Does it break LSP?</summary>
-    <p>Usually not. It keeps every promise (width becomes <code>w</code>, height unchanged) and does something <em>extra</em> that no client relied on not happening. It gives more and asks for no more. It would only break LSP if the parent's contract promised "no output," or if the logging could throw where the parent promised success.</p>
+    <p>Usually not. It keeps every promise (width becomes <code>w</code>, height unchanged). It also does something <em>extra</em>, and no client relied on that extra thing not happening. It gives more and asks for no more. It would only break LSP in two cases: if the parent's contract promised "no output," or if the logging could throw where the parent promised success.</p>
   </details>
 
   <h3>3.5 Spotting violations</h3>
   <p>LSP violations rarely announce themselves. Three signs give them away:</p>
   <ul>
-    <li><strong>Type checks in client code.</strong> Java can ask an object whether it is of a given class: <code>shape instanceof Square</code> is <code>true</code> for squares. That is the <code>instanceof</code> operator. Seeing <code>if (rectangle instanceof Square) { … special case … }</code> in a client means the client has learned it cannot trust the substitute. Every such check is a patch over a broken promise, and it also violates <a href="lesson-06-open-closed.html">OCP</a>, because each new rogue subclass needs another check.</li>
-    <li><strong>Refused bequest.</strong> A subclass inherits a method it cannot honour, so it throws <code>UnsupportedOperationException</code> or silently does nothing. Code relying on the parent's promise then crashes or quietly misbehaves. ("Bequest" is an inheritance left to someone; the child refuses part of it.)</li>
-    <li><strong>Surprising overrides.</strong> An override that does something the parent's contract rules out: <code>Square.setWidth</code> changing the height, a getter that changes state, a <code>save()</code> that doesn't save. It looks like a normal override and breaks clients from the inside.</li>
+    <li><strong>Type checks in client code.</strong> Java can ask an object whether it is of a given class: <code>shape instanceof Square</code> is <code>true</code> for squares. That is the <code>instanceof</code> operator. Say a client contains <code>if (rectangle instanceof Square) { … special case … }</code>. That means the client has learned it cannot trust the substitute. Every such check is a patch over a broken promise. It also breaks <a href="lesson-06-open-closed.html">OCP</a>, because each new rogue subclass needs another check.</li>
+    <li><strong>Refused bequest.</strong> A subclass inherits a method it cannot honour. So it throws <code>UnsupportedOperationException</code>, or quietly does nothing. Code that relies on the parent's promise then crashes or quietly misbehaves. ("Bequest" means something left to someone in a will. The child refuses part of what it inherits.)</li>
+    <li><strong>Surprising overrides.</strong> An override does something the parent's contract rules out. Examples: <code>Square.setWidth</code> changing the height, a getter that changes state, a <code>save()</code> that doesn't save. It looks like a normal override, but it breaks clients from the inside.</li>
   </ul>
 
   <h3>3.6 The cures</h3>
   <ul>
     <li><strong>Don't inherit what you can't honour.</strong> Make the two classes siblings under a smaller contract that both truly keep (<code>Shape</code>).</li>
-    <li><strong>Remove the promise that causes trouble.</strong> Square/Rectangle conflict only because they can be <em>changed</em>. An object whose state can never change after it is created is called <strong>immutable</strong>. "Resizing" an immutable rectangle returns a <em>new</em> rectangle, so no promise about "the other side stays the same" exists to be broken.</li>
+    <li><strong>Remove the promise that causes trouble.</strong> Square/Rectangle conflict only because they can be <em>changed</em>. An object whose state can never change after it is created is called <strong>immutable</strong>. "Resizing" an immutable rectangle returns a <em>new</em> rectangle. So there is no promise about "the other side stays the same" to break.</li>
     <li><strong>Split a contract that is too big for some implementers</strong>, so nobody inherits a method they must refuse. That is the next lesson, in full.</li>
   </ul>
 </section>
@@ -365,7 +365,7 @@ mvn compile exec:java <span class="str">"-Dexec.mainClass=com.katas.lsp.Main"</s
   <h2><span class="sec-num">5</span>Applied to the Smart Home Hub</h2>
 
   <h4>The pain, arriving in the hub</h4>
-  <p>The hub has trusted every <code>Device</code> since Lesson 01, and since Lesson 06 its routines are <em>closed</em> code that relies on that trust. Now someone asks for a <strong>smoke alarm</strong>. A smoke alarm must never be switched off, so the obvious implementation refuses:</p>
+  <p>The hub has trusted every <code>Device</code> since Lesson 01. Since Lesson 06, its routines are <em>closed</em> code that relies on that trust. Now someone asks for a <strong>smoke alarm</strong>. A smoke alarm must never be switched off, so the obvious implementation refuses:</p>
   <pre class="code" data-title="the tempting way (not written to disk)"><code><span class="kw">public class</span> <span class="ty">SmokeAlarm</span> <span class="kw">extends</span> <span class="ty">AbstractDevice</span> {
     <span class="anno">@Override</span>
     <span class="kw">public void</span> <span class="fn">turnOff</span>() {
@@ -373,14 +373,14 @@ mvn compile exec:java <span class="str">"-Dexec.mainClass=com.katas.lsp.Main"</s
     }
     <span class="cmt">// ...</span>
 }</code></pre>
-  <p>Then the homeowner leaves the house and runs "Away" (<code>AllOff</code>). Its loop reaches the smoke alarm, <code>turnOff()</code> throws, and the routine stops halfway. Every device <em>after</em> the alarm in the list stays on, in an empty house. Code that was correct, closed and tested is now broken by a newcomer that refuses a promise.</p>
+  <p>Then the homeowner leaves the house and runs "Away" (<code>AllOff</code>). Its loop reaches the smoke alarm. <code>turnOff()</code> throws, and the routine stops halfway. Every device <em>after</em> the alarm in the list stays on, in an empty house. The code was correct, closed and tested. Now it is broken by a newcomer that refuses a promise.</p>
   <p class="pred-label">Predicted symptom</p>
   <pre class="output"><code><span class="err">Exception in thread "main" java.lang.UnsupportedOperationException: Smoke alarms cannot be switched off
     at ...SmokeAlarm.turnOff(...)
     at ...AllOff.applyTo(...)</span></code></pre>
 
   <h4>What we do this lesson: write the contract down, and test every substitute against it</h4>
-  <p>LSP can only be checked against written promises, and the hub's were only implied. So <code>Device</code> now states its contract in comments. One test suite then checks those promises against <em>every</em> implementation. A single set of tests, written against the contract, that every implementation must pass is called a <strong>contract test</strong>. In JUnit it is an abstract test class: the tests are written once, and each small subclass only says which kind of device to build.</p>
+  <p>LSP can only be checked against written promises, and the hub's were never written down. So <code>Device</code> now states its contract in comments. One set of tests then checks those promises against <em>every</em> implementation. Such a set of tests is written against the contract, and every implementation must pass it. It is called a <strong>contract test</strong>. In JUnit it is an abstract test class. The tests are written once. Each small subclass only says which kind of device to build.</p>
 
   <p class="filepath">Saved: smarthome/src/main/java/com/smarthome/devices/Device.java (modified: comments only)</p>
   <pre class="code" data-title="Device.java (the contract, written down)"><code><span class="cmt">// The CONTRACT:</span>
@@ -493,14 +493,14 @@ mvn compile exec:java <span class="str">"-Dexec.mainClass=com.katas.lsp.Main"</s
 }</code></pre>
   <p><span class="filepath">Saved: devices/LightContractTest.java and devices/ThermostatContractTest.java</span> are the same three lines, returning <code>new Light(name)</code> and <code>new Thermostat(name, 21)</code>. Testing the <em>wrapper</em> matters too. Lesson 03's <code>LoggedDevice</code> is handed out in place of real devices, so it is a substitute and must keep the contract like any other.</p>
 
-  <p><strong>And the smoke alarm?</strong> It does <em>not</em> join the hub this lesson. Run through <code>DeviceContractTest</code>, it would fail <code>turnOffMakesItOff</code> with an <code>UnsupportedOperationException</code>, so it is not a <code>Device</code> and must not pretend to be one. The honest fix is to stop forcing "can be switched off" on everything that sits in the hub. The <code>Device</code> contract is too big for some devices, and splitting it into smaller, focused promises is exactly the next lesson.</p>
+  <p><strong>And the smoke alarm?</strong> It does <em>not</em> join the hub this lesson. Put through <code>DeviceContractTest</code>, it would fail <code>turnOffMakesItOff</code> with an <code>UnsupportedOperationException</code>. So it is not a <code>Device</code>, and must not pretend to be one. The honest fix is to stop forcing "can be switched off" on everything in the hub. The <code>Device</code> contract is too big for some devices. Splitting it into smaller, focused promises is the next lesson.</p>
 
-  <p><strong>What this adds:</strong> no new hub feature, but a safety net for every future one. From now on, every device kind (and every wrapper) gets a three-line contract test, and the hub's closed code (routines, report) can keep trusting <code>Device</code> because the machine checks that trust.</p>
+  <p><strong>What this adds:</strong> no new hub feature, but a safety net for every future one. From now on, every device kind (and every wrapper) gets a three-line contract test. The hub's closed code (routines, report) can keep trusting <code>Device</code>, because the machine checks that trust.</p>
 
   <ol class="trace">
     <li>Maven compiles the abstract <code>DeviceContractTest</code>. JUnit skips it, because an abstract class cannot be built.</li>
-    <li>For <code>LightContractTest</code>, JUnit builds the class and finds five inherited <code>@Test</code> methods. Each calls <code>createDevice(...)</code>, which is dispatched to <code>LightContractTest</code>'s override and returns a fresh Light.</li>
-    <li>The same five run for <code>ThermostatContractTest</code> (thermostats) and <code>LoggedDeviceContractTest</code> (wrapped lights): 15 tests, the same promises, three substitutes.</li>
+    <li>For <code>LightContractTest</code>, JUnit builds the class and finds five inherited <code>@Test</code> methods. Each calls <code>createDevice(...)</code>. That call runs <code>LightContractTest</code>'s override, which returns a fresh Light.</li>
+    <li>The same five run for <code>ThermostatContractTest</code> (thermostats) and <code>LoggedDeviceContractTest</code> (wrapped lights). That makes 15 tests: the same promises, checked on three substitutes.</li>
     <li>Every existing implementation keeps every promise, so all 15 pass. <code>Main</code> is unchanged and prints the same report as Lessons 05–06.</li>
   </ol>
 
@@ -518,18 +518,18 @@ mvn compile exec:java</code></pre>
 <span class="out">[INFO] Tests run: 37, Failures: 0, Errors: 0, Skipped: 0</span>
 <span class="out">[INFO] BUILD SUCCESS</span></code></pre>
   <div class="callout tryit">
-    <p>Expect <strong>37 tests</strong> (22 earlier + 15 contract tests) and the same house report as before. If what you see differs, your machine is right. Tell me what you saw and we will work out why. To watch the net catch a rogue, temporarily make <code>Light.status()</code> return <code>"ON"</code> without the name, and run <code>mvn test</code>: <code>LightContractTest.statusStartsWithTheName</code> fails (and so do some older tests). Undo it afterwards.</p>
+    <p>Expect <strong>37 tests</strong> (22 earlier + 15 contract tests) and the same house report as before. If what you see differs, your machine is right. Tell me what you saw and we will work out why. To watch the net catch a rogue, make <code>Light.status()</code> return just <code>"ON"</code> for a moment, without the name. Run <code>mvn test</code>. <code>LightContractTest.statusStartsWithTheName</code> fails (and so do some older tests). Undo it afterwards.</p>
   </div>
 </section>
 
 <!-- ============================== SECTION 6 ============================== -->
 <section id="s6">
   <h2><span class="sec-num">6</span>In the wild</h2>
-  <p><strong>The JDK's <code>List</code> admits a refused bequest in writing.</strong> The documentation of <code>java.util.List.add</code> marks it as an <em>"optional operation"</em> that may throw <code>UnsupportedOperationException</code>. That is how <code>List.of(...)</code> and <code>List.copyOf(...)</code> can be <code>List</code>s and still refuse <code>add</code>, which you met in <a href="../../phase-0-oop-foundations/chapter-01-oop/lesson-03-composition-vs-inheritance.html">Lesson 03</a> with <code>ActivityLog.entries()</code>. Technically this keeps LSP, because the refusal is <em>part of the contract</em>. The price is that every caller must know which kind of list it has before calling <code>add</code>, which is exactly the "is this the replacement courier?" question LSP exists to remove. It is a deliberate, documented trade-off, made to keep the collections library small.</p>
-  <p>An older, less defensible case: <code>java.util.Stack</code> <em>extends</em> <code>java.util.Vector</code>, so a "stack" also inherits methods to insert or remove at any position, which no stack should allow. Its own documentation now recommends using the <code>Deque</code> interface instead.</p>
+  <p><strong>The JDK's <code>List</code> admits a refused bequest in writing.</strong> The documentation of <code>java.util.List.add</code> marks it as an <em>"optional operation"</em> that may throw <code>UnsupportedOperationException</code>. That is how <code>List.of(...)</code> and <code>List.copyOf(...)</code> can be <code>List</code>s and still refuse <code>add</code>. You met this in <a href="../../phase-0-oop-foundations/chapter-01-oop/lesson-03-composition-vs-inheritance.html">Lesson 03</a> with <code>ActivityLog.entries()</code>. Strictly speaking, this keeps LSP, because the refusal is <em>part of the contract</em>. The price is that every caller must know which kind of list it has before calling <code>add</code>. That is exactly the "is this the replacement courier?" question LSP exists to remove. It is a trade-off, made on purpose and written down, to keep the collections library small.</p>
+  <p>An older case is harder to defend. <code>java.util.Stack</code> <em>extends</em> <code>java.util.Vector</code>. So a "stack" also inherits methods to insert or remove at any position, which no stack should allow. Its own documentation now recommends using the <code>Deque</code> interface instead.</p>
 
   <div class="callout realworld">
-    <p>"Explain the Liskov Substitution Principle" is a standard interview question, and the Square/Rectangle walk-through is the expected answer, as long as you can say <em>which</em> promise breaks (setWidth's "height unchanged" postcondition). In real codebases, the tell-tale signs are <code>instanceof</code> checks scattered through calling code and overrides that throw <code>UnsupportedOperationException</code>.</p>
+    <p>"Explain the Liskov Substitution Principle" is a standard interview question. The Square/Rectangle walk-through is the expected answer, as long as you can say <em>which</em> promise breaks (setWidth's "height unchanged" postcondition). In real codebases, look for two signs: <code>instanceof</code> checks scattered through calling code, and overrides that throw <code>UnsupportedOperationException</code>.</p>
   </div>
 </section>
 
@@ -538,17 +538,17 @@ mvn compile exec:java</code></pre>
   <h2><span class="sec-num">7</span>When NOT to use it</h2>
 
   <h3>What LSP does not demand</h3>
-  <p>LSP does not mean "a subclass must behave <em>identically</em>." That would make subclasses pointless. <code>Puppy.speak()</code> returning "Yip…" instead of "Woof" broke nothing in <a href="../../phase-0-oop-foundations/chapter-01-oop/lesson-02-inheritance-polymorphism.html">Lesson 02</a>, because <code>Animal</code>'s contract only promised "a sound." Different behaviour <em>within</em> the promise is the whole point of polymorphism. The over-application failure is two-fold: banning all inheritance out of fear, or writing contracts so detailed ("status returns exactly these words") that no second implementation could ever fit. Promise what clients genuinely rely on, and no more.</p>
+  <p>LSP does not mean "a subclass must behave <em>identically</em>." That would make subclasses pointless. <code>Puppy.speak()</code> returning "Yip…" instead of "Woof" broke nothing in <a href="../../phase-0-oop-foundations/chapter-01-oop/lesson-02-inheritance-polymorphism.html">Lesson 02</a>, because <code>Animal</code>'s contract only promised "a sound." Different behaviour <em>within</em> the promise is the whole point of polymorphism. Over-applying LSP goes wrong in two ways. One is banning all inheritance out of fear. The other is writing contracts so detailed ("status returns exactly these words") that no second implementation could ever fit. Promise what clients really rely on, and no more.</p>
 
   <h3>The simpler alternative, and the cost</h3>
-  <p>For a type with one implementation and no plans for more, a written contract and a contract-test suite are overhead. Clear names and ordinary tests suffice. Contract tests pay off from the <em>second</em> implementation onward, and above all for public interfaces that other people implement. Their cost is real: an abstract test class to maintain, contracts that must be kept in sync with the code, and the discipline of deciding what is promised.</p>
+  <p>For a type with one implementation and no plans for more, a written contract and a contract-test suite are overhead. Clear names and ordinary tests are enough. Contract tests pay off from the <em>second</em> implementation onward. They pay off most for public interfaces that other people implement. Their cost is real. There is an abstract test class to look after. The written contracts must stay in step with the code. And someone must decide carefully what is promised.</p>
 
   <h3>Relatives and look-alikes</h3>
   <ul>
-    <li><strong>OCP</strong> (<a href="lesson-06-open-closed.html">Lesson 06</a>) lets new classes plug in without editing closed code. LSP is what makes that <em>safe</em>: a plug-in that breaks the contract breaks the closed code that trusts it.</li>
+    <li><strong>OCP</strong> (<a href="lesson-06-open-closed.html">Lesson 06</a>) lets new classes plug in without editing closed code. LSP is what makes that <em>safe</em>. A plug-in that breaks the contract breaks the closed code that trusts it.</li>
     <li><strong>The fragile base class problem</strong> (<a href="../../phase-0-oop-foundations/chapter-01-oop/lesson-03-composition-vs-inheritance.html">Lesson 03</a>) is the danger from the <em>parent's</em> side (parent changes, child breaks). LSP is the danger from the <em>child's</em> side (child misbehaves, the parent's clients break).</li>
     <li><strong>Interface Segregation</strong> (Lesson 08) is the usual cure for refused bequests: a contract small enough that every implementer can keep all of it.</li>
-    <li><strong>Design by Contract</strong>, Bertrand Meyer's name for writing pre- and postconditions into code, is the toolset; LSP is the rule for applying it to subtypes.</li>
+    <li><strong>Design by Contract</strong> is Bertrand Meyer's name for writing pre- and postconditions into code. It is the toolset. LSP is the rule for using it with subtypes.</li>
   </ul>
 </section>
 
@@ -556,11 +556,11 @@ mvn compile exec:java</code></pre>
 <section id="s8">
   <h2><span class="sec-num">8</span>Key takeaways</h2>
   <ul class="takeaways">
-    <li>The Liskov Substitution Principle says code that works with a type must keep working with any subtype or implementation, without knowing the difference, so a substitute must keep every promise its parent makes.</li>
-    <li>Promises are preconditions (what callers must ensure), postconditions (what the method guarantees) and invariants (what is always true), and a substitute may ask for less and give more, never ask for more or give less.</li>
-    <li>"Is-a" in code means "behaves as," which is why a changeable Square is not a changeable Rectangle: its setters break the postcondition "the other side is unchanged."</li>
-    <li>The tell-tale signs of a violation are <code>instanceof</code> checks in client code, refused bequests that throw or do nothing, and overrides that surprise their callers.</li>
-    <li>Cure violations by not inheriting what you cannot honour (siblings under a smaller contract), by immutability, or by splitting the contract, and protect every contract with one contract test that every implementation must pass.</li>
+    <li>The Liskov Substitution Principle says code that works with a type must keep working with any subtype or implementation, without noticing the difference. So a substitute must keep every promise its parent makes.</li>
+    <li>Promises come in three kinds. Preconditions are what callers must make true. Postconditions are what the method guarantees. Invariants are what is always true. A substitute may ask for less and give more. It must never ask for more or give less.</li>
+    <li>"Is-a" in code means "behaves as." That is why a changeable Square is not a changeable Rectangle: its setters break the postcondition "the other side is unchanged."</li>
+    <li>Watch for three signs of a violation: <code>instanceof</code> checks in client code, refused bequests that throw or do nothing, and overrides that surprise their callers.</li>
+    <li>There are three cures. Don't inherit what you cannot honour (make siblings under a smaller contract). Make objects immutable. Or split the contract. Protect every contract with one contract test that every implementation must pass.</li>
   </ul>
 </section>
 
@@ -582,13 +582,13 @@ mvn compile exec:java</code></pre>
   <details class="answer">
     <summary>Click to reveal the answer</summary>
     <p><strong>(a)</strong> A <strong>refused bequest</strong>. <code>Penguin</code> inherits <code>fly()</code> and refuses it by throwing where <code>Bird</code> promised success. That is a weakened postcondition (and an exception the parent's contract never allowed).</p>
-    <p><strong>(b)</strong> The first bird flies; the penguin throws, and nothing catches it, so the program stops:</p>
+    <p><strong>(b)</strong> The first bird flies. The penguin throws, and nothing catches it, so the program stops:</p>
     <p class="pred-label">Prediction</p>
     <pre class="output"><code>flap flap
 <span class="err">Exception in thread "main" java.lang.UnsupportedOperationException: Penguins can't fly
     at Penguin.fly(...)
     at ...migrate(...)</span></code></pre>
-    <p><strong>(c)</strong> "Can fly" is not something <em>every</em> bird promises, so it must not be in <code>Bird</code>'s contract. Give flying its own, smaller contract, and let only real flyers sign it:</p>
+    <p><strong>(c)</strong> "Can fly" is not something <em>every</em> bird promises. So it must not be in <code>Bird</code>'s contract. Give flying its own, smaller contract, and let only real flyers sign it:</p>
     <pre class="code" data-title="redesign (sketch)"><code><span class="cmt">// What EVERY bird can honestly promise.</span>
 <span class="kw">abstract class</span> <span class="ty">Bird</span> { <span class="kw">abstract</span> <span class="ty">String</span> <span class="fn">name</span>(); }
 <span class="cmt">// A separate, smaller contract for the birds that really fly.</span>
@@ -606,10 +606,10 @@ mvn compile exec:java</code></pre>
 <span class="kw">static void</span> <span class="fn">migrate</span>(<span class="ty">List</span>&lt;<span class="ty">Flyer</span>&gt; flock) {
     <span class="kw">for</span> (<span class="ty">Flyer</span> flyer : flock) { <span class="ty">System</span>.out.<span class="fn">println</span>(flyer.<span class="fn">fly</span>()); }
 }</code></pre>
-    <p>Now <code>migrate(List.of(new Sparrow(), new Penguin()))</code> <strong>does not compile</strong>, because a Penguin is not a <code>Flyer</code>. The bug moved from a crash at run time to a red line in your editor, which is the best place for it. <code>migrate(List.of(new Sparrow()))</code> prints:</p>
+    <p>Now <code>migrate(List.of(new Sparrow(), new Penguin()))</code> <strong>does not compile</strong>, because a Penguin is not a <code>Flyer</code>. The bug moved from a crash at run time to a red line in your editor. That is the best place for it. <code>migrate(List.of(new Sparrow()))</code> prints:</p>
     <p class="pred-label">Prediction</p>
     <pre class="output"><code>flap flap</code></pre>
-    <p>Notice the cure: one big promise split into smaller ones, each signed only by those who can keep it. That is the next lesson's principle, and it is also how the hub's smoke alarm will finally get its place. If you code this in a scratch package, run it and compare. The machine is the judge.</p>
+    <p>Notice the cure. One big promise is split into smaller ones, and each is signed only by those who can keep it. That is the next lesson's principle. It is also how the hub's smoke alarm will finally get its place. If you code this in a scratch package, run it and compare. The machine is the judge.</p>
   </details>
 </section>
 
@@ -629,7 +629,7 @@ mvn compile exec:java</code></pre>
 </section>
 
 <div class="nextup">
-  <p><a href="lesson-08-interface-segregation.html">Lesson 08 — I: the Interface Segregation Principle.</a> The smoke alarm couldn't join the hub because <code>Device</code> asks every device to promise everything. We split that fat contract into focused capabilities (switchable, dimmable, lockable), so every device promises only what it can keep.</p>
+  <p><a href="lesson-08-interface-segregation.html">Lesson 08 — I: the Interface Segregation Principle.</a> The smoke alarm couldn't join the hub, because <code>Device</code> asks every device to promise everything. We split that fat contract into focused abilities (switchable, dimmable, lockable). Then every device promises only what it can keep.</p>
 </div>
 <p class="position">Lesson 07 · the eighth of 45 lessons (00–44) · Phase 1, Chapter 02 · lesson 3 of 7 in this chapter</p>
 

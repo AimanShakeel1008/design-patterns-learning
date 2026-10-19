@@ -69,9 +69,9 @@ java Main
 import org.junit.jupiter.api.Test;
                             ^</code></pre>
 
-  <p>Now you must find the library on the internet, download the right version, tell the translator where it is, find every test by hand, and run each one. Then a friend clones your code. Their machine has a different Java version and a different copy of the library, and the code breaks for them but not for you. Every developer has heard the sad sentence: <em>"but it works on my machine."</em></p>
+  <p>Now you must find the library on the internet and download the right version. You must tell the translator where it is. Then you must find every test by hand and run each one. Then a friend clones your code. Their machine has a different Java version and a different copy of the library, and the code breaks for them but not for you. Every developer has heard the sad sentence: <em>"but it works on my machine."</em></p>
 
-  <p>The pain has a name: a <strong>manual, unrepeatable build</strong>. The cure is three tools, pinned to exact versions: a fixed Java toolbox (the JDK), a build tool that fetches libraries and runs tests with one command (Maven), and a history keeper so nothing is ever lost (Git). This lesson installs all three and proves they work.</p>
+  <p>The pain has a name: a <strong>manual, unrepeatable build</strong>. The cure is three tools, each pinned to an exact version. The JDK is a fixed Java toolbox. Maven is a build tool: one command fetches libraries and runs tests. Git keeps the history, so nothing is ever lost. This lesson installs all three and proves they work.</p>
 
   <div class="callout note">
     <p>If your machine is already set up from an earlier run of this course, skim Sections 2 and 3, then run the checks in Section 4. The checks are the part that matters.</p>
@@ -319,7 +319,7 @@ Maven home: …
 
   <h3>3.6 Git and GitHub: the photo album and the safe</h3>
   <ul>
-    <li>A tool that records the history of your files as a series of saved snapshots, so you can always go back, is called a <strong>version-control</strong> tool. Ours is <strong>Git</strong>.</li>
+    <li>Some tools save the history of your files as a series of snapshots, so you can always go back. Such a tool is called a <strong>version-control</strong> tool. Ours is <strong>Git</strong>.</li>
     <li>The folder Git watches, together with its whole saved history, is called a <strong>repository</strong> (or <strong>repo</strong>).</li>
     <li>One saved snapshot, with a short message saying what changed (for example, "lesson 00 – setup"), is called a <strong>commit</strong>.</li>
     <li><strong>GitHub</strong> is a website that keeps a copy of your repository online, so a broken laptop never loses your work. That online copy is called a <strong>remote</strong>. Sending your new commits up to it is called a <strong>push</strong>.</li>
@@ -355,7 +355,7 @@ Maven home: …
         src/main/java/com/smarthome/Main.java
         src/test/java/com/smarthome/SmokeTest.java</code></pre>
 
-  <p>Maven expects one layout, and needs no extra settings when you follow it. Real code goes under <code>src/main/java</code>. Tests go under <code>src/test/java</code>, in the same folders. Inside those, the folders <code>com/katas</code> spell out a name that keeps classes from clashing, the way a street name separates two houses both numbered 10. The first line of each Java file must say the same name: <code>package com.katas;</code>. This name is called the <strong>package</strong>.</p>
+  <p>Maven expects one layout, and needs no extra settings when you follow it. Real code goes under <code>src/main/java</code>. Tests go under <code>src/test/java</code>, in the same folders. Inside those, the folders <code>com/katas</code> spell out a name. The name keeps classes from clashing, just as a street name tells apart two houses that are both number 10. The first line of each Java file must say the same name: <code>package com.katas;</code>. This name is called the <strong>package</strong>.</p>
 
   <h3>4.2 <code>.gitignore</code> and <code>.gitattributes</code></h3>
 
@@ -462,7 +462,7 @@ target/
 
 <span class="ty">&lt;/project&gt;</span></code></pre>
 
-  <p>Read top to bottom, the POM answers four questions. <em>Who am I?</em> The coordinates. <em>Which versions?</em> The properties: Java 21 and JUnit 5.14.4, pinned once. <em>What do I need?</em> One dependency, JUnit, in <code>test</code> scope, so it helps the tests but never ships with the program. <em>Which tools run the steps?</em> Surefire and exec. <strong>Saved: <code>smarthome/pom.xml</code></strong> is the same file with <code>com.smarthome</code> coordinates and <code>com.smarthome.Main</code> as its default main class. Deliberately, JUnit is the <em>only</em> dependency in either project. There is no framework, so every pattern is seen bare.</p>
+  <p>Read top to bottom, the POM answers four questions. <em>Who am I?</em> The coordinates. <em>Which versions?</em> The properties: Java 21 and JUnit 5.14.4, pinned once. <em>What do I need?</em> One dependency, JUnit, in <code>test</code> scope, so it helps the tests but never ships with the program. <em>Which tools run the steps?</em> Surefire and exec. <strong>Saved: <code>smarthome/pom.xml</code></strong> is the same file with <code>com.smarthome</code> coordinates and <code>com.smarthome.Main</code> as its default main class. On purpose, JUnit is the <em>only</em> dependency in either project. There is no framework, so every pattern is seen bare.</p>
 
   <div class="callout note">
     <p>The versions <strong>JUnit 5.14.4</strong> and <strong>Surefire 3.5.5</strong> are the ones pinned at the course's first setup. <strong>exec-maven-plugin 3.6.1</strong> was newly pinned for this restart. If Maven reports it cannot find that version, tell me what it says, and we will pin the version your Maven can find.</p>
@@ -509,10 +509,10 @@ target/
     }
 }</code></pre>
 
-  <p>Now the tests. A small piece of code that checks other code automatically, so a mistake shows up the moment you run it, is called a <strong>unit test</strong>. The library that finds and runs unit tests and reports pass or fail is <strong>JUnit</strong>. Two more words appear in the file below:</p>
+  <p>Now the tests. Some small pieces of code check other code automatically, so a mistake shows up the moment you run them. Such a check is called a <strong>unit test</strong>. The library that finds and runs unit tests and reports pass or fail is <strong>JUnit</strong>. Two more words appear in the file below:</p>
   <ul>
-    <li>A tag stuck onto code, which tools read but Java itself ignores, is an <strong>annotation</strong>. <code>@Test</code> tells JUnit "run this method as a test."</li>
-    <li>A line inside a test that states what must be true, and fails the test if it is not, is an <strong>assertion</strong>. <code>assertEquals(4, 2 + 2)</code> fails if the two values differ.</li>
+    <li>A tag stuck onto code is an <strong>annotation</strong>. Tools read it, but Java itself ignores it. <code>@Test</code> tells JUnit "run this method as a test."</li>
+    <li>An <strong>assertion</strong> is a line inside a test that says what must be true. If it is not true, the test fails. <code>assertEquals(4, 2 + 2)</code> fails if the two values differ.</li>
   </ul>
   <p>Our first tests check nothing real. They only prove that the machinery works: the compiler, Maven, JUnit and Surefire. The name comes from electronics: you switch a new device on and check that no smoke comes out. A test like this is called a <strong>smoke test</strong>.</p>
 
@@ -652,7 +652,7 @@ mvn compile exec:java</code></pre>
 
   <details class="check">
     <summary>You run <code>mvn test</code> and it ends with <code>BUILD SUCCESS</code>, but the report says <code>Tests run: 0</code>. Is everything fine?</summary>
-    <p>No. Zero tests ran, so nothing was checked, and the green build is lying to you by omission. Usually the test file is in the wrong folder, or its package line does not match its folders, or an old Surefire cannot see JUnit 5 tests. Always read the <code>Tests run:</code> count, not just the last line.</p>
+    <p>No. Zero tests ran, so nothing was checked. The green build looks fine, but it hides that. There are three usual causes. The test file is in the wrong folder. Or its package line does not match its folders. Or an old Surefire cannot see JUnit 5 tests. Always read the <code>Tests run:</code> count, not just the last line.</p>
   </details>
 </section>
 
@@ -664,7 +664,7 @@ mvn compile exec:java</code></pre>
 
   <p>A <strong>kata</strong> is a small practice exercise you can repeat until it becomes second nature (the word comes from martial arts). Here it means one tiny, self-contained example per pattern, in its own package, for example <code>com.katas.strategy</code>. Each kata holds the wrong-way version (in a sub-package called <code>naive</code>), the right-way version, a small <code>main</code> demo, and a test. Once its lesson is done, a kata is <strong>frozen</strong>: never edited again. You can always go back and see a pattern in its smallest, purest form.</p>
 
-  <p>The <strong>Smart Home Hub</strong> is the opposite: one real, living application that grows lesson by lesson. It controls lights, thermostats, locks, cameras and speakers, reacts to sensors, runs scenes and schedules, and plugs in third-party devices. A pattern goes into the hub only when the hub genuinely needs it. Today the hub is just its banner line. In Lesson 01 it gets its first real code: a <code>Device</code> contract and two devices.</p>
+  <p>The <strong>Smart Home Hub</strong> is the opposite: one real, living application that grows lesson by lesson. It controls lights, thermostats, locks, cameras and speakers, reacts to sensors, runs scenes and schedules, and plugs in third-party devices. A pattern goes into the hub only when the hub really needs it. Today the hub is just its banner line. In Lesson 01 it gets its first real code: a <code>Device</code> contract and two devices.</p>
 
   <div class="callout forlearning">
     <p>Keeping the wrong-way code beside the right-way code is a teaching device. In a real codebase you delete the naive version once it is refactored, because Git's history already remembers it.</p>
@@ -678,7 +678,7 @@ mvn compile exec:java</code></pre>
   <p>The three-part address you just wrote is how the whole Java world shares code. The free public store of open-source Java libraries is called <em>Maven Central</em>. Every library in it is fetched by exactly these coordinates: <code>org.junit.jupiter : junit-jupiter : 5.14.4</code> is the line our POM used. Gradle, the other big Java build tool, reads the very same coordinates from the very same store. Learn coordinates once, and you can pull any open-source Java library into any project.</p>
 
   <div class="callout realworld">
-    <p>On a real team, nobody trusts "it passed on my laptop." Every push to GitHub triggers a clean server that checks out the code and runs the <em>same</em> <code>mvn test</code>. This setup is called continuous integration (CI). Pinned versions are what make that server's result match yours. That is the professional cure for "works on my machine," and it rests on exactly what you set up today.</p>
+    <p>On a real team, nobody trusts "it passed on my laptop." Every push to GitHub starts a clean server. The server gets the code and runs the <em>same</em> <code>mvn test</code>. This setup is called continuous integration (CI). Pinned versions are what make that server's result match yours. That is the professional cure for "works on my machine," and it rests on exactly what you set up today.</p>
   </div>
 </section>
 
@@ -698,11 +698,11 @@ mvn compile exec:java</code></pre>
 <section id="s8">
   <h2><span class="sec-num">8</span>Key takeaways</h2>
   <ul class="takeaways">
-    <li>The JDK builds, the JVM runs, and Maven drives the whole build: <code>javac</code> compiles source into bytecode, the JVM executes it on any operating system, and Maven does every step from one <code>pom.xml</code>.</li>
-    <li>Versions are pinned on purpose (Java 21 LTS, JUnit 5.14.4, Surefire 3.5.5, exec 3.6.1), so the code and its predicted output stay the same on every machine and in every lesson.</li>
-    <li>The PATH decides which <code>java</code> your terminal runs, while <code>JAVA_HOME</code> (when set) decides which JDK Maven compiles with, so both must point at JDK 21.</li>
-    <li>A smoke test proves the machinery, not the logic: a green test on day one means the compiler, Maven, JUnit and Surefire are all wired up, and you should always read the <code>Tests run:</code> count.</li>
-    <li>The course has two code homes: frozen katas that show each pattern alone, and the one evolving Smart Home Hub that shows patterns working together. <code>.gitignore</code> keeps the course-control files local, so <code>git add .</code> is always safe.</li>
+    <li>The JDK builds, the JVM runs, and Maven drives the whole build. <code>javac</code> turns source into bytecode, the JVM runs it on any operating system, and Maven does every step from one <code>pom.xml</code>.</li>
+    <li>Versions are pinned on purpose (Java 21 LTS, JUnit 5.14.4, Surefire 3.5.5, exec 3.6.1). That keeps the code and its predicted output the same on every machine and in every lesson.</li>
+    <li>The PATH decides which <code>java</code> your terminal runs. <code>JAVA_HOME</code>, when set, decides which JDK Maven uses. Both must point at JDK 21.</li>
+    <li>A smoke test checks the machinery, not the logic. A green test on day one means the compiler, Maven, JUnit and Surefire all work. Always read the <code>Tests run:</code> count.</li>
+    <li>The course has two code homes. Frozen katas show each pattern alone. The one growing Smart Home Hub shows patterns working together. <code>.gitignore</code> keeps the course-control files local, so <code>git add .</code> is always safe.</li>
   </ul>
 </section>
 
@@ -726,11 +726,11 @@ mvn compile exec:java</code></pre>
 <!-- ============================== SECTION 10 ============================== -->
 <section id="s10">
   <h2><span class="sec-num">10</span>Catalog update</h2>
-  <p>No entry this lesson. The <a href="../../pattern-catalog.html">pattern catalog</a> is seeded with its header and an empty index, ready for its first entry: the Single Responsibility Principle in Lesson 05. Every principle and pattern after that adds one entry with the same fields: intent, the pain it cures, use it when, do NOT use it when, the cost, relatives, seen in the wild, and where it lives.</p>
+  <p>No entry this lesson. The <a href="../../pattern-catalog.html">pattern catalog</a> is seeded with its header and an empty index, ready for its first entry: the Single Responsibility Principle in Lesson 05. After that, every principle and pattern adds one entry. Each entry has the same fields: intent, the pain it cures, use it when, do NOT use it when, the cost, relatives, seen in the wild, and where it lives.</p>
 </section>
 
 <div class="nextup">
-  <p><a href="../chapter-01-oop/lesson-01-objects-encapsulation-interfaces.html">Lesson 01 — Objects, Encapsulation, and Interfaces.</a> We write the hub's first real code, a <code>Device</code> contract and two devices. We also unpack the most load-bearing idea in the whole course: programming to a <em>contract</em> instead of to a concrete class.</p>
+  <p><a href="../chapter-01-oop/lesson-01-objects-encapsulation-interfaces.html">Lesson 01 — Objects, Encapsulation, and Interfaces.</a> We write the hub's first real code, a <code>Device</code> contract and two devices. We also meet the most important idea in the whole course: writing code against a <em>contract</em> instead of against one exact class.</p>
 </div>
 <p class="position">Lesson 00 · the first of 45 lessons (00–44) · Phase 0, Chapter 00 · Setup complete</p>
 
