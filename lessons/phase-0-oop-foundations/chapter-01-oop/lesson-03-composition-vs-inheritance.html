@@ -22,6 +22,8 @@
     <li><a href="#s8">8 · Key takeaways</a></li>
     <li><a href="#s9">9 · Challenge</a></li>
     <li><a href="#s10">10 · Catalog update</a></li>
+    <li><a href="#s11">11 · Key words</a></li>
+    <li><a href="#s12">12 · Quick recap</a></li>
   </ol>
   <nav class="toc-nav" aria-label="Course navigation">
     <a class="navcard" href="lesson-02-inheritance-polymorphism.html">
@@ -50,13 +52,23 @@
   </p>
 </header>
 
+<div class="learn">
+  <ul>
+    <li>How a child class can break when someone changes only its parent, and exactly why it happens.</li>
+    <li>How to build an object out of other objects ("has-a") and pass the work along, so this cannot happen.</li>
+    <li>When inheritance is still the right choice, and what composition costs.</li>
+  </ul>
+</div>
+
 <!-- ============================== SECTION 1 ============================== -->
 <section id="s1">
   <h2><span class="sec-num">1</span>The pain</h2>
 
-  <p class="lead">Lesson 02 warned that a child depends on its parent's insides. Here is that warning coming true, in a class nobody touched.</p>
+  <p class="lead">Lesson 02 warned that a child depends on its parent's insides. Here that warning comes true, in a class nobody touched.</p>
 
-  <p>A teammate owns a <code>Playlist</code> class. You need a playlist that also counts how many songs were ever added. Inheritance looks perfect: extend it, override the two adding methods, count, and call <code>super</code>.</p>
+  <h3>1.1 A counting playlist</h3>
+
+  <p>A teammate owns a <code>Playlist</code> class. You need a playlist that also counts how many songs were ever added. Inheritance looks perfect. You plan four steps: extend <code>Playlist</code>, override its two adding methods, count the songs, and then call <code>super</code> to really add them.</p>
 
   <pre class="code" data-title="naive/CountingPlaylist.java (key lines)"><code><span class="kw">public class</span> <span class="ty">CountingPlaylist</span> <span class="kw">extends</span> <span class="ty">Playlist</span> {
     <span class="kw">private int</span> addedCount;
@@ -68,19 +80,26 @@
     }
 }</code></pre>
 
-  <p>You test it: add three songs with <code>addAll</code>, and the counter says 3. Shipped. A month later your teammate tidies <em>their</em> class. <code>Playlist.addAll</code> used to store each song directly. Now it reuses its own <code>add</code> method, to avoid repeating itself:</p>
+  <p>You test it. You add three songs with <code>addAll</code>, and the counter says 3. It works, so you ship it.</p>
+
+  <h3>1.2 The parent changes</h3>
+
+  <p>A month later, your teammate tidies <em>their</em> class. <code>Playlist.addAll</code> used to store each song directly. Now it reuses its own <code>add</code> method, to avoid repeating itself:</p>
 
   <pre class="code" data-title="Playlist.addAll — before and after the tidy-up"><code><span class="cmt">// before                          // after</span>
 <span class="kw">for</span> (<span class="ty">String</span> song : newSongs) {     <span class="kw">for</span> (<span class="ty">String</span> song : newSongs) {
     songs.<span class="fn">add</span>(song);                    <span class="fn">add</span>(song);       <span class="cmt">// "cleaner"</span>
 }                                  }</code></pre>
 
-  <p>Playlist still behaves exactly as before, and its own tests stay green. You changed nothing. But:</p>
+  <p>Playlist still behaves exactly as before. Its own tests still pass. You changed nothing. But now your counter says this:</p>
 
   <p class="pred-label">Predicted symptom</p>
   <pre class="output"><code><span class="err">Inheritance: 3 songs in the list, counter says 6</span></code></pre>
 
-  <p>The pain has a name. A subclass breaks because of a change made only to its parent. This is the <strong>fragile base class problem</strong> ("base class" is another word for superclass). The teammate was not careless. The tidy-up was a perfectly reasonable change to <code>Playlist</code>. The fault is the relationship. Inheritance let a private detail of the parent ("does <code>addAll</code> call <code>add</code>?") become part of how the child behaves.</p>
+  <h3>1.3 Naming the pain</h3>
+
+  <p>A subclass broke because of a change made only to its parent. This is called the <strong>fragile base class problem</strong>. ("Fragile" means easy to break. "Base class" is another word for superclass.)</p>
+  <p>The teammate was not careless. The tidy-up was a perfectly reasonable change to <code>Playlist</code>. The fault lies in the relationship itself. Inheritance let a private detail of the parent become part of how the child behaves. That detail was: "does <code>addAll</code> call <code>add</code>?"</p>
 
   <p class="filepath">Full wrong-way code: katas/src/main/java/com/katas/composition/naive/Playlist.java and CountingPlaylist.java</p>
 </section>
@@ -89,16 +108,20 @@
 <section id="s2">
   <h2><span class="sec-num">2</span>Real-world analogy</h2>
 
-  <p><strong>A hired driver versus a transplanted engine.</strong> To go faster, you could rebuild your car <em>around</em> a racing engine. You weld your own parts to its insides. Now any change the engine maker makes inside the engine might break your welds. Or you could <em>hire</em> a driver with a fast car. You tell the driver where to go, and the driver handles the rest. You never look under their bonnet. If you want a different car tomorrow, you hire a different driver. Nothing is welded.</p>
+  <p><strong>A hired driver versus a borrowed engine.</strong> You want to travel faster. You have two choices:</p>
+  <ul>
+    <li><strong>Rebuild your car around a racing engine.</strong> You fix your own parts directly onto the engine's insides. Now any change the engine maker makes inside the engine might break your parts.</li>
+    <li><strong>Hire a driver with a fast car.</strong> You tell the driver where to go, and the driver handles the rest. You never look under their car's hood. Want a different car tomorrow? Hire a different driver. Nothing is fixed together.</li>
+  </ul>
 
   <div class="table-wrap">
     <table>
       <thead><tr><th>In real life</th><th>In Java</th></tr></thead>
       <tbody>
-        <tr><td>Welding your parts onto the engine's insides</td><td>Inheritance: the child is built into the parent's internals</td></tr>
+        <tr><td>Fixing your parts onto the engine's insides</td><td>Inheritance: the child is built into the parent's insides</td></tr>
         <tr><td>Hiring a driver</td><td>Composition: holding another object in a field</td></tr>
         <tr><td>Telling the driver where to go</td><td>Delegation: passing the call on to the held object</td></tr>
-        <tr><td>Never looking under their bonnet</td><td>Using only the held object's public contract</td></tr>
+        <tr><td>Never looking under their hood</td><td>Using only the held object's public contract</td></tr>
         <tr><td>Hiring a different driver tomorrow</td><td>Swapping the held object while the program runs</td></tr>
       </tbody>
     </table>
@@ -118,11 +141,23 @@
     <li><code>add(...)</code> means <code>this.add(...)</code>, and <code>this</code> is the CountingPlaylist. <span class="term" tabindex="0" data-def="choosing which method body runs from the object's actual type at run time: search upward from the actual class.">Dynamic dispatch</span> searches from the actual class, so it finds <strong>CountingPlaylist's</strong> <code>add</code>: counter 4, then it stores the song.</li>
     <li>The same happens for "Verse" (counter 5) and "Outro" (counter 6).</li>
   </ol>
-  <p>When a class's methods call each other, that habit is called <strong>self-use</strong>. A parent's self-use is invisible from outside, and it can change at any time. Yet every subclass that <span class="term" tabindex="0" data-def="a subclass writing a method with the same signature as an inherited one, replacing it for its objects; chosen at run time.">overrides</span> one of those methods gets pulled into it. When you reuse a class by extending it, you end up depending on how it works inside. This is called <strong>white-box reuse</strong>: you can see into the box, and you end up depending on what you see.</p>
+  <p>When a class's methods call each other, that habit is called <strong>self-use</strong>. Here, <code>addAll</code> uses <code>add</code>. Three facts about self-use cause the trouble:</p>
+  <ol>
+    <li>A parent's self-use is invisible from outside.</li>
+    <li>It can change at any time, as it did in the tidy-up.</li>
+    <li>Yet every subclass that <span class="term" tabindex="0" data-def="a subclass writing a method with the same signature as an inherited one, replacing it for its objects; chosen at run time.">overrides</span> one of those methods gets pulled into it.</li>
+  </ol>
+  <p>So when you reuse a class by extending it, you end up depending on how it works inside. This is called <strong>white-box reuse</strong>. Picture a clear glass box: you can see inside, and you end up depending on what you see.</p>
 
   <h3>3.2 The cure: hold an object, and pass the work along</h3>
 
-  <p>Instead of <em>being</em> a playlist, the counter can <em>have</em> one. It keeps a real playlist in a private field. When asked to add songs, it counts and then hands the request to that playlist. Building an object out of other objects held in its fields is called <strong>composition</strong>. The relationship is <strong>has-a</strong> ("a CountingPlaylist has a playlist"), not <span class="term" tabindex="0" data-def="the plain-English test for inheritance: &quot;a Dog is an Animal&quot; sounds true, &quot;a Thermostat is a Light&quot; does not.">is-a</span>. Handing a request on to the held object, so it does the real work, is called <strong>delegation</strong>.</p>
+  <p>The counter does not need to <em>be</em> a playlist. It can <em>have</em> one instead. Here is the plan:</p>
+  <ol>
+    <li>The counter keeps a real playlist in a private field.</li>
+    <li>When someone asks it to add songs, it counts them.</li>
+    <li>Then it hands the request on to that playlist, which does the real adding.</li>
+  </ol>
+  <p>Building an object out of other objects, held in its fields, is called <strong>composition</strong>. The relationship is <strong>has-a</strong> ("a CountingPlaylist has a playlist"), not <span class="term" tabindex="0" data-def="the plain-English test for inheritance: &quot;a Dog is an Animal&quot; sounds true, &quot;a Thermostat is a Light&quot; does not.">is-a</span>. Handing a request on to the held object, so that it does the real work, is called <strong>delegation</strong>.</p>
 
   <pre class="code" data-title="the core of composition + delegation"><code><span class="kw">public class</span> <span class="ty">CountingPlaylist</span> <span class="kw">implements</span> <span class="ty">SongList</span> {
     <span class="kw">private final</span> <span class="ty">SongList</span> inner;                <span class="cmt">// HAS-A</span>
@@ -138,7 +173,11 @@
     <li><code>Playlist.addAll</code> runs on the <em>inner</em> object. Its loop calls <code>add("Intro")</code>, meaning <code>this.add</code>, and <code>this</code> is now the <strong>Playlist</strong>. The counter is a separate object that Playlist does not even know exists.</li>
     <li>Playlist's own <code>add</code> runs three times. Nothing comes back to the counter, which still says 3.</li>
   </ol>
-  <p>The playlist's self-use stays inside the playlist. The counter depends only on the public contract, not on how the playlist works inside. Reusing an object only through its public contract, without seeing inside, is called <strong>black-box reuse</strong>.</p>
+  <p>The playlist's self-use stays inside the playlist. The counter depends only on the public contract, not on how the playlist works inside. Reusing an object only through its public contract, without seeing inside, is called <strong>black-box reuse</strong>. Picture a closed black box: you only use the buttons on the outside.</p>
+
+  <div class="callout mixup">
+    <p><strong>"But the composed counter still calls <code>addAll</code>, and <code>addAll</code> still calls <code>add</code>. Why is that safe now?"</strong> Because the <code>add</code> calls happen inside a <em>different object</em>. In the inheritance version there is one object, so <code>this.add</code> lands on the child. In the composition version there are two objects, so <code>this.add</code> inside the playlist means the playlist's own <code>add</code>.</p>
+  </div>
 
   <figure class="fig">
     <svg viewBox="0 0 720 300" role="img" aria-label="Left, inheritance: one CountingPlaylist object; its addAll counts 3 and calls the inherited Playlist addAll, whose add calls are dispatched back to the child, counting 3 more: 6. Right, composition: a wrapper object counts 3 and calls addAll on a separate Playlist object, whose add calls stay inside it: 3.">
@@ -259,17 +298,29 @@
 
   <h3>3.3 The contract makes the wrapper a stand-in</h3>
 
-  <p>A <code>CountingPlaylist</code> that only <em>has</em> a playlist is no longer <em>a</em> playlist. Any code expecting a playlist would refuse it. The fix is Lesson 01's tool: a shared interface, <code>SongList</code>. Both <code>Playlist</code> and <code>CountingPlaylist</code> implement it. The counter is a <code>SongList</code> (so clients accept it) and holds a <code>SongList</code> (so it can wrap any of them). Some objects keep the same contract as the object they hold, and forward calls to it. Such an object is called a <strong>wrapper</strong>. This "implements X and holds an X" shape is very useful. It comes back as a named pattern in Lesson 19.</p>
+  <p>There is a new problem. A <code>CountingPlaylist</code> that only <em>has</em> a playlist is no longer <em>a</em> playlist. So any code that expects a playlist would refuse it.</p>
+  <p>The fix is Lesson 01's tool: a shared interface, <code>SongList</code>. Both <code>Playlist</code> and <code>CountingPlaylist</code> implement it. Now the counter does two things at once:</p>
+  <ul>
+    <li>It <em>is</em> a <code>SongList</code>, so clients accept it.</li>
+    <li>It <em>holds</em> a <code>SongList</code>, so it can wrap any of them.</li>
+  </ul>
+  <p>An object that keeps the same contract as the object it holds, and forwards calls to it, is called a <strong>wrapper</strong>. Think of gift-wrapping: the present inside is the same, but the outside adds something. This "implements X and holds an X" shape is very useful. It comes back as a named pattern in Lesson 19.</p>
 
   <p>That shape gives composition two powers inheritance lacks:</p>
   <ul>
     <li><strong>Chosen while the program runs.</strong> <code>new CountingPlaylist(new Playlist())</code> picks the inner object when the code runs. Tomorrow it can wrap a different <code>SongList</code>, with no new class.</li>
-    <li><strong>Stackable.</strong> A wrapper is itself a <code>SongList</code>, so wrappers can wrap wrappers: <code>new CountingPlaylist(new CountingPlaylist(new Playlist()))</code>. Features combine by stacking, not by writing a subclass for every combination.</li>
+    <li><strong>Stackable.</strong> A wrapper is itself a <code>SongList</code>. So wrappers can wrap other wrappers: <code>new CountingPlaylist(new CountingPlaylist(new Playlist()))</code>. You combine features by stacking wrappers, not by writing a subclass for every combination.</li>
   </ul>
 
   <h3>3.4 The class explosion that composition avoids</h3>
 
-  <p>Suppose the hub has 3 device kinds (light, thermostat, lock) and 2 optional features (logging, scheduling). With inheritance, every combination you might need is its own subclass: <code>LoggingLight</code>, <code>ScheduledLight</code>, <code>LoggingScheduledLight</code>. Then you need the same three again for thermostats, and again for locks. Independent choices multiply, and you end up with far too many classes. This is called a <strong>class explosion</strong>.</p>
+  <p>Suppose the hub has 3 device kinds (light, thermostat, lock). It also has 2 optional features (logging, scheduling). With inheritance, every combination you might need becomes its own subclass:</p>
+  <ul>
+    <li>For lights: <code>LoggingLight</code>, <code>ScheduledLight</code>, <code>LoggingScheduledLight</code>.</li>
+    <li>Then the same three again for thermostats.</li>
+    <li>Then the same three again for locks.</li>
+  </ul>
+  <p>Independent choices multiply, and you end up with far too many classes. This is called a <strong>class explosion</strong>.</p>
 
   <div class="table-wrap">
     <table>
@@ -281,11 +332,17 @@
       </tbody>
     </table>
   </div>
-  <p>(Where the numbers come from: with 2 features there are 3 combinations, "just A," "just B," and "A and B." With 3 features there are 7. Multiply by the number of device kinds. Composition needs one wrapper per feature, whatever the number of devices.)</p>
+  <p>Where do the numbers come from? With 2 features there are 3 combinations: "just A," "just B," and "A and B." With 3 features there are 7. Multiply that by the number of device kinds. Composition needs only one wrapper per feature, however many devices there are.</p>
 
   <h3>3.5 The rule, and where it comes from</h3>
 
-  <p>In 1994 four authors wrote the book <em>Design Patterns</em>: Erich Gamma, Richard Helm, Ralph Johnson and John Vlissides. They were soon nicknamed the "Gang of Four." Lesson 12 tells its story. Before their first pattern, they state two principles. The first you already know from Lesson 01: <span class="term" tabindex="0" data-def="have client code name only the contract, never a concrete class, so new implementations need no client changes.">program to an interface, not an implementation</span>. The second is this lesson: <strong>favor object composition over class inheritance</strong>. Note the word <em>favor</em>, not <em>always</em>. Inheritance still has its place (Section 7). But when in doubt, has-a is the safer default.</p>
+  <p>In 1994, four authors wrote the book <em>Design Patterns</em>: Erich Gamma, Richard Helm, Ralph Johnson and John Vlissides. People soon nicknamed them the "Gang of Four." Lesson 12 tells the book's story.</p>
+  <p>Before their first pattern, the authors state two <em>principles</em> (basic rules to guide your choices):</p>
+  <ol>
+    <li>You already know the first one from Lesson 01: <span class="term" tabindex="0" data-def="have client code name only the contract, never a concrete class, so new implementations need no client changes.">program to an interface, not an implementation</span>.</li>
+    <li>The second one is this lesson: <strong>favor object composition over class inheritance</strong>.</li>
+  </ol>
+  <p>Note the word <em>favor</em> ("prefer"), not <em>always</em>. Inheritance still has its place (see Section 7). But when in doubt, has-a is the safer default.</p>
 
   <details class="check">
     <summary>The composed <code>CountingPlaylist</code> wraps a Playlist whose <code>addAll</code> calls <code>add</code>. Why doesn't the counter double-count?</summary>
@@ -297,7 +354,12 @@
 <section id="s4">
   <h2><span class="sec-num">4</span>The kata</h2>
 
-  <p>A few JDK pieces appear here. <code>List&lt;String&gt;</code> is the JDK's ordered-list interface. The part in angle brackets says what the list holds, here text. That feature gets its own story later. <code>ArrayList</code> is its everyday implementation. <code>List.of("a", "b")</code> builds a small list that can never be changed.</p>
+  <p>A few JDK pieces appear here:</p>
+  <ul>
+    <li><code>List&lt;String&gt;</code> is the JDK's interface for an ordered list. The part in angle brackets says what the list holds, here text. That feature gets its own story later.</li>
+    <li><code>ArrayList</code> is the everyday implementation of <code>List</code>.</li>
+    <li><code>List.of("a", "b")</code> builds a small list that can never be changed.</li>
+  </ul>
 
   <p class="filepath">Saved: katas/src/main/java/com/katas/composition/SongList.java</p>
   <pre class="code" data-title="SongList.java"><code><span class="cmt">// The contract that lets a wrapper stand in for the real thing.</span>
@@ -321,7 +383,7 @@
 }</code></pre>
 
   <p class="filepath">Saved: katas/src/main/java/com/katas/composition/Playlist.java</p>
-  <p>The real list: <code>implements SongList</code>, a <code>private final List&lt;String&gt; songs = new ArrayList&lt;&gt;()</code>, and an <code>addAll</code> that reuses <code>add</code> on purpose. It is the same "tidy" style that broke the inheritance version. We keep it to prove that composition does not care.</p>
+  <p>This is the real list. It <code>implements SongList</code>. It holds a <code>private final List&lt;String&gt; songs = new ArrayList&lt;&gt;()</code>. Its <code>addAll</code> reuses <code>add</code> on purpose. That is the same "tidy" style that broke the inheritance version. We keep it to prove that composition does not care.</p>
 
   <p class="filepath">Saved: katas/src/main/java/com/katas/composition/CountingPlaylist.java</p>
   <pre class="code" data-title="CountingPlaylist.java"><code><span class="cmt">// The RIGHT WAY: add a feature by HOLDING a song list, not by extending one.</span>
@@ -423,7 +485,12 @@
 
   <h4>The tests</h4>
   <p class="filepath">Saved: katas/src/test/java/com/katas/composition/CountingPlaylistTest.java</p>
-  <p>Three tests on the composed version. <code>addAllCountsEachSongOnce</code> expects size 3 and count 3. <code>singleAndBatchAddsAddUp</code> does one <code>add</code> plus a batch of two and expects 3. <code>wrapperCanWrapAnyImplementationOfTheContract</code> puts a counter around a counter around a Playlist. It adds 2 songs and expects <em>both</em> layers to report 2. That proves the request travelled through every layer exactly once.</p>
+  <p>This file holds three tests on the composed version:</p>
+  <ul>
+    <li><code>addAllCountsEachSongOnce</code> expects size 3 and count 3.</li>
+    <li><code>singleAndBatchAddsAddUp</code> does one <code>add</code> plus a batch of two, and expects 3.</li>
+    <li><code>wrapperCanWrapAnyImplementationOfTheContract</code> puts a counter around a counter around a Playlist. It adds 2 songs and expects <em>both</em> layers to report 2. That proves the request travelled through every layer exactly once.</li>
+  </ul>
 
   <p class="filepath">Saved: katas/src/test/java/com/katas/composition/FragileBaseClassTest.java</p>
   <pre class="code" data-title="FragileBaseClassTest.java"><code><span class="cmt">// The test sits in the composition package; it reaches the naive classes by import.</span>
@@ -460,7 +527,7 @@
 }</code></pre>
 
   <div class="callout forlearning">
-    <p>This test passes <em>because</em> a bug is present. That is a teaching trick, used here so the machine confirms the lesson's claim. In a real codebase you would fix the bug and test the correct behaviour instead.</p>
+    <p>This test passes <em>because</em> a bug is present. That is a teaching trick. We use it so the machine itself confirms the lesson's claim. In a real project you would fix the bug, and test the correct behaviour instead.</p>
   </div>
 
   <h4>Run it, and compare</h4>
@@ -473,7 +540,13 @@ mvn compile exec:java <span class="str">"-Dexec.mainClass=com.katas.composition.
 <span class="out">[INFO] BUILD SUCCESS</span></code></pre>
 
   <div class="callout tryit">
-    <p>Expect <strong>18 tests</strong> (14 earlier + 4 new) and the two demo lines. If anything differs, the machine is right. Tell me what you saw. To see the fragility live, edit <code>naive/Playlist.addAll</code> back to <code>songs.add(song)</code> (the "before" version) and re-run <code>mvn test</code>. <code>FragileBaseClassTest</code> now <em>fails</em>, expecting 6 but getting 3. The child's behaviour flipped, and you only touched the parent. Undo the edit afterwards.</p>
+    <p>Expect <strong>18 tests</strong> (14 earlier + 4 new) and the two demo lines. If anything is different, the machine is right. Tell me what you saw.</p>
+    <p>To see the fragility live, try this. Undo the edit afterwards.</p>
+    <ol>
+      <li>Edit <code>naive/Playlist.addAll</code> back to <code>songs.add(song)</code> (the "before" version).</li>
+      <li>Run <code>mvn test</code> again.</li>
+      <li><code>FragileBaseClassTest</code> now <em>fails</em>: it expects 6 but gets 3. The child's behaviour flipped, and you only touched the parent.</li>
+    </ol>
   </div>
 </section>
 
@@ -481,7 +554,7 @@ mvn compile exec:java <span class="str">"-Dexec.mainClass=com.katas.composition.
 <section id="s5">
   <h2><span class="sec-num">5</span>Applied to the Smart Home Hub</h2>
 
-  <p><strong>The new requirement:</strong> the hub must keep an <em>activity log</em>, a record of every time a device is switched on or off. And it must work for every device kind, present and future.</p>
+  <p><strong>The new request:</strong> the hub must keep an <em>activity log</em>. That is a record of every time a device is switched on or off. It must work for every device kind, both now and in the future.</p>
 
   <h4>The inheritance mess this invites</h4>
   <p>The tempting first move uses Lesson 02's tool:</p>
@@ -491,10 +564,17 @@ mvn compile exec:java <span class="str">"-Dexec.mainClass=com.katas.composition.
 }
 <span class="kw">class</span> <span class="ty">LoggingThermostat</span> <span class="kw">extends</span> <span class="ty">Thermostat</span> { <span class="cmt">/* the same two overrides, copied */</span> }
 <span class="cmt">// ...and LoggingLock, LoggingCamera, then ScheduledLight, LoggingScheduledLight...</span></code></pre>
-  <p>Every smell from this lesson is there. The logging code is copied once per device kind. Section 3.4's class explosion begins with the second feature. Each <code>Logging*</code> class is welded to its parent's insides. If <code>AbstractDevice.turnOff</code> ever reused <code>turnOn</code>, logs would double up, just like the playlist counter. And whether a device is logged is fixed when the code is written. The other temptation is to put logging inside <code>AbstractDevice.turnOn</code>. That forces <em>every</em> device to log, always, into some shared place, with no way to opt out.</p>
+  <p>Every problem from this lesson is there:</p>
+  <ul>
+    <li>The logging code is copied once per device kind.</li>
+    <li>Section 3.4's class explosion begins as soon as the second feature arrives.</li>
+    <li>Each <code>Logging*</code> class is tied to its parent's insides. If <code>AbstractDevice.turnOff</code> ever reused <code>turnOn</code>, logs would double up, just like the playlist counter.</li>
+    <li>Whether a device is logged is fixed when the code is written.</li>
+  </ul>
+  <p>The other temptation is to put logging inside <code>AbstractDevice.turnOn</code>. But that forces <em>every</em> device to log, always, into some shared place. There is no way to say "not this one."</p>
 
   <h4>The composition cure</h4>
-  <p>Two small classes in a new <code>activity</code> package, and no device class changes at all:</p>
+  <p>We add two small classes in a new <code>activity</code> package. No device class changes at all:</p>
 
   <figure class="fig">
     <svg viewBox="0 0 720 320" role="img" aria-label="Hub structure after Lesson 03. Main uses Device. AbstractDevice implements Device; Light and Thermostat extend AbstractDevice. LoggedDevice also implements Device, and has a Device inside it called inner and an ActivityLog called log.">
@@ -574,7 +654,7 @@ mvn compile exec:java <span class="str">"-Dexec.mainClass=com.katas.composition.
         <span class="kw">return</span> <span class="ty">List</span>.<span class="fn">copyOf</span>(entries);
     }
 }</code></pre>
-  <p>Why <code>List.copyOf</code>? Returning the private <code>entries</code> list itself would hand every caller a key to the vault. Then <code>log.entries().clear()</code> would erase history. <code>List.copyOf</code> returns a snapshot that refuses changes. Trying <code>add</code> on it throws <code>UnsupportedOperationException</code>, Java's standard "this object does not allow that" exception.</p>
+  <p>Why <code>List.copyOf</code>? Suppose we returned the private <code>entries</code> list itself. That would hand every caller a key to the vault. Then <code>log.entries().clear()</code> would erase the whole history. Instead, <code>List.copyOf</code> returns a <em>snapshot</em>: a copy taken at that moment, which refuses changes. If you call <code>add</code> on it, it throws <code>UnsupportedOperationException</code>. That is Java's standard exception for "this object does not allow that."</p>
 
   <p class="filepath">Saved: smarthome/src/main/java/com/smarthome/activity/LoggedDevice.java</p>
   <pre class="code" data-title="LoggedDevice.java"><code><span class="cmt">// Lives with ActivityLog: it is the logging feature, not a kind of device.</span>
@@ -679,9 +759,17 @@ mvn compile exec:java <span class="str">"-Dexec.mainClass=com.katas.composition.
         }</code></pre>
 
   <p class="filepath">Saved: smarthome/src/test/java/com/smarthome/activity/ActivityLogTest.java and LoggedDeviceTest.java</p>
-  <p>Five tests. <code>recordsEntriesInOrder</code> checks the order. <code>entriesCannotBeChangedFromOutside</code> checks that adding to the returned list throws <code>UnsupportedOperationException</code> and leaves the log unchanged. <code>switchingIsDelegatedAndRecorded</code> expects <code>["Porch Light: ON", "Porch Light: OFF"]</code>. <code>wrapperIsInvisibleToClients</code> checks that name, state and status come straight from the real thermostat. <code>sharedLogKeepsTheOrderAcrossDevices</code> interleaves two devices and expects the true order. <code>DeviceTest</code> and <code>AbstractDeviceTest</code> are untouched, because no device class changed.</p>
+  <p>These two files hold five tests:</p>
+  <ul>
+    <li><code>recordsEntriesInOrder</code> checks the order.</li>
+    <li><code>entriesCannotBeChangedFromOutside</code> checks that adding to the returned list throws <code>UnsupportedOperationException</code>, and leaves the log unchanged.</li>
+    <li><code>switchingIsDelegatedAndRecorded</code> expects <code>["Porch Light: ON", "Porch Light: OFF"]</code>.</li>
+    <li><code>wrapperIsInvisibleToClients</code> checks that name, state and status come straight from the real thermostat.</li>
+    <li><code>sharedLogKeepsTheOrderAcrossDevices</code> switches two devices in turns, and expects the true order.</li>
+  </ul>
+  <p><code>DeviceTest</code> and <code>AbstractDeviceTest</code> are untouched, because no device class changed.</p>
 
-  <p><strong>What this adds:</strong> the hub now has a house-wide activity history. Any device, even kinds not yet written, gets logging. You just wrap it where it is created. No device class knows logging exists, and the loop did not change.</p>
+  <p><strong>What this adds:</strong> the hub now has a history of activity for the whole house. Any device, even kinds not yet written, gets logging. You just wrap it where you create it. No device class knows logging exists, and the loop did not change.</p>
 
   <ol class="trace">
     <li><code>new ActivityLog()</code> makes one empty history.</li>
@@ -717,9 +805,21 @@ mvn compile exec:java</code></pre>
 <section id="s6">
   <h2><span class="sec-num">6</span>In the wild</h2>
 
-  <p><strong>The JDK's own fragile base class.</strong> This lesson's playlist is a small copy of a famous real case. It comes from Joshua Bloch's book <em>Effective Java</em>, in the item "Favor composition over inheritance." There, a counting subclass of <code>java.util.HashSet</code> overrides <code>add</code> and <code>addAll</code>. It adds three elements and reports six. The reason is the same as ours. <code>HashSet</code> inherits <code>addAll</code> from <code>AbstractCollection</code>, which loops and calls <code>add</code>. <code>AbstractCollection</code>'s documentation describes that loop, but <code>HashSet</code> makes no promise to keep inheriting it. A future version could override <code>addAll</code>. That would quietly "fix" the subclass's count, or break a different subclass. Depending on a parent's self-use is fragile in both directions. Bloch's fix is our fix: a wrapper class that holds a <code>Set</code> and forwards to it.</p>
+  <h3>The JDK's own fragile base class</h3>
+  <p>This lesson's playlist is a small copy of a famous real case. It comes from Joshua Bloch's book <em>Effective Java</em>, in the section "Favor composition over inheritance." Here is the story, step by step:</p>
+  <ol>
+    <li>A counting subclass of <code>java.util.HashSet</code> overrides <code>add</code> and <code>addAll</code>.</li>
+    <li>It adds three elements and reports six.</li>
+    <li>The reason is the same as ours. <code>HashSet</code> inherits <code>addAll</code> from <code>AbstractCollection</code>, which loops and calls <code>add</code>.</li>
+  </ol>
+  <p>There is a further twist. <code>AbstractCollection</code>'s documentation describes that loop. But <code>HashSet</code> never promises to keep inheriting it. A future version could override <code>addAll</code>. That would quietly "fix" this subclass's count, or break a different subclass. So depending on a parent's self-use is fragile in both directions. Bloch's fix is our fix: a wrapper class that holds a <code>Set</code> and forwards calls to it.</p>
 
-  <p><strong>The JDK's own wrappers.</strong> <code>Collections.unmodifiableList(list)</code> returns an object that is a <code>List</code> and holds your list. It forwards every read to your list and refuses every write. <code>new BufferedReader(new FileReader("notes.txt"))</code> wraps one reader in another to add buffering. That is the same "implements X, holds an X" shape as <code>LoggedDevice</code>. The whole <code>java.io</code> package uses it (Lesson 19 traces it).</p>
+  <h3>The JDK's own wrappers</h3>
+  <ul>
+    <li><code>Collections.unmodifiableList(list)</code> returns an object that is a <code>List</code> and holds your list. It forwards every read to your list, and refuses every write.</li>
+    <li><code>new BufferedReader(new FileReader("notes.txt"))</code> wraps one file reader in another. The outer one adds <em>buffering</em>: it reads a big chunk of the file at once and hands it out bit by bit, which is faster.</li>
+  </ul>
+  <p>That is the same "implements X, holds an X" shape as <code>LoggedDevice</code>. The whole <code>java.io</code> package uses it (Lesson 19 traces it).</p>
 </section>
 
 <!-- ============================== SECTION 7 ============================== -->
@@ -727,20 +827,34 @@ mvn compile exec:java</code></pre>
   <h2><span class="sec-num">7</span>When NOT to compose, and gotchas</h2>
 
   <h3>Inheritance is still right sometimes</h3>
-  <p>"Favor" composition does not mean "never extend." Our hub kept <code>AbstractDevice</code> on purpose, because it passes every check. The is-a sentence is true. The shared core (name, on/off) is stable. We own both parent and children. And children are meant to be written against it. Inheritance is fine when all of these hold: <strong>a true is-a, a parent designed for extension, both sides under your control, and a core that rarely changes.</strong> Suppose we rewrote <code>AbstractDevice</code> as a component "because composition is better." That would add forwarding code and cure no pain. That is exactly the over-application this course warns against.</p>
+  <p>"Favor" composition does not mean "never extend." Our hub kept <code>AbstractDevice</code> on purpose, because it passes every check:</p>
+  <ul>
+    <li>The is-a sentence is true: a light is a device.</li>
+    <li>The shared core (name, on/off) is stable. It rarely changes.</li>
+    <li>We own both the parent and the children.</li>
+    <li>The parent was designed for children to build on.</li>
+  </ul>
+  <p>So inheritance is fine when all of these hold: <strong>a true is-a, a parent designed for extension, both sides under your control, and a core that rarely changes.</strong></p>
+  <p>Suppose we rewrote <code>AbstractDevice</code> as a held part "because composition is better." That would add forwarding code and cure no pain. That is exactly the over-use this course warns against.</p>
 
   <h3>Gotchas</h3>
   <ul>
-    <li><strong>Composition costs forwarding code.</strong> <code>LoggedDevice</code> must forward all five <code>Device</code> methods, even the three it does not change. Bigger interfaces mean more boilerplate. Implementing the interface at least makes the compiler check that you forgot none.</li>
-    <li><strong>The wrapper is a different object.</strong> <code>wrapper == inner</code> is false. Some code compares objects by identity. Other code keeps a reference to the inner object and uses it directly. Both skip the wrapper's behaviour. Hand out the wrapper, not the inner object.</li>
-    <li><strong>The wrapper does not see the inner object's self-calls.</strong> That is what saved the counter, but it cuts both ways. If you <em>wanted</em> to intercept a call the inner object makes to itself, a wrapper cannot.</li>
-    <li><strong>Leaking internals through a getter.</strong> Returning a private <code>List</code> directly lets callers change it. Return a copy (<code>List.copyOf</code>), as <code>ActivityLog</code> does.</li>
-    <li><strong>If you write a class others may extend, decide on purpose.</strong> Either write down which methods call which, so subclasses can rely on it. Or forbid extension by marking the class <code>final</code>. <code>public final class Playlist</code> means "cannot be extended." It would have made the fragile subclass impossible to write.</li>
+    <li><strong>Composition costs forwarding code.</strong> <code>LoggedDevice</code> must forward all five <code>Device</code> methods, even the three it does not change. Bigger interfaces mean more of this dull, repeated code (programmers call it <em>boilerplate</em>). At least, implementing the interface makes the compiler check that you forgot none.</li>
+    <li><strong>The wrapper is a different object.</strong> <code>wrapper == inner</code> is false. Some code checks whether two variables point at the very same object. Other code keeps a reference to the inner object and uses it directly. Both skip the wrapper's behaviour. So hand out the wrapper, not the inner object.</li>
+    <li><strong>The wrapper does not see the inner object's calls to itself.</strong> That is what saved the counter, but it cuts both ways. Suppose you <em>wanted</em> to catch a call the inner object makes to itself. A wrapper cannot do that.</li>
+    <li><strong>Leaking private data through a getter.</strong> Returning a private <code>List</code> directly lets callers change it. Return a copy (<code>List.copyOf</code>) instead, as <code>ActivityLog</code> does.</li>
+    <li><strong>If you write a class others may extend, decide on purpose.</strong> You have two choices. Either write down which methods call which, so subclasses can rely on it. Or forbid extension by marking the class <code>final</code>. <code>public final class Playlist</code> means "this class cannot be extended." It would have made the fragile subclass impossible to write.</li>
   </ul>
 
   <details class="check">
     <summary>A teammate wants every device to be logged, always. Should logging move into <code>AbstractDevice.turnOn/turnOff</code> after all?</summary>
-    <p>Even then, the wrapper is usually better. Logging inside <code>AbstractDevice</code> has three problems. It ties every device to a log object (where would it come from?). It makes tests of a plain light produce log noise. And devices outside that parent stay unlogged. "Always logged" is a decision about how the hub is <em>put together</em>. So it belongs where devices are created: wrap every device in <code>Main</code>. The device classes stay simple, and the decision stays in one visible place.</p>
+    <p>Even then, the wrapper is usually better. Logging inside <code>AbstractDevice</code> has three problems:</p>
+    <ul>
+      <li>It ties every device to a log object. (Where would that object come from?)</li>
+      <li>It makes tests of a plain light produce unwanted log entries.</li>
+      <li>Devices that do not extend that parent stay unlogged.</li>
+    </ul>
+    <p>"Always logged" is a decision about how the hub is <em>put together</em>. So it belongs where devices are created: wrap every device in <code>Main</code>. The device classes stay simple, and the decision stays in one place you can see.</p>
   </details>
 </section>
 
@@ -759,7 +873,12 @@ mvn compile exec:java</code></pre>
 <!-- ============================== SECTION 9 ============================== -->
 <section id="s9">
   <h2><span class="sec-num">9</span>Challenge</h2>
-  <p>New requirement: maintenance wants to know how many times each device has been switched on, because bulbs wear out. Design a <code>SwitchCountingDevice</code> using composition. Then show how one light can be <strong>both</strong> logged and counted <em>without writing a class for that combination</em>. Predict what this prints:</p>
+  <p>New request: the repair team wants to know how many times each device has been switched on, because bulbs wear out. Do three things:</p>
+  <ol>
+    <li>Design a <code>SwitchCountingDevice</code> using composition.</li>
+    <li>Show how one light can be <strong>both</strong> logged and counted, <em>without writing a class for that combination</em>.</li>
+    <li>Predict what this code prints:</li>
+  </ol>
   <pre class="code" data-title="predict the output"><code><span class="ty">ActivityLog</span> log = <span class="kw">new</span> <span class="ty">ActivityLog</span>();
 <span class="ty">SwitchCountingDevice</span> counted = <span class="kw">new</span> <span class="ty">SwitchCountingDevice</span>(<span class="kw">new</span> <span class="ty">LoggedDevice</span>(<span class="kw">new</span> <span class="ty">Light</span>(<span class="str">"Porch"</span>), log));
 counted.<span class="fn">turnOn</span>();
@@ -805,14 +924,51 @@ counted.<span class="fn">turnOn</span>();
     <p class="pred-label">Prediction</p>
     <pre class="output"><code>2 switch-ons, 3 log entries
 Porch: ON</code></pre>
-    <p>The order of stacking is a real design choice. Here the counter is outermost, so it counts every <code>turnOn</code> before the logger even sees it. For these two features, the order does not change the results. Lesson 19 shows cases where it does. If you type this in (in <code>smarthome/</code>, under <code>activity/</code>), add a test such as "two turnOns and one turnOff give an onCount of 2." Then run <code>mvn test</code>. The machine is the judge. You may delete it afterwards to stay in step with the lessons.</p>
+    <p>The order of stacking is a real design choice. Here the counter is on the outside, so it counts every <code>turnOn</code> before the logger even sees it. For these two features, the order does not change the results. Lesson 19 shows cases where it does.</p>
+    <p>If you type this in (in <code>smarthome/</code>, under <code>activity/</code>), add a test such as "two turnOns and one turnOff give an onCount of 2." Then run <code>mvn test</code>. The machine is the judge. You may delete it afterwards, to stay in step with the lessons.</p>
   </details>
 </section>
 
 <!-- ============================== SECTION 10 ============================== -->
 <section id="s10">
   <h2><span class="sec-num">10</span>Catalog update</h2>
-  <p>No entry yet. "Favor composition over inheritance" gets its catalog entry in Lesson 11, with the other companion principles, once SOLID gives it a frame. You built the wrapper shape twice today (<code>CountingPlaylist</code>, <code>LoggedDevice</code>). It gets its own entry as a named pattern in Lesson 19.</p>
+  <p>No entry yet. "Favor composition over inheritance" gets its catalog entry in Lesson 11, with the other companion principles. By then, the SOLID lessons will have given it a frame. You built the wrapper shape twice today (<code>CountingPlaylist</code> and <code>LoggedDevice</code>). It gets its own entry as a named pattern in Lesson 19.</p>
+</section>
+
+<!-- ============================== SECTION 11 ============================== -->
+<section id="s11">
+  <h2><span class="sec-num">11</span>Key words</h2>
+  <dl class="keywords">
+    <dt>Fragile base class problem</dt><dd>A subclass that breaks when someone changes only its parent.</dd>
+    <dt>Self-use</dt><dd>A class's methods calling each other inside, like <code>addAll</code> calling <code>add</code>.</dd>
+    <dt>White-box reuse</dt><dd>Reusing a class by extending it, and so depending on how it works inside.</dd>
+    <dt>Black-box reuse</dt><dd>Reusing an object only through its public contract, without depending on its insides.</dd>
+    <dt>Composition (has-a)</dt><dd>Building an object out of other objects held in its fields.</dd>
+    <dt>Delegation</dt><dd>Passing a request on to a held object, so it does the real work.</dd>
+    <dt>Wrapper</dt><dd>An object that keeps the same interface as the object it holds, and forwards calls to it, adding something on the way.</dd>
+    <dt>Class explosion</dt><dd>Far too many subclasses, caused by multiplying independent choices.</dd>
+    <dt>Principle</dt><dd>A basic rule that guides design choices.</dd>
+    <dt>Favor composition over inheritance</dt><dd>Prefer has-a to is-a when in doubt. "Favor", not "always".</dd>
+    <dt>Gang of Four (GoF)</dt><dd>The four authors of the 1994 book <em>Design Patterns</em>.</dd>
+    <dt><code>List</code> / <code>ArrayList</code></dt><dd>The JDK's ordered-list interface, and its everyday implementation.</dd>
+    <dt><code>List.of</code> / <code>List.copyOf</code></dt><dd>A small list that can never change; and an unchangeable snapshot copy of another list.</dd>
+    <dt>Snapshot</dt><dd>A copy taken at one moment, which later changes do not affect.</dd>
+    <dt><code>UnsupportedOperationException</code></dt><dd>Java's standard exception for "this object does not allow that operation."</dd>
+    <dt><code>final</code> class</dt><dd>A class that cannot be extended.</dd>
+    <dt>Boilerplate</dt><dd>Dull, repeated code you must write but that adds no new idea, like pure forwarding methods.</dd>
+  </dl>
+</section>
+
+<!-- ============================== SECTION 12 ============================== -->
+<section id="s12">
+  <h2><span class="sec-num">12</span>Quick recap</h2>
+  <ul class="recap">
+    <li>With <code>extends</code>, a parent's internal calls can land on the child's overrides and break it.</li>
+    <li>Composition holds another object and delegates to it, so the other object's insides cannot reach you.</li>
+    <li>A wrapper implements X and holds an X; wrappers can be swapped at run time and stacked.</li>
+    <li>Stacking wrappers avoids a class explosion of one subclass per combination.</li>
+    <li>"Favor composition" means prefer it, not always use it; a true is-a with a stable parent can still extend.</li>
+  </ul>
 </section>
 
 <div class="nextup">

@@ -22,6 +22,8 @@
     <li><a href="#s8">8 · Key takeaways</a></li>
     <li><a href="#s9">9 · Challenge</a></li>
     <li><a href="#s10">10 · Catalog update</a></li>
+    <li><a href="#s11">11 · Key words</a></li>
+    <li><a href="#s12">12 · Quick recap</a></li>
   </ol>
   <nav class="toc-nav" aria-label="Course navigation">
     <span class="navcard disabled">
@@ -49,32 +51,60 @@
   </p>
 </header>
 
+<div class="learn">
+  <ul>
+    <li>How Java turns the text you type into a program that runs, and which tools do each step.</li>
+    <li>How to install Java 21, Maven and Git, and how to check that each one works.</li>
+    <li>How to build the two course projects and run their first tests with one command.</li>
+  </ul>
+</div>
+
 <!-- ============================== SECTION 1 ============================== -->
 <section id="s1">
   <h2><span class="sec-num">1</span>The pain</h2>
 
-  <p class="lead">Before we talk about design at all, we need a workshop that builds the same way every time, on every machine. Here is what life looks like without one.</p>
+  <p class="lead">Before we talk about design, we need a good workshop. It must build our code the same way every time, on every computer. Here is what life looks like without one.</p>
 
-  <p>Imagine you write one small Java file, <code>Main.java</code>. You translate it into something runnable by hand, then run it. It works. Easy.</p>
+  <h3>1.1 One file is easy</h3>
+
+  <p>Imagine you write one small Java file, <code>Main.java</code>. You turn it into something the computer can run, by hand. Then you run it. It works. Easy.</p>
 
   <pre class="terminal" data-title="building by hand"><code><span class="cmt"># translate Main.java into Main.class, then run it</span>
 javac Main.java
 java Main
 <span class="out">Hello!</span></code></pre>
 
-  <p>Now a new requirement arrives: "add an automatic check that the code works." That check needs an outside library called JUnit (you will meet it properly in Section 4). You try the same trick:</p>
+  <h3>1.2 Then the project grows</h3>
+
+  <p>Now a new request arrives: "add an automatic check that the code works." That check needs a <strong>library</strong>. A library is a bundle of ready-made code that someone else wrote so that others can use it. The library we need is called JUnit. (You will meet it properly in Section 4.) You try the same trick as before:</p>
 
   <pre class="terminal" data-title="the trick stops working"><code>javac SmokeTest.java
 <span class="err">SmokeTest.java:3: error: package org.junit.jupiter.api does not exist</span>
 import org.junit.jupiter.api.Test;
                             ^</code></pre>
 
-  <p>Now you must find the library on the internet and download the right version. You must tell the translator where it is. Then you must find every test by hand and run each one. Then a friend clones your code. Their machine has a different Java version and a different copy of the library, and the code breaks for them but not for you. Every developer has heard the sad sentence: <em>"but it works on my machine."</em></p>
+  <p>The computer does not know where JUnit is. So now the jobs pile up:</p>
+  <ol>
+    <li>You find the library on the internet and download the right version.</li>
+    <li>You tell the translator where you saved it.</li>
+    <li>You find every test by hand and run each one.</li>
+  </ol>
+  <p>Then a friend copies your code onto their computer. Their computer has a different Java version. It also has a different copy of the library. The code breaks for them, but not for you. Every developer has heard this sad sentence: <em>"but it works on my machine."</em></p>
 
-  <p>The pain has a name: a <strong>manual, unrepeatable build</strong>. The cure is three tools, each pinned to an exact version. The JDK is a fixed Java toolbox. Maven is a build tool: one command fetches libraries and runs tests. Git keeps the history, so nothing is ever lost. This lesson installs all three and proves they work.</p>
+  <h3>1.3 The name of the pain, and the cure</h3>
+
+  <p>This pain has a name: a <strong>manual, unrepeatable build</strong>. "Manual" means you do every step by hand. "Unrepeatable" means you cannot be sure it happens the same way twice.</p>
+
+  <p>The cure is three tools. We <strong>pin</strong> each one to an exact version. To pin a version means to lock it: we always use that one version, and it never changes by itself. Here are the three tools:</p>
+  <ul>
+    <li><strong>The JDK</strong> is Java's toolbox. It turns your code into a program and runs it.</li>
+    <li><strong>Maven</strong> is a build tool. With one command, it downloads libraries and runs tests.</li>
+    <li><strong>Git</strong> keeps the history of your files, so you never lose work.</li>
+  </ul>
+  <p>This lesson installs all three and proves that they work.</p>
 
   <div class="callout note">
-    <p>If your machine is already set up from an earlier run of this course, skim Sections 2 and 3, then run the checks in Section 4. The checks are the part that matters.</p>
+    <p>Maybe your computer is already set up from an earlier run of this course. If so, skim Sections 2 and 3. Then run the checks in Section 4. The checks are the part that matters.</p>
   </div>
 </section>
 
@@ -82,7 +112,15 @@ import org.junit.jupiter.api.Test;
 <section id="s2">
   <h2><span class="sec-num">2</span>Real-world analogy</h2>
 
-  <p>Think of a <strong>furniture workshop</strong>. You draw the plans. A machine cuts the wood. A foreman reads a work order, fetches the parts, runs the machines in the right order, and calls in an inspector. A photo album records each finished stage, and a copy of the album is kept in a safe somewhere else.</p>
+  <p>Think of a <strong>furniture workshop</strong>. Here is how it works:</p>
+  <ul>
+    <li>You draw the plans.</li>
+    <li>A machine cuts the wood.</li>
+    <li>The workshop boss (the <em>foreman</em>) reads a work order. The foreman fetches the parts and runs the machines in the right order.</li>
+    <li>An inspector checks the finished piece.</li>
+    <li>A photo album records each finished stage. You keep a copy of the album in a safe somewhere else.</li>
+  </ul>
+  <p>Each part of the workshop matches one tool in this course:</p>
 
   <div class="table-wrap">
     <table>
@@ -105,11 +143,18 @@ import org.junit.jupiter.api.Test;
 
   <h3>3.1 How Java runs: from your text to a running program</h3>
 
-  <p>A computer cannot run the text you type. It first has to be <strong>translated</strong>. Translating human-readable code into a form a machine can run is called <strong>compiling</strong>, and the program that does it is a <strong>compiler</strong>. Java's compiler is called <code>javac</code>.</p>
+  <p>A computer cannot run the text you type. Someone must first <strong>translate</strong> it into a form the machine understands. This translating step is called <strong>compiling</strong>. The program that does it is called a <strong>compiler</strong>. Java's compiler is called <code>javac</code>.</p>
 
-  <p>Most compilers translate straight into the raw instructions of one kind of computer. Then the result only runs on that kind of computer. Java does something smarter. <code>javac</code> translates into a halfway language: not human text, and not raw machine instructions either. It is stored in <code>.class</code> files. For example, <code>javac Main.java</code> produces <code>Main.class</code>. This halfway language is called <strong>bytecode</strong>.</p>
+  <p>Most compilers translate straight into the raw instructions of one kind of computer. Then the result runs only on that kind of computer. Java does something smarter. <code>javac</code> translates into a <em>halfway</em> language. It is not human text, and it is not raw machine instructions either. Java stores it in <code>.class</code> files. For example, <code>javac Main.java</code> produces <code>Main.class</code>. This halfway language is called <strong>bytecode</strong>.</p>
 
-  <p>Bytecode needs a program to run it. That program reads the bytecode and carries out each instruction on whatever computer it is installed on. Windows has one, macOS has one, Linux has one. So you compile <em>once</em>, and the same <code>Main.class</code> runs everywhere. A program that acts like a computer inside your computer is called a <em>virtual machine</em>, and this one is the <strong>JVM</strong> (Java Virtual Machine).</p>
+  <p>Bytecode needs a program to run it. That program reads the bytecode. Then it carries out each instruction on the computer it is installed on. Windows has one, macOS has one, and Linux has one. So you compile <em>once</em>, and the same <code>Main.class</code> runs everywhere. A program that acts like a computer inside your computer is called a <em>virtual machine</em>. Java's one is called the <strong>JVM</strong> (Java Virtual Machine).</p>
+
+  <p>Here are the steps in order:</p>
+  <ol>
+    <li>You write <code>Main.java</code>. It is plain text.</li>
+    <li><code>javac</code> compiles it into <code>Main.class</code>. That file holds bytecode.</li>
+    <li>The JVM reads <code>Main.class</code> and runs it, on any operating system.</li>
+  </ol>
 
   <figure class="fig">
     <svg viewBox="0 0 720 200" role="img" aria-label="Flow diagram: Main.java goes into javac, which produces Main.class bytecode, which the JVM runs on Windows, macOS or Linux.">
@@ -149,9 +194,14 @@ import org.junit.jupiter.api.Test;
 
   <h3>3.2 The JDK: the whole toolbox</h3>
 
-  <p>To <em>build</em> Java you need the compiler. To <em>run</em> Java you need the JVM plus Java's ready-made building blocks: text, lists, maps, files, and so on. Those ready-made blocks are called the <strong>standard library</strong>. One download gives you all of it, and that bundle is called the <strong>JDK</strong> (Java Development Kit).</p>
+  <p>To <em>build</em> Java, you need the compiler. To <em>run</em> Java, you need the JVM. You also need Java's ready-made building blocks, for things like text, lists and files. Those ready-made blocks come with Java, and they are called the <strong>standard library</strong>. One download gives you all of it. That bundle is called the <strong>JDK</strong> (Java Development Kit).</p>
 
-  <p>The JDK has two halves. The <em>tools</em> half builds programs (<code>javac</code>, plus the <code>java</code> command that starts the JVM). The <em>runtime</em> half runs them: the JVM plus the standard library. That runtime half used to be downloaded on its own, under the name <strong>JRE</strong> (Java Runtime Environment). You will still see the word, but today you simply install the JDK.</p>
+  <p>The JDK has two halves:</p>
+  <ul>
+    <li>The <em>tools</em> half builds programs. It holds <code>javac</code>, plus the <code>java</code> command that starts the JVM.</li>
+    <li>The <em>runtime</em> half runs programs. It holds the JVM plus the standard library. "Runtime" means "while the program is running."</li>
+  </ul>
+  <p>People used to download the runtime half on its own, under the name <strong>JRE</strong> (Java Runtime Environment). You will still see that word. Today you simply install the JDK.</p>
 
   <figure class="fig">
     <svg viewBox="0 0 720 260" role="img" aria-label="Containment diagram: the JDK contains development tools (javac, java, jar) and the runtime; the runtime contains the JVM and the standard library.">
@@ -178,9 +228,17 @@ import org.junit.jupiter.api.Test;
     <figcaption>Boxes inside boxes mean "is part of." The JDK contains the tools and the runtime; the runtime contains the JVM and the standard library. All teal: all of it is tooling we use, none of it is code we write.</figcaption>
   </figure>
 
-  <p>Java releases a new version every six months. Most versions get fixes for only a short time. Every few years, one version is promised fixes for many years, so teams can stand on it safely. Such a version is called an <strong>LTS</strong> (Long-Term Support) release. We pin <strong>Java 21</strong>, an LTS release, for the whole course. Pinning one version means every prediction in these pages stays true for you.</p>
+  <div class="callout mixup">
+    <p><strong>JDK, JRE, JVM: three names that sound alike.</strong> Think of boxes inside boxes. The <strong>JVM</strong> is the smallest box: it only runs bytecode. The <strong>JRE</strong> is the JVM plus the standard library. The <strong>JDK</strong> is the biggest box: the JRE plus the tools that build code. You install the biggest box, the JDK, and get all three.</p>
+  </div>
 
-  <p><strong>Install it.</strong> Any JDK 21 build works. A popular free one is <em>Eclipse Temurin 21</em> from adoptium.net. On Windows, the installer has an option to set <code>JAVA_HOME</code> and the PATH (both explained in 3.3). Tick both. Then open a <em>new</em> terminal and check:</p>
+  <h3>3.3 Which Java version, and why we pin it</h3>
+
+  <p>Java brings out a new version every six months. Most versions get fixes for only a short time. But every few years, one version gets fixes for many years. Teams can rely on that version safely. Such a version is called an <strong>LTS</strong> (Long-Term Support) release. We pin <strong>Java 21</strong>, an LTS release, for the whole course. Because we all use the same version, every prediction in these pages stays true for you.</p>
+
+  <p><strong>Install it.</strong> Any JDK 21 build works. A popular free one is <em>Eclipse Temurin 21</em> from adoptium.net. On Windows, the installer offers to set two settings, <code>JAVA_HOME</code> and the PATH. (Section 3.4 explains both.) Tick both boxes.</p>
+
+  <p>Next you need a <strong>terminal</strong>. A terminal is a window where you type commands as text, instead of clicking. On Windows it is usually PowerShell. Open a <em>new</em> terminal and check that Java is installed:</p>
 
   <pre class="terminal" data-title="terminal"><code>java -version
 javac -version</code></pre>
@@ -191,17 +249,23 @@ OpenJDK Runtime Environment Temurin-21.0.x+y (build 21.0.x+y-LTS)
 OpenJDK 64-Bit Server VM Temurin-21.0.x+y (build 21.0.x+y-LTS, mixed mode, sharing)
 javac <span class="out">21</span>.0.x</code></pre>
 
-  <p>The only thing that must match is the leading <strong>21</strong> on both lines. If you see 17, 11 or 8, an older Java is getting in the way. The next section shows exactly why.</p>
+  <p>Only one thing must match: the leading <strong>21</strong> on both lines. Do you see 17, 11 or 8 instead? Then an older Java is getting in the way. The next section shows exactly why.</p>
 
-  <h3>3.3 PATH and JAVA_HOME: how your terminal finds Java</h3>
+  <h3>3.4 PATH and JAVA_HOME: how your terminal finds Java</h3>
 
-  <p>When you type <code>java</code>, how does the terminal know which program you mean? Your computer keeps a few named settings that every program can read. For example, one setting holds your user name, and another says where temporary files go. These named settings are called <strong>environment variables</strong>.</p>
+  <p>When you type <code>java</code>, how does the terminal know which program you mean? The answer starts with a few named settings. Your computer keeps them, and every program can read them. For example, one setting holds your user name. Another says where temporary files go. These named settings are called <strong>environment variables</strong>.</p>
 
-  <p>One environment variable lists folders, in order. When you type a command, the terminal looks in the first folder, then the second, and so on, and runs the <em>first</em> match it finds. That list is called the <strong>PATH</strong>. If an old Java 17 folder comes before your Java 21 folder in the PATH, then typing <code>java</code> runs Java 17.</p>
+  <p>One environment variable holds a list of folders, in order. When you type a command, the terminal searches these folders one by one:</p>
+  <ol>
+    <li>It looks in the first folder for a program with that name.</li>
+    <li>If it finds none, it looks in the second folder, and so on.</li>
+    <li>It runs the <em>first</em> match it finds, and stops looking.</li>
+  </ol>
+  <p>That list of folders is called the <strong>PATH</strong>. Suppose an old Java 17 folder comes before your Java 21 folder in the PATH. Then typing <code>java</code> runs Java 17.</p>
 
-  <p>Maven does not rely on the PATH alone. It first looks for an environment variable that names one JDK folder directly, for example <code>C:\Program Files\Eclipse Adoptium\jdk-21…</code>. If that variable is set, Maven uses that JDK. If it is not set, Maven falls back to the <code>java</code> it finds on the PATH. That variable is called <strong><code>JAVA_HOME</code></strong>.</p>
+  <p>Maven does not rely on the PATH alone. First, it looks for an environment variable that names one JDK folder directly, for example <code>C:\Program Files\Eclipse Adoptium\jdk-21…</code>. If that variable is set, Maven uses that JDK. If it is not set, Maven falls back to the <code>java</code> it finds on the PATH. That variable is called <strong><code>JAVA_HOME</code></strong>.</p>
 
-  <p>So the two can disagree. <code>java -version</code> can say 21 while Maven quietly compiles with 17, or the other way round. Try every combination below.</p>
+  <p>So the two settings can disagree. <code>java -version</code> can say 21 while Maven quietly compiles with 17. It can also happen the other way round. Try every combination below.</p>
 
   <div class="sim" id="sim1">
     <h4>Which Java wins? (PATH vs JAVA_HOME)</h4>
@@ -292,39 +356,55 @@ javac <span class="out">21</span>.0.x</code></pre>
     <p>JDK 21. Maven checks <code>JAVA_HOME</code> first and uses it when it is set. The PATH only matters to Maven when <code>JAVA_HOME</code> is missing. But <code>java -version</code> in the same terminal would print 17, because it only looks at the PATH. To avoid confusion, make both point at JDK 21.</p>
   </details>
 
-  <h3>3.4 Maven: the foreman</h3>
+  <h3>3.5 Maven: the foreman</h3>
 
-  <p>You <em>could</em> call <code>javac</code> by hand for every file, download libraries by hand, and run tests by hand. That is the pain from Section 1. A program that does all of it from one command is called a <strong>build tool</strong>. Ours is <strong>Maven</strong>. One command compiles your code, downloads the libraries you asked for, runs your tests, and reports the result.</p>
+  <p>You <em>could</em> do every job by hand. You could call <code>javac</code> for every file, download libraries yourself, and run each test yourself. That is the pain from Section 1. A program that does all of these jobs from one command is called a <strong>build tool</strong>. Ours is called <strong>Maven</strong>. One Maven command does four things:</p>
+  <ol>
+    <li>It downloads the libraries you asked for.</li>
+    <li>It compiles your code.</li>
+    <li>It runs your tests.</li>
+    <li>It reports the result.</li>
+  </ol>
 
-  <p>A few words Maven uses constantly, one at a time:</p>
+  <p>Maven uses a few words all the time. Here they are, one at a time:</p>
   <ul>
-    <li>Your project often needs code that someone else wrote and published, like JUnit for tests. You do not copy it in by hand. You write down its name and version, and Maven downloads it. An outside library your project uses is called a <strong>dependency</strong>.</li>
-    <li>Maven needs a work order for each project: its name, its Java version, its dependencies, and its extra tools. That work order is one file, <code>pom.xml</code>. It is called the <strong>POM</strong> (Project Object Model).</li>
-    <li>Every published library needs a unique address so Maven can fetch exactly the right one. The address has three parts: who owns it (<code>groupId</code>), its name (<code>artifactId</code>), and its <code>version</code>. For example, <code>org.junit.jupiter : junit-jupiter : 5.14.4</code>. These three parts are the <strong>coordinates</strong>, and the published, versioned thing they point to is called an <strong>artifact</strong>.</li>
-    <li>Maven itself only knows the order of the steps. The real work in each step is done by small add-on tools, for example "the thing that runs tests." These add-ons are called <strong>plugins</strong>. We pin three: the compiler plugin (built in), <strong>Surefire</strong> (runs tests), and <strong>exec</strong> (runs a <code>main</code> method).</li>
-    <li>Downloaded artifacts are saved once in a folder in your home directory, <code>~/.m2/repository</code>, and reused by every project after that. This folder is called the <strong>local repository</strong>. It is why only your first build is slow.</li>
+    <li>Your project often needs a library, like JUnit for tests. You do not copy it in by hand. You write down its name and version, and Maven downloads it for you. A library your project needs is called a <strong>dependency</strong>.</li>
+    <li>Maven needs a work order for each project. The work order lists the project's name, its Java version, its dependencies, and its extra tools. That work order is one file, <code>pom.xml</code>. It is called the <strong>POM</strong> (Project Object Model).</li>
+    <li>Every published library needs a unique address, so Maven can fetch exactly the right one. The address has three parts: who owns it (<code>groupId</code>), its name (<code>artifactId</code>), and its <code>version</code>. For example: <code>org.junit.jupiter : junit-jupiter : 5.14.4</code>. These three parts are called the <strong>coordinates</strong>. The published thing they point to is called an <strong>artifact</strong>.</li>
+    <li>Maven itself only knows the order of the steps. Small add-on tools do the real work in each step. For example, one add-on runs the tests. These add-ons are called <strong>plugins</strong>. We pin three: the compiler plugin (built in), <strong>Surefire</strong> (runs tests), and <strong>exec</strong> (runs a <code>main</code> method).</li>
+    <li>Maven saves each downloaded artifact once, in a folder in your home folder: <code>~/.m2/repository</code>. Every project reuses it after that. This folder is called the <strong>local repository</strong>. It is the reason only your first build is slow.</li>
   </ul>
 
-  <p><strong>Install Maven</strong> (3.9.x) from maven.apache.org. Unzip it, add its <code>bin</code> folder to your PATH, open a new terminal, and check:</p>
+  <p><strong>Install Maven</strong> (version 3.9.x) from maven.apache.org. Follow these steps:</p>
+  <ol>
+    <li>Unzip the download.</li>
+    <li>Add its <code>bin</code> folder to your PATH. (<code>bin</code> is the folder that holds Maven's programs.)</li>
+    <li>Open a new terminal, and check:</li>
+  </ol>
 
   <pre class="terminal" data-title="terminal"><code>mvn -version</code></pre>
   <p class="pred-label">Prediction — versions and paths will vary</p>
   <pre class="output"><code>Apache Maven 3.9.x (…)
 Maven home: …
 <span class="out">Java version: 21.0.x</span>, vendor: …, runtime: …</code></pre>
-  <p>The line that matters is <strong>Java version: 21</strong>. That is the JDK Maven will compile with (see 3.3).</p>
+  <p>The line that matters is <strong>Java version: 21</strong>. That is the JDK Maven will compile with (see 3.4).</p>
 
-  <h3>3.5 An IDE: where you will type</h3>
-  <p>Plain text editors know nothing about Java. A smarter editor colours your code, spots typos as you type, suggests method names, and runs tests with a click. Such an editor is called an <strong>IDE</strong> (Integrated Development Environment). Pick either <strong>IntelliJ IDEA Community Edition</strong> (free, the smoothest for Java) or <strong>VS Code</strong> with the "Extension Pack for Java." Every command in this course is a terminal command, so nothing depends on which one you choose.</p>
-
-  <h3>3.6 Git and GitHub: the photo album and the safe</h3>
+  <h3>3.6 An IDE: where you will type</h3>
+  <p>Plain text editors know nothing about Java. A smarter editor does more. It colours your code. It spots typing mistakes as you type. It suggests method names. It runs tests with a click. Such an editor is called an <strong>IDE</strong> (Integrated Development Environment). Pick one of these two:</p>
   <ul>
-    <li>Some tools save the history of your files as a series of snapshots, so you can always go back. Such a tool is called a <strong>version-control</strong> tool. Ours is <strong>Git</strong>.</li>
+    <li><strong>IntelliJ IDEA Community Edition</strong>: free, and the smoothest for Java.</li>
+    <li><strong>VS Code</strong> with the "Extension Pack for Java."</li>
+  </ul>
+  <p>Every command in this course is a terminal command. So nothing depends on which IDE you choose.</p>
+
+  <h3>3.7 Git and GitHub: the photo album and the safe</h3>
+  <ul>
+    <li>Some tools save the history of your files as a series of snapshots. Then you can always go back to an older one. Such a tool is called a <strong>version-control</strong> tool. Ours is <strong>Git</strong>.</li>
     <li>The folder Git watches, together with its whole saved history, is called a <strong>repository</strong> (or <strong>repo</strong>).</li>
     <li>One saved snapshot, with a short message saying what changed (for example, "lesson 00 – setup"), is called a <strong>commit</strong>.</li>
     <li><strong>GitHub</strong> is a website that keeps a copy of your repository online, so a broken laptop never loses your work. That online copy is called a <strong>remote</strong>. Sending your new commits up to it is called a <strong>push</strong>.</li>
   </ul>
-  <p><strong>Install Git</strong> from git-scm.com and check it with <code>git --version</code> (prediction: <code>git version 2.xx.x</code>). Create a free GitHub account and one <em>empty</em> repository named <code>design-patterns-learning</code>. Do not let GitHub add a README or <code>.gitignore</code>. We write those ourselves.</p>
+  <p><strong>Install Git</strong> from git-scm.com. Check it with <code>git --version</code> (prediction: <code>git version 2.xx.x</code>). Then create a free GitHub account. On GitHub, create one <em>empty</em> repository named <code>design-patterns-learning</code>. Do not let GitHub add a README or a <code>.gitignore</code> file. We write those ourselves.</p>
 </section>
 
 <!-- ============================== SECTION 4 ============================== -->
@@ -355,7 +435,12 @@ Maven home: …
         src/main/java/com/smarthome/Main.java
         src/test/java/com/smarthome/SmokeTest.java</code></pre>
 
-  <p>Maven expects one layout, and needs no extra settings when you follow it. Real code goes under <code>src/main/java</code>. Tests go under <code>src/test/java</code>, in the same folders. Inside those, the folders <code>com/katas</code> spell out a name. The name keeps classes from clashing, just as a street name tells apart two houses that are both number 10. The first line of each Java file must say the same name: <code>package com.katas;</code>. This name is called the <strong>package</strong>.</p>
+  <p>Maven expects one fixed layout of folders. If you follow it, Maven needs no extra settings:</p>
+  <ul>
+    <li>Real code goes under <code>src/main/java</code>.</li>
+    <li>Tests go under <code>src/test/java</code>, in matching folders.</li>
+  </ul>
+  <p>Inside those, the folders <code>com/katas</code> spell out a name. The name stops two classes with the same name from clashing. A street name works the same way: it tells apart two houses that are both "number 10." The first line of each Java file must say the same name: <code>package com.katas;</code>. This name is called the <strong>package</strong>.</p>
 
   <h3>4.2 <code>.gitignore</code> and <code>.gitattributes</code></h3>
 
@@ -376,14 +461,21 @@ target/
 
 <span class="cmt"># Local Claude Code settings - machine-specific, never commit</span>
 .claude/</code></pre>
-  <p>Git must never save some files. The three course-control files run the course on <em>your</em> machine and are not course content. <code>target/</code> and <code>*.class</code> are build output. You save the source that makes them, never the output itself. IDE folders hold settings for your machine only. A file that lists paths Git must ignore is a <strong><code>.gitignore</code></strong>. It was written <em>before</em> the first commit, so these files were never saved, not even once.</p>
+  <p>Git must never save some files. Here is why, group by group:</p>
+  <ul>
+    <li>The three course-control files run the course on <em>your</em> computer. They are not course content.</li>
+    <li><code>target/</code> and <code>*.class</code> are <em>build output</em>: files Maven makes from your code. You save the code that makes them, never the output itself.</li>
+    <li>IDE folders hold settings for your computer only.</li>
+  </ul>
+  <p>A file that lists what Git must ignore is called a <strong><code>.gitignore</code></strong>. We wrote it <em>before</em> the first commit. So Git never saved these files, not even once.</p>
 
-  <p>Windows and Linux end each line of a text file with different invisible characters. Mixing them makes Git report changes nobody made. One small file tells Git to always store the Linux style (called "LF"):</p>
+  <p>Windows and Linux end each line of a text file with different invisible characters. If you mix them, Git reports changes that nobody made. One small file tells Git to always store the Linux style (called "LF"):</p>
   <p class="filepath">Saved: .gitattributes</p>
   <pre class="code" data-title=".gitattributes"><code><span class="cmt"># Force LF line endings on every text file</span>
 * text=auto eol=lf</code></pre>
 
   <h3>4.3 <code>katas/pom.xml</code>: read it slowly, it teaches how Maven thinks</h3>
+  <p>The POM is written in <strong>XML</strong>. XML is a text format that wraps each piece of data in named tags. A tag opens with <code>&lt;name&gt;</code> and closes with <code>&lt;/name&gt;</code>. For example, <code>&lt;version&gt;1.0.0&lt;/version&gt;</code> means "the version is 1.0.0." Tags can sit inside other tags, like folders inside folders. Lines between <code>&lt;!--</code> and <code>--&gt;</code> are comments: notes for humans that Maven skips.</p>
   <p class="filepath">Saved: katas/pom.xml</p>
   <pre class="code" data-title="katas/pom.xml"><code><span class="ty">&lt;?xml version="1.0" encoding="UTF-8"?&gt;</span>
 <span class="cmt">&lt;!-- The line above says "this is an XML file, stored as UTF-8 text". --&gt;</span>
@@ -462,15 +554,22 @@ target/
 
 <span class="ty">&lt;/project&gt;</span></code></pre>
 
-  <p>Read top to bottom, the POM answers four questions. <em>Who am I?</em> The coordinates. <em>Which versions?</em> The properties: Java 21 and JUnit 5.14.4, pinned once. <em>What do I need?</em> One dependency, JUnit, in <code>test</code> scope, so it helps the tests but never ships with the program. <em>Which tools run the steps?</em> Surefire and exec. <strong>Saved: <code>smarthome/pom.xml</code></strong> is the same file with <code>com.smarthome</code> coordinates and <code>com.smarthome.Main</code> as its default main class. On purpose, JUnit is the <em>only</em> dependency in either project. There is no framework, so every pattern is seen bare.</p>
+  <p>Read from top to bottom, the POM answers four questions:</p>
+  <ol>
+    <li><em>Who am I?</em> The coordinates.</li>
+    <li><em>Which versions?</em> The properties: Java 21 and JUnit 5.14.4, pinned once.</li>
+    <li><em>What do I need?</em> One dependency, JUnit. Its <code>test</code> scope means it helps the tests but never ships with the program.</li>
+    <li><em>Which tools run the steps?</em> Surefire and exec.</li>
+  </ol>
+  <p><strong>Saved: <code>smarthome/pom.xml</code></strong>. It is the same file, with <code>com.smarthome</code> coordinates and <code>com.smarthome.Main</code> as its default main class. On purpose, JUnit is the <em>only</em> dependency in either project. We use no <em>framework</em> (a big library that runs your code for you and hides some of the work). So you see every pattern bare, with nothing hidden.</p>
 
   <div class="callout note">
-    <p>The versions <strong>JUnit 5.14.4</strong> and <strong>Surefire 3.5.5</strong> are the ones pinned at the course's first setup. <strong>exec-maven-plugin 3.6.1</strong> was newly pinned for this restart. If Maven reports it cannot find that version, tell me what it says, and we will pin the version your Maven can find.</p>
+    <p>We pinned <strong>JUnit 5.14.4</strong> and <strong>Surefire 3.5.5</strong> at the course's first setup. We pinned <strong>exec-maven-plugin 3.6.1</strong> new for this restart. If Maven says it cannot find that version, tell me what it says. Then we will pin a version your Maven can find.</p>
   </div>
 
   <h3>4.4 The four Java files</h3>
 
-  <p>Every Java program needs a starting point, a method the JVM knows to call first. It must be spelled exactly <code>public static void main(String[] args)</code>, or the JVM will not recognise it. This is the <strong><code>main</code> method</strong>. (The words <code>public</code> and <code>static</code> get their full story in Lesson 01 and beyond. For now: "callable from outside" and "no object needed.")</p>
+  <p>Every Java program needs a starting point. That is a method the JVM knows to call first. (A <em>method</em> is a named block of code; Lesson 01 explains it fully.) You must spell it exactly <code>public static void main(String[] args)</code>. Otherwise the JVM will not recognise it. This is the <strong><code>main</code> method</strong>. The words <code>public</code> and <code>static</code> get their full story in Lesson 01 and later. For now, read them as "callable from outside" and "no object needed."</p>
 
   <p class="filepath">Saved: katas/src/main/java/com/katas/Main.java</p>
   <pre class="code" data-title="Main.java (katas)"><code><span class="cmt">// Declares the package (folder-path namespace) this class lives in. The folders</span>
@@ -509,12 +608,12 @@ target/
     }
 }</code></pre>
 
-  <p>Now the tests. Some small pieces of code check other code automatically, so a mistake shows up the moment you run them. Such a check is called a <strong>unit test</strong>. The library that finds and runs unit tests and reports pass or fail is <strong>JUnit</strong>. Two more words appear in the file below:</p>
+  <p>Now the tests. A test is a small piece of code that checks other code automatically. If something is wrong, you find out the moment you run it. A small check like this, for one piece of code, is called a <strong>unit test</strong>. <strong>JUnit</strong> is the library that finds your unit tests, runs them, and reports pass or fail. Two more words appear in the file below:</p>
   <ul>
-    <li>A tag stuck onto code is an <strong>annotation</strong>. Tools read it, but Java itself ignores it. <code>@Test</code> tells JUnit "run this method as a test."</li>
-    <li>An <strong>assertion</strong> is a line inside a test that says what must be true. If it is not true, the test fails. <code>assertEquals(4, 2 + 2)</code> fails if the two values differ.</li>
+    <li>A tag stuck onto code is called an <strong>annotation</strong>. It starts with <code>@</code>. Tools read it, but Java itself ignores it. <code>@Test</code> tells JUnit "run this method as a test."</li>
+    <li>An <strong>assertion</strong> is a line inside a test that says what must be true. If it is not true, the test fails. For example, <code>assertEquals(4, 2 + 2)</code> fails if the two values differ.</li>
   </ul>
-  <p>Our first tests check nothing real. They only prove that the machinery works: the compiler, Maven, JUnit and Surefire. The name comes from electronics: you switch a new device on and check that no smoke comes out. A test like this is called a <strong>smoke test</strong>.</p>
+  <p>Our first tests check nothing real. They only prove that the machinery works: the compiler, Maven, JUnit and Surefire. The name comes from electronics. You switch on a new device and check that no smoke comes out. A test like this is called a <strong>smoke test</strong>.</p>
 
   <p class="filepath">Saved: katas/src/test/java/com/katas/SmokeTest.java</p>
   <pre class="code" data-title="SmokeTest.java (katas)"><code><span class="cmt">// Same package as the code under test. Test sources live in src/test/java,</span>
@@ -644,15 +743,33 @@ mvn compile exec:java</code></pre>
 [INFO] BUILD SUCCESS</code></pre>
 
   <div class="callout tryit">
-    <p>Run each command and check the result against the predictions above. Both test runs should show <code>Tests run: 1, Failures: 0</code> and <code>BUILD SUCCESS</code>. The exec run should print the banner line. <strong>If what you see differs, your machine is right.</strong> Tell me what you saw and we will work out why. <a href="#s7">Section 7</a> and <code>troubleshooting.md</code> decode the usual suspects.</p>
+    <p>Run each command. Then compare the result with the predictions above:</p>
+    <ul>
+      <li>Both test runs should show <code>Tests run: 1, Failures: 0</code> and <code>BUILD SUCCESS</code>.</li>
+      <li>The exec run should print the banner line.</li>
+    </ul>
+    <p><strong>If what you see is different, your machine is right.</strong> Tell me what you saw, and we will work out why. <a href="#s7">Section 7</a> and <code>troubleshooting.md</code> explain the usual problems.</p>
   </div>
 
   <h3>4.7 These lesson pages</h3>
-  <p>Every lesson is a single HTML file that works without internet. Double-click <code>lessons/index.html</code> to open the course map in your browser, and follow the cards from there. Each page has its contents and a <em>Prev / Course map / Next</em> stack in the side column. The pages follow your system's light or dark theme. Glossary words with a dotted underline show their definition when you hover over them or tab to them. Hover <span class="term" tabindex="0" data-def="A small automated check that one piece of code does what it should, run with a single command so breakage is caught early.">unit test</span> to try it.</p>
+  <p>Every lesson is a single web page (an HTML file) that works without internet. Here is how to use them:</p>
+  <ul>
+    <li>Double-click <code>lessons/index.html</code>. It opens the course map in your browser. Follow the cards from there.</li>
+    <li>Each page has its contents in the side column, plus a <em>Prev / Course map / Next</em> stack.</li>
+    <li>The pages follow your computer's light or dark theme.</li>
+    <li>Words with a dotted underline show their meaning when you point at them with the mouse, or reach them with the Tab key. Point at <span class="term" tabindex="0" data-def="A small automated check that one piece of code does what it should, run with a single command so breakage is caught early.">unit test</span> to try it.</li>
+    <li>Each lesson ends with a <em>Key words</em> list and a <em>Quick recap</em>.</li>
+  </ul>
 
   <details class="check">
     <summary>You run <code>mvn test</code> and it ends with <code>BUILD SUCCESS</code>, but the report says <code>Tests run: 0</code>. Is everything fine?</summary>
-    <p>No. Zero tests ran, so nothing was checked. The green build looks fine, but it hides that. There are three usual causes. The test file is in the wrong folder. Or its package line does not match its folders. Or an old Surefire cannot see JUnit 5 tests. Always read the <code>Tests run:</code> count, not just the last line.</p>
+    <p>No. Zero tests ran, so nothing was checked. The green build looks fine, but it hides that. There are three usual causes:</p>
+    <ul>
+      <li>The test file is in the wrong folder.</li>
+      <li>Its <code>package</code> line does not match its folders.</li>
+      <li>An old Surefire cannot see JUnit 5 tests.</li>
+    </ul>
+    <p>Always read the <code>Tests run:</code> count, not just the last line.</p>
   </details>
 </section>
 
@@ -660,14 +777,32 @@ mvn compile exec:java</code></pre>
 <section id="s5">
   <h2><span class="sec-num">5</span>The two code homes, and the Smart Home Hub</h2>
 
-  <p>This course keeps code in two homes, on purpose, because they do two different jobs.</p>
+  <p>This course keeps code in two homes. We do this on purpose, because the two homes do two different jobs.</p>
 
-  <p>A <strong>kata</strong> is a small practice exercise you can repeat until it becomes second nature (the word comes from martial arts). Here it means one tiny, self-contained example per pattern, in its own package, for example <code>com.katas.strategy</code>. Each kata holds the wrong-way version (in a sub-package called <code>naive</code>), the right-way version, a small <code>main</code> demo, and a test. Once its lesson is done, a kata is <strong>frozen</strong>: never edited again. You can always go back and see a pattern in its smallest, purest form.</p>
+  <h3>5.1 The katas: small, frozen examples</h3>
 
-  <p>The <strong>Smart Home Hub</strong> is the opposite: one real, living application that grows lesson by lesson. It controls lights, thermostats, locks, cameras and speakers, reacts to sensors, runs scenes and schedules, and plugs in third-party devices. A pattern goes into the hub only when the hub really needs it. Today the hub is just its banner line. In Lesson 01 it gets its first real code: a <code>Device</code> contract and two devices.</p>
+  <p>A <strong>kata</strong> is a small practice exercise that you repeat until it feels natural. The word comes from martial arts. In this course, a kata is one tiny example for one pattern. It lives in its own package, for example <code>com.katas.strategy</code>. Each kata holds four things:</p>
+  <ol>
+    <li>The wrong-way version. It sits in a sub-package called <code>naive</code>. ("Naive" means a simple first try that does not see the problems coming.)</li>
+    <li>The right-way version.</li>
+    <li>A small <code>main</code> demo you can run.</li>
+    <li>A test.</li>
+  </ol>
+  <p>Once its lesson is done, a kata is <strong>frozen</strong>: we never edit it again. So you can always go back and see a pattern in its smallest, purest form.</p>
+
+  <h3>5.2 The Smart Home Hub: one real, growing project</h3>
+
+  <p>The <strong>Smart Home Hub</strong> is the opposite. It is one real application that grows lesson by lesson. Over the course, it will do all of this:</p>
+  <ul>
+    <li>control lights, thermostats, locks, cameras and speakers;</li>
+    <li>react to sensors, such as a thermometer;</li>
+    <li>run scenes and schedules;</li>
+    <li>plug in devices made by other companies.</li>
+  </ul>
+  <p>A pattern goes into the hub only when the hub really needs it. Today the hub is just one banner line. In Lesson 01 it gets its first real code: a <code>Device</code> contract and two devices.</p>
 
   <div class="callout forlearning">
-    <p>Keeping the wrong-way code beside the right-way code is a teaching device. In a real codebase you delete the naive version once it is refactored, because Git's history already remembers it.</p>
+    <p>We keep the wrong-way code next to the right-way code to help you learn. In a real project you delete the naive version once you have improved it. Git's history already remembers it.</p>
   </div>
 </section>
 
@@ -675,10 +810,12 @@ mvn compile exec:java</code></pre>
 <section id="s6">
   <h2><span class="sec-num">6</span>In the wild</h2>
 
-  <p>The three-part address you just wrote is how the whole Java world shares code. The free public store of open-source Java libraries is called <em>Maven Central</em>. Every library in it is fetched by exactly these coordinates: <code>org.junit.jupiter : junit-jupiter : 5.14.4</code> is the line our POM used. Gradle, the other big Java build tool, reads the very same coordinates from the very same store. Learn coordinates once, and you can pull any open-source Java library into any project.</p>
+  <p>The three-part address you just wrote is how the whole Java world shares code. Many libraries are <em>open source</em>: their code is public, and anyone may use it for free. There is a free public store of open-source Java libraries called <em>Maven Central</em>. Maven fetches every library in it by exactly these coordinates. For example, our POM used <code>org.junit.jupiter : junit-jupiter : 5.14.4</code>.</p>
+
+  <p>Gradle, the other big Java build tool, reads the very same coordinates from the very same store. So once you learn coordinates, you can pull any open-source Java library into any project.</p>
 
   <div class="callout realworld">
-    <p>On a real team, nobody trusts "it passed on my laptop." Every push to GitHub starts a clean server. The server gets the code and runs the <em>same</em> <code>mvn test</code>. This setup is called continuous integration (CI). Pinned versions are what make that server's result match yours. That is the professional cure for "works on my machine," and it rests on exactly what you set up today.</p>
+    <p>On a real team, nobody trusts "it passed on my laptop." Instead, every push to GitHub starts a clean server. The server gets the code and runs the <em>same</em> <code>mvn test</code>. This setup is called <strong>continuous integration</strong> (CI). Pinned versions make that server's result match yours. That is how professionals cure "works on my machine." It rests on exactly what you set up today.</p>
   </div>
 </section>
 
@@ -686,11 +823,11 @@ mvn compile exec:java</code></pre>
 <section id="s7">
   <h2><span class="sec-num">7</span>Gotchas and common mistakes</h2>
   <ul>
-    <li><strong><code>'mvn' is not recognized</code> / <code>command not found</code>.</strong> The tool's <code>bin</code> folder is not on the PATH, or the terminal was opened <em>before</em> you changed it. PATH changes only reach terminals opened afterwards, so open a new one.</li>
-    <li><strong><code>release version 21 not supported</code>.</strong> Maven is using an older JDK, usually because <code>JAVA_HOME</code> points at it. Re-run the simulation in 3.3, then fix <code>JAVA_HOME</code>.</li>
-    <li><strong><code>there is no POM in this directory</code>.</strong> You ran Maven in the wrong folder. Each project (<code>katas/</code>, <code>smarthome/</code>) has its own POM, and Maven only looks in the current folder. The repo root has no POM.</li>
-    <li><strong>PowerShell and <code>-D</code> options.</strong> Later lessons run a chosen kata with <code>-Dexec.mainClass=com.katas.x.Main</code>. PowerShell splits that argument at the dot unless you wrap it in quotes. Always write <code>mvn compile exec:java "-Dexec.mainClass=com.katas.x.Main"</code>. The quotes do no harm in other terminals.</li>
-    <li><strong>Committing build output.</strong> If <code>target/</code> ever appears in <code>git status</code>, your <code>.gitignore</code> is missing or misnamed. Compiled <span class="term" tabindex="0" data-def="The halfway language Java source is compiled into (.class files); not human source, not raw machine code — the JVM reads it.">bytecode</span> never belongs in Git.</li>
+    <li><strong><code>'mvn' is not recognized</code> / <code>command not found</code>.</strong> Two possible causes. The tool's <code>bin</code> folder is not on the PATH. Or you opened the terminal <em>before</em> you changed the PATH. PATH changes only reach terminals opened afterwards, so open a new one.</li>
+    <li><strong><code>release version 21 not supported</code>.</strong> Maven is using an older JDK. Usually <code>JAVA_HOME</code> points at it. Try the simulation in 3.4 again, then fix <code>JAVA_HOME</code>.</li>
+    <li><strong><code>there is no POM in this directory</code>.</strong> You ran Maven in the wrong folder. Each project (<code>katas/</code>, <code>smarthome/</code>) has its own POM. Maven only looks in the current folder. The repo's top folder has no POM.</li>
+    <li><strong>PowerShell and <code>-D</code> options.</strong> Later lessons run a chosen kata with <code>-Dexec.mainClass=com.katas.x.Main</code>. PowerShell splits that text at the dot, unless you wrap it in quotes. So always write <code>mvn compile exec:java "-Dexec.mainClass=com.katas.x.Main"</code>. The quotes do no harm in other terminals.</li>
+    <li><strong>Committing build output.</strong> Does <code>target/</code> ever appear in <code>git status</code>? Then your <code>.gitignore</code> is missing or has the wrong name. Compiled <span class="term" tabindex="0" data-def="The halfway language Java source is compiled into (.class files); not human source, not raw machine code — the JVM reads it.">bytecode</span> never belongs in Git.</li>
   </ul>
 </section>
 
@@ -698,18 +835,23 @@ mvn compile exec:java</code></pre>
 <section id="s8">
   <h2><span class="sec-num">8</span>Key takeaways</h2>
   <ul class="takeaways">
-    <li>The JDK builds, the JVM runs, and Maven drives the whole build. <code>javac</code> turns source into bytecode, the JVM runs it on any operating system, and Maven does every step from one <code>pom.xml</code>.</li>
-    <li>Versions are pinned on purpose (Java 21 LTS, JUnit 5.14.4, Surefire 3.5.5, exec 3.6.1). That keeps the code and its predicted output the same on every machine and in every lesson.</li>
-    <li>The PATH decides which <code>java</code> your terminal runs. <code>JAVA_HOME</code>, when set, decides which JDK Maven uses. Both must point at JDK 21.</li>
-    <li>A smoke test checks the machinery, not the logic. A green test on day one means the compiler, Maven, JUnit and Surefire all work. Always read the <code>Tests run:</code> count.</li>
-    <li>The course has two code homes. Frozen katas show each pattern alone. The one growing Smart Home Hub shows patterns working together. <code>.gitignore</code> keeps the course-control files local, so <code>git add .</code> is always safe.</li>
+    <li>The JDK builds, the JVM runs, and Maven drives the whole build. <code>javac</code> turns your code into bytecode. The JVM runs that bytecode on any operating system. Maven does every step from one <code>pom.xml</code>.</li>
+    <li>We pin every version on purpose: Java 21 LTS, JUnit 5.14.4, Surefire 3.5.5, exec 3.6.1. This keeps the code and its predicted output the same on every computer and in every lesson.</li>
+    <li>The PATH decides which <code>java</code> your terminal runs. <code>JAVA_HOME</code>, when it is set, decides which JDK Maven uses. Both must point at JDK 21.</li>
+    <li>A smoke test checks the machinery, not the logic. A passing test on day one means the compiler, Maven, JUnit and Surefire all work. Always read the <code>Tests run:</code> count.</li>
+    <li>The course has two code homes. Frozen katas show each pattern alone. The growing Smart Home Hub shows patterns working together. <code>.gitignore</code> keeps the course-control files on your computer only, so <code>git add .</code> is always safe.</li>
   </ul>
 </section>
 
 <!-- ============================== SECTION 9 ============================== -->
 <section id="s9">
   <h2><span class="sec-num">9</span>Challenge</h2>
-  <p>You open a terminal in the <strong>repository root</strong> (<code>design-patterns-learning/</code>, not <code>katas/</code>) and type <code>mvn test</code>. Predict what happens. Does Maven test both projects, test neither, or something else? Then say what one change of habit avoids it, and why the course is laid out this way at all.</p>
+  <p>You open a terminal in the <strong>repository root</strong>. That is the top folder, <code>design-patterns-learning/</code>, not <code>katas/</code>. You type <code>mvn test</code>. Answer three questions:</p>
+  <ol>
+    <li>What happens? Does Maven test both projects, test neither, or something else?</li>
+    <li>What one change of habit avoids the problem?</li>
+    <li>Why is the course laid out in two separate projects at all?</li>
+  </ol>
 
   <details class="answer">
     <summary>Click to reveal the answer</summary>
@@ -718,7 +860,7 @@ mvn compile exec:java</code></pre>
     <pre class="output"><code><span class="err">[ERROR] The goal you specified requires a project to execute but there is no POM in this directory (…\design-patterns-learning). Please verify you invoked Maven from the correct directory.</span>
 [INFO] BUILD FAILURE</code></pre>
     <p><strong>The habit:</strong> always <code>cd</code> into the project first (<code>cd katas</code>, then <code>mvn test</code>). Every command in this course names its folder for this reason.</p>
-    <p><strong>Why the layout?</strong> The two projects do different jobs. Katas are frozen exhibits, and the hub keeps changing. Keeping them as separate Maven projects means a change to the hub can never break a kata, and the other way round. Maven <em>can</em> build several projects at once from a parent POM (a "multi-module" build). We skip that on purpose: it would add machinery the course does not need. You will see that judgment again and again: <strong>do not add structure until a real pain asks for it.</strong></p>
+    <p><strong>Why the layout?</strong> The two projects do different jobs. Katas are frozen examples, and the hub keeps changing. We keep them as separate Maven projects. So a change to the hub can never break a kata, and the other way round. Maven <em>can</em> build several projects at once from one parent POM. That is called a "multi-module" build. We skip it on purpose, because it adds machinery the course does not need. You will see this way of thinking again and again: <strong>do not add structure until a real pain asks for it.</strong></p>
     <p>Check it: run <code>mvn test</code> from the repo root and compare the error with the prediction. Then <code>cd katas</code> and run it again.</p>
   </details>
 </section>
@@ -726,7 +868,72 @@ mvn compile exec:java</code></pre>
 <!-- ============================== SECTION 10 ============================== -->
 <section id="s10">
   <h2><span class="sec-num">10</span>Catalog update</h2>
-  <p>No entry this lesson. The <a href="../../pattern-catalog.html">pattern catalog</a> is seeded with its header and an empty index, ready for its first entry: the Single Responsibility Principle in Lesson 05. After that, every principle and pattern adds one entry. Each entry has the same fields: intent, the pain it cures, use it when, do NOT use it when, the cost, relatives, seen in the wild, and where it lives.</p>
+  <p>No entry this lesson. The <a href="../../pattern-catalog.html">pattern catalog</a> is the course's cheat-sheet page. Right now it holds only its header and an empty index. Its first entry arrives in Lesson 05: the Single Responsibility Principle. After that, every principle and pattern adds one entry. Each entry has the same fields:</p>
+  <ul>
+    <li>its intent (its goal, in one line) and the pain it cures;</li>
+    <li>when to use it, and when NOT to use it;</li>
+    <li>what it costs, and which other patterns look like it;</li>
+    <li>where you can see it in real code, and where it lives in this course.</li>
+  </ul>
+</section>
+
+<!-- ============================== SECTION 11 ============================== -->
+<section id="s11">
+  <h2><span class="sec-num">11</span>Key words</h2>
+  <dl class="keywords">
+    <dt>Compiler / compiling</dt><dd>The program that translates the code you type into a form the machine can run. Java's compiler is <code>javac</code>.</dd>
+    <dt>Bytecode</dt><dd>Java's halfway language, stored in <code>.class</code> files. It is not human text and not raw machine code; the JVM reads it.</dd>
+    <dt>JVM</dt><dd>Java Virtual Machine: the program that runs bytecode. Each operating system has its own.</dd>
+    <dt>Standard library</dt><dd>Java's ready-made building blocks (text, lists, files…) that come with every JDK.</dd>
+    <dt>JDK</dt><dd>Java Development Kit: the whole toolbox. Tools that build Java, plus the runtime that runs it.</dd>
+    <dt>JRE</dt><dd>Java Runtime Environment: the old name for the runtime half alone (JVM + standard library).</dd>
+    <dt>LTS</dt><dd>Long-Term Support: a Java version that gets fixes for many years. Java 21 is one.</dd>
+    <dt>Pin (a version)</dt><dd>Lock a tool to one exact version, so it never changes by itself.</dd>
+    <dt>Terminal</dt><dd>A window where you type commands as text. On Windows, usually PowerShell.</dd>
+    <dt>Environment variable</dt><dd>A named setting your computer keeps, which any program can read.</dd>
+    <dt>PATH</dt><dd>The list of folders the terminal searches, in order, when you type a command. The first match wins.</dd>
+    <dt><code>JAVA_HOME</code></dt><dd>A setting that names one JDK folder. Maven uses it when it is set.</dd>
+    <dt>Library</dt><dd>A bundle of ready-made code that someone wrote for others to use.</dd>
+    <dt>Build tool</dt><dd>A program that downloads libraries, compiles code and runs tests from one command.</dd>
+    <dt>Maven</dt><dd>The build tool this course uses. It follows the work order in <code>pom.xml</code>.</dd>
+    <dt>Dependency</dt><dd>A library your project needs. You list it in the POM, and Maven downloads it.</dd>
+    <dt>POM</dt><dd>Project Object Model: the file <code>pom.xml</code>, Maven's work order for one project.</dd>
+    <dt>XML</dt><dd>A text format that wraps each piece of data in named tags, like <code>&lt;version&gt;1.0.0&lt;/version&gt;</code>.</dd>
+    <dt>Coordinates</dt><dd>A library's three-part address: owner (<code>groupId</code>), name (<code>artifactId</code>), <code>version</code>.</dd>
+    <dt>Artifact</dt><dd>One published, versioned thing (usually a library) found by its coordinates.</dd>
+    <dt>Plugin</dt><dd>A small add-on tool that does the real work of one Maven step.</dd>
+    <dt>Surefire</dt><dd>The Maven plugin that finds and runs the tests.</dd>
+    <dt>Local repository</dt><dd>The folder <code>~/.m2/repository</code>, where Maven keeps every download for reuse.</dd>
+    <dt>IDE</dt><dd>Integrated Development Environment: a code editor that understands Java.</dd>
+    <dt>Version control / Git</dt><dd>Saving the history of your files as snapshots, so you can go back. Git is our tool for it.</dd>
+    <dt>Repository (repo)</dt><dd>The folder Git watches, together with its whole saved history.</dd>
+    <dt>Commit</dt><dd>One saved snapshot in Git, with a message about what changed.</dd>
+    <dt>Remote / push</dt><dd>A copy of your repo on another computer (here, GitHub). Pushing sends your new commits there.</dd>
+    <dt><code>.gitignore</code></dt><dd>The file that lists what Git must never save.</dd>
+    <dt><code>.gitattributes</code></dt><dd>The file that makes Git store one line-ending style, so Windows and Linux agree.</dd>
+    <dt>Package</dt><dd>The name a Java class lives under, like <code>com.katas</code>. It matches the class's folders.</dd>
+    <dt><code>main</code> method</dt><dd>The exact starting point the JVM calls first: <code>public static void main(String[] args)</code>.</dd>
+    <dt>Unit test</dt><dd>A small automatic check that one piece of code does what it should.</dd>
+    <dt>JUnit</dt><dd>The library that finds and runs unit tests and reports pass or fail.</dd>
+    <dt>Annotation</dt><dd>A tag that starts with <code>@</code> and is stuck onto code for tools to read, like <code>@Test</code>.</dd>
+    <dt>Assertion</dt><dd>A line in a test that says what must be true. If it is false, the test fails.</dd>
+    <dt>Smoke test</dt><dd>The simplest test. It proves the tools work, not any real logic.</dd>
+    <dt>Kata</dt><dd>A small practice exercise. Here: one tiny, frozen example per pattern.</dd>
+    <dt>Open source / Maven Central</dt><dd>Code that is public and free to use. Maven Central is the free public store of such Java libraries.</dd>
+    <dt>Continuous integration (CI)</dt><dd>A clean server that runs the same build and tests on every push.</dd>
+  </dl>
+</section>
+
+<!-- ============================== SECTION 12 ============================== -->
+<section id="s12">
+  <h2><span class="sec-num">12</span>Quick recap</h2>
+  <ul class="recap">
+    <li><code>javac</code> compiles your code into bytecode, and the JVM runs it anywhere.</li>
+    <li>The JDK is the whole toolbox; we pin Java 21 so everyone gets the same results.</li>
+    <li>Maven reads <code>pom.xml</code>, downloads libraries, compiles, and runs tests with one command.</li>
+    <li>Git saves snapshots of your work, and GitHub keeps a safe copy online.</li>
+    <li>Katas show one pattern each; the Smart Home Hub grows with every lesson.</li>
+  </ul>
 </section>
 
 <div class="nextup">

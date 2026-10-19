@@ -22,6 +22,8 @@
     <li><a href="#s8">8 · Key takeaways</a></li>
     <li><a href="#s9">9 · Challenge</a></li>
     <li><a href="#s10">10 · Catalog update</a></li>
+    <li><a href="#s11">11 · Key words</a></li>
+    <li><a href="#s12">12 · Quick recap</a></li>
   </ol>
   <nav class="toc-nav" aria-label="Course navigation">
     <a class="navcard" href="../../phase-0-oop-foundations/chapter-01-oop/chapter-01-summary.html">
@@ -50,11 +52,22 @@
   </p>
 </header>
 
+<div class="learn">
+  <ul>
+    <li>What SOLID is: five rules for classes that bend without breaking.</li>
+    <li>The first rule, Single Responsibility: how to find a class's "reasons to change" by asking who would request the change.</li>
+    <li>How to split a class that serves too many people, and how to avoid splitting too much.</li>
+  </ul>
+</div>
+
 <!-- ============================== SECTION 1 ============================== -->
 <section id="s1">
   <h2><span class="sec-num">1</span>The pain</h2>
 
-  <p class="lead">A payroll class that works perfectly. Then Accounting asks for a small change, and HR's weekly report quietly starts lying.</p>
+  <p class="lead">Here is a payroll class (the code that works out how much each worker is paid). It works perfectly. Then the Accounting team asks for a small change, and HR's weekly report quietly starts lying.</p>
+
+  <h3>1.1 One class, three teams</h3>
+  <p>A company has three teams that care about workers. <strong>Accounting</strong> pays them. <strong>HR</strong> (Human Resources, the team that looks after staff) tracks their working hours. The <strong>database team</strong> stores their records. One class, <code>Employee</code>, serves all three:</p>
 
   <pre class="code" data-title="naive/Employee.java (key lines)"><code><span class="kw">public int</span> <span class="fn">calculatePay</span>() {                <span class="cmt">// used by ACCOUNTING</span>
     <span class="kw">return</span> <span class="fn">regularHours</span>() * hourlyRate + <span class="fn">overtimeHours</span>() * hourlyRate * <span class="num">2</span>;
@@ -68,13 +81,23 @@
     <span class="kw">return</span> <span class="ty">Math</span>.<span class="fn">min</span>(hoursWorked, <span class="num">40</span>);
 }</code></pre>
 
-  <p>Accounting asks: "for <em>pay</em>, overtime should start after 35 hours." A developer finds <code>regularHours()</code> and changes 40 to 35. The pay tests are green, so the change ships. HR never asked for anything. But <code>reportHours()</code> uses the same helper, so HR's report changed too:</p>
+  <p>(<code>toCsv()</code> turns the worker into one line of text with commas between the values, like <code>Asha,45,20</code>. That format is called <em>CSV</em>, "comma-separated values.")</p>
+
+  <h3>1.2 A small change for one team</h3>
+  <p>Accounting asks: "for <em>pay</em>, overtime should start after 35 hours." (<em>Overtime</em> is extra hours, paid at a higher rate.) Here is what happens next:</p>
+  <ol>
+    <li>A developer finds <code>regularHours()</code> and changes 40 to 35.</li>
+    <li>The pay tests pass, so the change ships.</li>
+    <li>HR never asked for anything. But <code>reportHours()</code> uses the same helper. So HR's report changed too:</li>
+  </ol>
 
   <p class="pred-label">Predicted symptom (Asha worked 45 hours)</p>
   <pre class="output"><code>Naive pay: 1100                              <span class="cmt">&lt;- correct, as Accounting asked</span>
 <span class="err">Naive HR report: Asha: 35 regular hours      &lt;- HR's rule is 40; nobody told HR</span></code></pre>
 
-  <p>Nobody was careless. The developer did exactly what Accounting asked, in the place where the rule lived. The fault is the class. It serves <strong>three different groups</strong>, so a change asked for by one can reach the others. The smell has a name. A class that does many unrelated jobs for many masters is called a <strong>god class</strong>. Our own hub has the start of one: <code>Main</code>. <a href="../../phase-0-oop-foundations/chapter-01-oop/lesson-04-coupling-cohesion-uml.html#s5">Lesson 04 flagged</a> it as losing <span class="term" tabindex="0" data-def="how strongly the parts inside one class serve a single, clear purpose; high is good. Test: one sentence, no &quot;and&quot;.">cohesion</span>.</p>
+  <h3>1.3 Naming the pain</h3>
+  <p>Nobody was careless. The developer did exactly what Accounting asked, in the place where the rule lived. The fault lies in the class itself. It serves <strong>three different groups</strong>. So a change asked for by one group can reach the others.</p>
+  <p>This smell has a name. A class that does many unrelated jobs for many different groups is called a <strong>god class</strong>, because it tries to do everything. Our own hub has the start of one: <code>Main</code>. <a href="../../phase-0-oop-foundations/chapter-01-oop/lesson-04-coupling-cohesion-uml.html#s5">Lesson 04 noticed</a> that it was losing <span class="term" tabindex="0" data-def="how strongly the parts inside one class serve a single, clear purpose; high is good. Test: one sentence, no &quot;and&quot;.">cohesion</span>.</p>
 
   <p class="filepath">Full wrong-way code: katas/src/main/java/com/katas/srp/naive/Employee.java</p>
 </section>
@@ -83,7 +106,13 @@
 <section id="s2">
   <h2><span class="sec-num">2</span>Real-world analogy</h2>
 
-  <p><strong>One circuit breaker for the whole house.</strong> Imagine every light, the fridge and the doorbell all on one breaker. When the electrician works on the kitchen, the bedroom goes dark too. A fault in the doorbell trips the fridge. Real houses have <em>one breaker per circuit</em>, so work on the kitchen touches only the kitchen. The breaker panel's only job is to hold the breakers side by side.</p>
+  <p><strong>One circuit breaker for the whole house.</strong> A <em>circuit breaker</em> is a safety switch in your fuse box. It cuts the power to one set of wires (a <em>circuit</em>) when something goes wrong, or when an electrician works on it.</p>
+  <ul>
+    <li>Imagine every light, the fridge and the doorbell all on one breaker.</li>
+    <li>When the electrician works on the kitchen, the bedroom goes dark too.</li>
+    <li>A fault in the doorbell switches off the fridge.</li>
+  </ul>
+  <p>Real houses have <em>one breaker per circuit</em>. So work on the kitchen touches only the kitchen. The breaker panel's only job is to hold the breakers side by side.</p>
 
   <div class="table-wrap">
     <table>
@@ -104,10 +133,19 @@
   <h2><span class="sec-num">3</span>The principle explained</h2>
 
   <h3>3.1 First, where "SOLID" comes from</h3>
-  <p>Around 2000, Robert C. Martin gathered five rules for designing classes that bend without breaking. A few years later, Michael Feathers noticed that their first letters spelled a word. So the five became known together as <strong>SOLID</strong>: <strong>S</strong>ingle responsibility, <strong>O</strong>pen/closed, <strong>L</strong>iskov substitution, <strong>I</strong>nterface segregation, <strong>D</strong>ependency inversion. This chapter teaches one per lesson, each starting from a real pain. Each one is a sharper version of a Chapter 01 idea.</p>
+  <p>Around the year 2000, Robert C. Martin gathered five rules for designing classes that bend without breaking. A few years later, Michael Feathers noticed that their first letters spelled a word. So people started calling the five rules <strong>SOLID</strong>:</p>
+  <ul>
+    <li><strong>S</strong>ingle responsibility (this lesson);</li>
+    <li><strong>O</strong>pen/closed (Lesson 06);</li>
+    <li><strong>L</strong>iskov substitution (Lesson 07);</li>
+    <li><strong>I</strong>nterface segregation (Lesson 08);</li>
+    <li><strong>D</strong>ependency inversion (Lesson 09).</li>
+  </ul>
+  <p>Don't worry about the long names yet. This chapter teaches one rule per lesson, and each starts from a real pain. Each one is a sharper version of an idea from Chapter 01.</p>
 
   <h3>3.2 What a "responsibility" really is</h3>
-  <p>"A class should do one thing" sounds right, but it is too vague to apply. Is "calculate pay" one thing? Is "handle employees"? Martin's sharper wording is about <em>change</em>. A class's responsibility is defined by who would ask you to change it. Think of the person or group that a piece of code serves. They are the ones who would ask for changes to it. Such a person or group is called an <strong>actor</strong>. The principle then reads:</p>
+  <p>"A class should do one thing" sounds right. But it is too vague to use. Is "calculate pay" one thing? Is "handle employees" one thing? Martin's sharper wording is about <em>change</em>. A class's responsibility depends on <em>who would ask you to change it</em>.</p>
+  <p>Think of the person or group that a piece of code serves. They are the ones who would ask for changes to it. Such a person or group is called an <strong>actor</strong>. (Like an actor in a play, it is someone who takes part.) The principle then reads:</p>
   <div class="callout note">
     <p><strong>A class should have one, and only one, reason to change.</strong> In other words, it should be responsible to one actor. This is the <strong>Single Responsibility Principle (SRP)</strong>.</p>
   </div>
@@ -123,10 +161,18 @@
       </tbody>
     </table>
   </div>
-  <p>Three actors means three reasons to change. So this one class has three responsibilities. The shared <code>regularHours()</code> helper is where they collided. It <em>looked</em> like one rule. But it was really two different rules (Accounting's 35, HR's 40) that happened to use the same number on day one.</p>
+  <p>Three actors means three reasons to change. So this one class has three responsibilities. The shared <code>regularHours()</code> helper is where they crashed into each other. It <em>looked</em> like one rule. But it was really two different rules (Accounting's 35 and HR's 40). They just happened to use the same number on day one.</p>
+
+  <div class="callout mixup">
+    <p><strong>"One responsibility" does not mean "one method."</strong> Many beginners count methods. But a class with ten methods can still have one responsibility, if one actor asks for all its changes. And a class with two methods can have two responsibilities, if two actors use them. Count <em>actors</em>, not methods.</p>
+  </div>
 
   <h3>3.3 The cure: split along the actors</h3>
-  <p>Give each actor its own class. Keep the plain facts that every actor needs in a separate data class. That data class holds no actor's rules.</p>
+  <p>The cure has two steps:</p>
+  <ol>
+    <li>Give each actor its own class, holding that actor's rules.</li>
+    <li>Put the plain facts that every actor needs (name, hours, rate) in a separate data class. That data class holds no actor's rules.</li>
+  </ol>
 
   <figure class="fig">
     <svg viewBox="0 0 720 300" role="img" aria-label="Before: three actors, Accounting, HR and the database team, all point into one Employee class; calculatePay and reportHours both use a shared regularHours helper. After: each actor points to its own class, PayCalculator with cutoff 35, HoursReporter with cutoff 40, and EmployeeCsv, each reading EmployeeData.">
@@ -189,11 +235,11 @@
     <figcaption>Left (red): three actors reach into one class, and two of them meet in a shared helper. Right (blue): each actor has its own class with its own private rule. So Accounting's 35 and HR's 40 can never collide. Grey boxes are people, not code. They are the "reasons to change."</figcaption>
   </figure>
 
-  <p>Notice the two <code>Math.min(...)</code> lines in <code>PayCalculator</code> and <code>HoursReporter</code>. They look like duplication, and on day one they even used the same number. But they change for different reasons, when different actors ask. Code that looks the same but stands for different rules is called <strong>accidental duplication</strong>. Merging it is what caused the bug. Lesson 11's "don't repeat yourself" rule comes with exactly this warning.</p>
+  <p>Notice the two <code>Math.min(...)</code> lines in <code>PayCalculator</code> and <code>HoursReporter</code>. They look like duplicated code. On day one, they even used the same number. But they change for different reasons, when different actors ask. Code that looks the same but stands for different rules is called <strong>accidental duplication</strong>. Two twins can look alike and still be different people. Merging the two rules is what caused the bug. Lesson 11's "don't repeat yourself" rule comes with exactly this warning.</p>
 
   <details class="check">
     <summary>A class <code>Invoice</code> has <code>total()</code>, <code>applyDiscount()</code> and <code>printAsPdf()</code>. How many responsibilities, by the actor test?</summary>
-    <p>Two. <code>total()</code> and <code>applyDiscount()</code> both change when the <em>pricing/sales</em> rules change. That is one actor, so they belong together. <code>printAsPdf()</code> changes when the person who designs the document wants a new layout. That is a different actor. Split out the printing (an <code>InvoicePdf</code> class), and keep total and discount together. Counting methods would have said "three," which is the wrong answer.</p>
+    <p>Two. <code>total()</code> and <code>applyDiscount()</code> both change when the <em>pricing and sales</em> rules change. That is one actor, so they belong together. <code>printAsPdf()</code> changes when the person who designs the document wants a new layout. That is a different actor. So split out the printing (an <code>InvoicePdf</code> class), and keep total and discount together. Counting methods would have said "three," which is the wrong answer.</p>
   </details>
 
   <h3>3.4 What each piece gains</h3>
@@ -201,10 +247,10 @@
     <li><strong>Safety:</strong> a change for one actor cannot reach another actor's code, because they share nothing but plain data.</li>
     <li><strong>Findability:</strong> "where is the overtime rule?" has exactly one answer.</li>
     <li><strong>Testability:</strong> each class is tested alone, with no unrelated setup.</li>
-    <li><strong>Fewer collisions in a team:</strong> when two developers work for two actors, they edit two different files.</li>
+    <li><strong>Fewer clashes in a team:</strong> when two developers work for two actors, they edit two different files.</li>
   </ul>
   <div class="callout note">
-    <p>The honest cost: the caller now deals with three small classes instead of one, and someone must wire them together. In the kata that is <code>Main</code>. In the hub it is <code>Main</code> again, now doing <em>only</em> the wiring. Sometimes callers find it painful to juggle many small objects. A single front door over them is a named pattern of its own (Lesson 20).</p>
+    <p>The honest cost: the caller now deals with three small classes instead of one. And someone must <em>wire</em> them together (create them and connect them). In the kata, <code>Main</code> does that. In the hub, <code>Main</code> does it too, but now it does <em>only</em> the wiring. Sometimes callers find it painful to juggle many small objects. A single "front door" over them is a named pattern of its own (Lesson 20).</p>
   </div>
 </section>
 
@@ -212,7 +258,11 @@
 <section id="s4">
   <h2><span class="sec-num">4</span>The kata</h2>
 
-  <p>Package <code>com.katas.srp</code>. The god class stays in <code>naive/Employee.java</code>. It already has Accounting's change in it, so its bug can be run and tested. <span class="filepath">Saved: katas/src/main/java/com/katas/srp/EmployeeData.java</span> holds the plain facts (<code>name</code>, <code>hoursWorked</code>, <code>hourlyRate</code>) with getters and no rules. <span class="filepath">Saved: katas/src/main/java/com/katas/srp/EmployeeCsv.java</span> turns them into <code>"Asha,45,20"</code>.</p>
+  <p>The kata lives in package <code>com.katas.srp</code>. The god class stays in <code>naive/Employee.java</code>. It already has Accounting's change in it, so you can run its bug and test it. Two small files hold no rules at all:</p>
+  <ul>
+    <li><span class="filepath">Saved: katas/src/main/java/com/katas/srp/EmployeeData.java</span> holds the plain facts (<code>name</code>, <code>hoursWorked</code>, <code>hourlyRate</code>) with getters.</li>
+    <li><span class="filepath">Saved: katas/src/main/java/com/katas/srp/EmployeeCsv.java</span> turns those facts into <code>"Asha,45,20"</code>.</li>
+  </ul>
 
   <p class="filepath">Saved: katas/src/main/java/com/katas/srp/PayCalculator.java</p>
   <pre class="code" data-title="PayCalculator.java"><code><span class="cmt">// The RIGHT WAY, part 2: Accounting's rules, and only Accounting's.</span>
@@ -301,7 +351,13 @@ SRP pay: 1100
 SRP CSV: Asha,45,20</code></pre>
 
   <h4>The tests</h4>
-  <p><span class="filepath">Saved: katas/src/test/java/com/katas/srp/ResponsibilitiesTest.java</span> has three tests: <code>payUsesAccountingsCutoff</code> (1100), <code>hoursReportUsesHrsCutoff</code> ("Asha: 40 regular hours"), and <code>csvHoldsTheRawFacts</code> ("Asha,45,20"). <span class="filepath">Saved: katas/src/test/java/com/katas/srp/GodClassTest.java</span> <em>pins the bug</em> on purpose, as Lesson 03 did. It asserts that the naive pay is 1100 <em>and</em> that the naive HR report says 35. So the machine confirms the leak.</p>
+  <p><span class="filepath">Saved: katas/src/test/java/com/katas/srp/ResponsibilitiesTest.java</span> has three tests:</p>
+  <ul>
+    <li><code>payUsesAccountingsCutoff</code> expects 1100.</li>
+    <li><code>hoursReportUsesHrsCutoff</code> expects "Asha: 40 regular hours".</li>
+    <li><code>csvHoldsTheRawFacts</code> expects "Asha,45,20".</li>
+  </ul>
+  <p><span class="filepath">Saved: katas/src/test/java/com/katas/srp/GodClassTest.java</span> <em>pins down the bug</em> on purpose, as Lesson 03 did. It asserts that the naive pay is 1100 <em>and</em> that the naive HR report says 35. So the machine itself confirms the leak.</p>
 
   <pre class="terminal" data-title="terminal — from design-patterns-learning/"><code>cd katas
 mvn test
@@ -310,7 +366,8 @@ mvn compile exec:java <span class="str">"-Dexec.mainClass=com.katas.srp.Main"</s
   <pre class="output"><code><span class="out">[INFO] Tests run: 27, Failures: 0, Errors: 0, Skipped: 0</span>
 <span class="out">[INFO] BUILD SUCCESS</span></code></pre>
   <div class="callout tryit">
-    <p>Expect <strong>27 tests</strong> (23 earlier + 4 new) and the five demo lines. If anything differs, the machine is right. Tell me what you saw. Then play Accounting: change <code>PAY_OVERTIME_AFTER</code> to 38 and run <code>mvn test</code>. Only <code>payUsesAccountingsCutoff</code> fails (expected 1100, now 1040). HR's test stays green. Undo the change afterwards.</p>
+    <p>Expect <strong>27 tests</strong> (23 earlier + 4 new) and the five demo lines. If anything is different, the machine is right. Tell me what you saw.</p>
+    <p>Then pretend to be Accounting. Change <code>PAY_OVERTIME_AFTER</code> to 38 and run <code>mvn test</code>. Only <code>payUsesAccountingsCutoff</code> fails (it expected 1100, and now gets 1040). HR's test still passes. Undo the change afterwards.</p>
   </div>
 </section>
 
@@ -319,7 +376,13 @@ mvn compile exec:java <span class="str">"-Dexec.mainClass=com.katas.srp.Main"</s
   <h2><span class="sec-num">5</span>Applied to the Smart Home Hub</h2>
 
   <h4>The pain, arriving in the hub</h4>
-  <p>Three requests arrive the same week, from three different people. The <strong>installer</strong> will add devices next month. The <strong>homeowner</strong> wants a fixed start-up routine: everything on, then the living-room light off. The <strong>app designer</strong> wants a proper house report: how many devices, how many are on, each one's status, then the activity history. All three would land in <code>Main</code>. It already builds the devices, wraps them, loops over them and prints the log. That is one method with three actors. And there is no way to test the report, because it is printed straight to the console. That is the Employee problem on our own doorstep.</p>
+  <p>Three requests arrive in the same week, from three different people:</p>
+  <ul>
+    <li>The <strong>installer</strong> will add devices next month.</li>
+    <li>The <strong>homeowner</strong> wants a fixed start-up routine: everything on, then the living-room light off.</li>
+    <li>The <strong>app designer</strong> wants a proper house report: how many devices, how many are on, each one's status, then the activity history.</li>
+  </ul>
+  <p>All three would land in <code>Main</code>. It already builds the devices, wraps them, loops over them and prints the log. That is one method with three actors. And there is no way to test the report, because <code>Main</code> prints it straight to the console. It is the Employee problem, right here in our own project.</p>
 
   <h4>The split</h4>
   <figure class="fig">
@@ -459,7 +522,8 @@ mvn compile exec:java <span class="str">"-Dexec.mainClass=com.katas.srp.Main"</s
     }
 }</code></pre>
 
-  <p>The report builds its text piece by piece. The JDK's tool for that is a growable piece of text: <code>append(...)</code> adds to its end, and <code>toString()</code> gives back the finished <code>String</code>. That tool is called <code>StringBuilder</code>. It is cheaper than joining many strings with <code>+</code> in a loop. And the report returns the text instead of printing it. That is what makes the report testable.</p>
+  <p>The report builds its text piece by piece. The JDK has a tool for that: a piece of text that can grow. <code>append(...)</code> adds to its end. <code>toString()</code> gives back the finished <code>String</code>. That tool is called <code>StringBuilder</code>. It is faster than joining many strings with <code>+</code> in a loop.</p>
+  <p>Also notice: the report <em>returns</em> the text instead of printing it. That one choice is what makes the report testable.</p>
 
   <p class="filepath">Saved: smarthome/src/main/java/com/smarthome/report/HouseReport.java</p>
   <pre class="code" data-title="HouseReport.java"><code><span class="cmt">// Presentation code lives in its own "report" package.</span>
@@ -549,7 +613,11 @@ mvn compile exec:java <span class="str">"-Dexec.mainClass=com.katas.srp.Main"</s
 }</code></pre>
 
   <h4>The tests</h4>
-  <p><span class="filepath">Saved: smarthome/src/test/java/com/smarthome/home/HubTest.java</span> has three tests: <code>startUpTurnsEveryDeviceOn</code>, <code>turnOffSwitchesOnlyTheNamedDevice</code>, and <code>unknownNameIsRefused</code>. <span class="filepath">Saved: smarthome/src/test/java/com/smarthome/home/HomeSetupTest.java</span> checks both device names and that switching the first one lands in the log. <span class="filepath">Saved: smarthome/src/test/java/com/smarthome/report/HouseReportTest.java</span> compares the <em>exact</em> report text for a typical house and an empty one. That test was impossible while the report was printed from inside <code>Main</code>:</p>
+  <ul>
+    <li><span class="filepath">Saved: smarthome/src/test/java/com/smarthome/home/HubTest.java</span> has three tests: <code>startUpTurnsEveryDeviceOn</code>, <code>turnOffSwitchesOnlyTheNamedDevice</code>, and <code>unknownNameIsRefused</code>.</li>
+    <li><span class="filepath">Saved: smarthome/src/test/java/com/smarthome/home/HomeSetupTest.java</span> checks both device names, and that switching the first one lands in the log.</li>
+    <li><span class="filepath">Saved: smarthome/src/test/java/com/smarthome/report/HouseReportTest.java</span> compares the <em>exact</em> report text for a typical house and an empty one. That test was impossible while <code>Main</code> printed the report itself:</li>
+  </ul>
   <pre class="code" data-title="HouseReportTest.java (key assertion)"><code>        <span class="cmt">// Every line, exactly.</span>
         <span class="fn">assertEquals</span>(<span class="str">"=== House report ===\n"</span>
                 + <span class="str">"Devices: 2 (1 on)\n"</span>
@@ -560,7 +628,13 @@ mvn compile exec:java <span class="str">"-Dexec.mainClass=com.katas.srp.Main"</s
                 + <span class="str">"  2. Hall Thermostat: regulating to 21C\n"</span>
                 + <span class="str">"  3. Living Room Light: OFF\n"</span>, text);</code></pre>
 
-  <p><strong>What this adds:</strong> a proper house report with an on-count, and a hub where each of the three actors has one file to change. Adding a device touches only <code>HomeSetup</code>. Changing the start-up routine touches only <code>Hub</code>. Restyling the report touches only <code>HouseReport</code>. The device classes, the wrapper and the log were not touched.</p>
+  <p><strong>What this adds:</strong> a proper house report that counts the devices that are on. And each of the three actors now has one file to change:</p>
+  <ul>
+    <li>Adding a device touches only <code>HomeSetup</code>.</li>
+    <li>Changing the start-up routine touches only <code>Hub</code>.</li>
+    <li>Restyling the report touches only <code>HouseReport</code>.</li>
+  </ul>
+  <p>We did not touch the device classes, the wrapper, or the log.</p>
 
   <ol class="trace">
     <li>The banner prints. <code>Main</code> creates the log, then asks <code>HomeSetup</code> for the devices: two <code>LoggedDevice</code>s wrapping a Light and a Thermostat.</li>
@@ -595,10 +669,15 @@ mvn compile exec:java</code></pre>
 <!-- ============================== SECTION 6 ============================== -->
 <section id="s6">
   <h2><span class="sec-num">6</span>In the wild</h2>
-  <p>The JDK's date-and-time library keeps <em>what a date is</em> separate from <em>how a date looks</em>. <code>java.time.LocalDate</code> holds a date and knows calendar arithmetic (<code>plusDays</code>, <code>isLeapYear</code>…). <code>java.time.format.DateTimeFormatter</code> owns the display rules: <code>"16/10/2026"</code> versus <code>"Oct 16, 2026"</code>. <code>LocalDate</code> does have a handy method, <code>format(formatter)</code>. But the formatting <em>rules</em> live in the formatter. A designer who changes a date style never touches calendar code. A calendar fix never touches display code. That is the hub's <code>HouseReport</code> split, at JDK scale.</p>
+  <p>The JDK's date-and-time library keeps <em>what a date is</em> separate from <em>how a date looks</em>:</p>
+  <ul>
+    <li><code>java.time.LocalDate</code> holds a date and knows calendar maths (<code>plusDays</code>, <code>isLeapYear</code>…).</li>
+    <li><code>java.time.format.DateTimeFormatter</code> owns the display rules: <code>"16/10/2026"</code> versus <code>"Oct 16, 2026"</code>.</li>
+  </ul>
+  <p><code>LocalDate</code> does have a handy method, <code>format(formatter)</code>. But the formatting <em>rules</em> live in the formatter. So a designer who changes a date style never touches calendar code. And a calendar fix never touches display code. That is the hub's <code>HouseReport</code> split, at JDK size.</p>
 
   <div class="callout realworld">
-    <p>On teams, SRP violations show up as merge conflicts. Two developers, working for two different stakeholders, keep editing the same file. "Who would ask for this change?" is also a strong code-review question. If the answer for one class is "three different teams," it is a god class in the making.</p>
+    <p>On teams, two developers sometimes edit the same lines of the same file at the same time. When Git tries to combine their work, it cannot decide whose version wins. That is called a <em>merge conflict</em>. SRP problems often show up this way: two developers, working for two different groups, keep editing the same file. "Who would ask for this change?" is also a strong code-review question. If the answer for one class is "three different teams," it is a god class in the making.</p>
   </div>
 </section>
 
@@ -607,11 +686,18 @@ mvn compile exec:java</code></pre>
   <h2><span class="sec-num">7</span>When NOT to use it</h2>
 
   <h3>The over-application trap</h3>
-  <p>Read wrongly, "one responsibility" becomes "one method per class." Then a design turns into a swarm of tiny classes that only pass calls along. Suppose we "SRP'd" <code>HouseReport</code> into <code>ReportHeaderFormatter</code>, <code>DeviceLinesFormatter</code>, <code>ActivityLinesFormatter</code> and a <code>ReportAssembler</code> to call them. Every one of those would change for the <em>same</em> actor, the app designer. And they would usually change <em>together</em>: a new style touches all four. We would have taken one cohesive class and scattered it. Some classes have almost no behaviour of their own and only hold one sliver of a job. They are called <strong>anemic</strong> classes. They are the needless-complexity smell from Lesson 04.</p>
+  <p>If you read it wrongly, "one responsibility" becomes "one method per class." Then a design turns into a crowd of tiny classes that only pass calls along.</p>
+  <p>Suppose we split <code>HouseReport</code> into <code>ReportHeaderFormatter</code>, <code>DeviceLinesFormatter</code>, <code>ActivityLinesFormatter</code>, and a <code>ReportAssembler</code> to call them. Check them with the actor test:</p>
+  <ul>
+    <li>Every one of them would change for the <em>same</em> actor, the app designer.</li>
+    <li>They would usually change <em>together</em>: a new style touches all four.</li>
+  </ul>
+  <p>So we would have taken one cohesive class and scattered it. Some classes have almost no behaviour of their own. They hold only a tiny slice of a job. They are called <strong>anemic</strong> classes ("anemic" means weak, lacking strength). They are the needless-complexity smell from Lesson 04.</p>
   <p>The test is never "how many methods?" It is "<strong>how many actors?</strong>" One actor with ten methods is fine. Two actors sharing one helper is not.</p>
 
-  <h3>The simpler alternative that often suffices</h3>
-  <p>Sometimes a class serves two actors, but both parts are tiny and stable. Then a clear comment and well-separated private sections can be enough <em>for now</em>. Split when the second real change request arrives. That is the moment the collision would actually hurt. The cost of SRP is real: more files, wiring code, and more hops when reading. Pay it when there are real, separate reasons to change, not imagined ones.</p>
+  <h3>The simpler alternative that often works</h3>
+  <p>Sometimes a class serves two actors, but both parts are tiny and rarely change. Then a clear comment and well-separated private sections can be enough <em>for now</em>. Split the class when the second real change request arrives. That is the moment the clash would actually hurt.</p>
+  <p>The cost of SRP is real: more files, wiring code, and more hops when reading. Pay it when there are real, separate reasons to change, not imagined ones.</p>
 
   <h3>Relatives and look-alikes</h3>
   <ul>
@@ -629,14 +715,20 @@ mvn compile exec:java</code></pre>
     <li>Count actors, not methods. "Who would ask me to change this?" finds responsibilities far more reliably than "does it do one thing?"</li>
     <li>When one class serves several actors, a change for one can quietly break another. A common cause is a shared helper that merges rules that only looked alike.</li>
     <li>Splitting along actors gives each change one obvious home. It keeps teams out of each other's files, and each piece can be tested alone. The price is more classes and some wiring code.</li>
-    <li>Over-splitting is a smell too. Pieces that always change together for the same actor belong in one cohesive class, not in a swarm of anemic one-method classes.</li>
+    <li>Over-splitting is a smell too. Pieces that always change together for the same actor belong in one cohesive class, not in a crowd of anemic one-method classes.</li>
   </ul>
 </section>
 
 <!-- ============================== SECTION 9 ============================== -->
 <section id="s9">
   <h2><span class="sec-num">9</span>Challenge</h2>
-  <p>A teammate wrote this class for the hub's future camera. Use the actor test. How many responsibilities does it have? Which methods must <strong>stay together</strong>? How would you split it? Then predict what <code>new MotionAlert().text("Porch")</code> returns in your design.</p>
+  <p>A teammate wrote this class for the hub's future camera. Use the actor test to answer four questions:</p>
+  <ol>
+    <li>How many responsibilities does it have?</li>
+    <li>Which methods must <strong>stay together</strong>?</li>
+    <li>How would you split it?</li>
+    <li>What does <code>new MotionAlert().text("Porch")</code> return in your design?</li>
+  </ol>
   <pre class="code" data-title="SecurityCamera.java (as written)"><code><span class="kw">public class</span> <span class="ty">SecurityCamera</span> {
     <span class="kw">public boolean</span> <span class="fn">isMotionDetected</span>() { … }        <span class="cmt">// reads the sensor</span>
     <span class="kw">public byte</span>[] <span class="fn">recordClip</span>(<span class="kw">int</span> seconds) { … }   <span class="cmt">// grabs frames from the lens</span>
@@ -669,7 +761,8 @@ mvn compile exec:java</code></pre>
 }</code></pre>
     <p class="pred-label">Prediction</p>
     <pre class="output"><code>Motion at Porch</code></pre>
-    <p>Wiring them together (camera → encoder → uploader, plus the alert) is assembly work. So it belongs where the hub is put together, just as <code>Main</code> wires <code>HomeSetup</code>, <code>Hub</code> and <code>HouseReport</code>. The hub gets a real camera in a later lesson. If you code <code>MotionAlert</code> in a scratch package with a one-line test, run <code>mvn test</code> and compare. The machine is the judge.</p>
+    <p>Wiring them together (camera → encoder → uploader, plus the alert) is assembly work. So it belongs where the hub is put together, just as <code>Main</code> wires <code>HomeSetup</code>, <code>Hub</code> and <code>HouseReport</code>. The hub gets a real camera in a later lesson.</p>
+    <p>If you code <code>MotionAlert</code> in a throwaway practice package with a one-line test, run <code>mvn test</code> and compare. The machine is the judge.</p>
   </details>
 </section>
 
@@ -685,6 +778,39 @@ mvn compile exec:java</code></pre>
     <li><strong>Cost:</strong> more classes, wiring code, more hops.</li>
     <li><strong>Seen in the wild:</strong> <code>LocalDate</code> vs <code>DateTimeFormatter</code>.</li>
     <li><strong>Where:</strong> kata <code>com.katas.srp</code>; hub <code>home.HomeSetup</code>, <code>home.Hub</code>, <code>report.HouseReport</code>.</li>
+  </ul>
+</section>
+
+<!-- ============================== SECTION 11 ============================== -->
+<section id="s11">
+  <h2><span class="sec-num">11</span>Key words</h2>
+  <dl class="keywords">
+    <dt>SOLID</dt><dd>Five class-design rules: Single responsibility, Open/closed, Liskov substitution, Interface segregation, Dependency inversion.</dd>
+    <dt>Payroll</dt><dd>The work (or code) of calculating how much each worker is paid.</dd>
+    <dt>HR</dt><dd>Human Resources: the team that looks after a company's staff.</dd>
+    <dt>CSV</dt><dd>Comma-separated values: data written as one line of text with commas between values.</dd>
+    <dt>God class</dt><dd>A class that does many unrelated jobs for many groups, so every change touches it.</dd>
+    <dt>Actor</dt><dd>A person or group whose needs some code serves, and who would ask for changes to it.</dd>
+    <dt>Responsibility</dt><dd>A reason to change: one actor that a class answers to.</dd>
+    <dt>Single Responsibility Principle (SRP)</dt><dd>A class should have one, and only one, reason to change: it answers to one actor.</dd>
+    <dt>Accidental duplication</dt><dd>Code that looks the same but stands for different rules for different actors. Merging it ties them together.</dd>
+    <dt>Wire (objects)</dt><dd>Create objects and connect them to each other, usually in one place like <code>Main</code>.</dd>
+    <dt><code>StringBuilder</code></dt><dd>The JDK's growable text: <code>append(...)</code> adds to its end, <code>toString()</code> gives the finished <code>String</code>.</dd>
+    <dt>Merge conflict</dt><dd>When Git cannot combine two people's edits to the same lines, and a human must choose.</dd>
+    <dt>Anemic class</dt><dd>A class with almost no behaviour of its own, holding a tiny slice of a job; the result of over-splitting.</dd>
+    <dt>Pattern catalog</dt><dd>This course's cheat-sheet page, with one entry per principle and pattern.</dd>
+  </dl>
+</section>
+
+<!-- ============================== SECTION 12 ============================== -->
+<section id="s12">
+  <h2><span class="sec-num">12</span>Quick recap</h2>
+  <ul class="recap">
+    <li>SRP: a class should have one reason to change, meaning it answers to one actor.</li>
+    <li>Find responsibilities by asking "who would ask me to change this?", not by counting methods.</li>
+    <li>A helper shared by two actors is where their changes crash into each other.</li>
+    <li>Split along actors; keep shared plain facts in a data class with no rules.</li>
+    <li>Do not over-split: parts that always change together for one actor belong together.</li>
   </ul>
 </section>
 

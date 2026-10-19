@@ -309,6 +309,64 @@ pre .err { color: #ff8a80; font-weight: 700; }
 .callout.forlearning::before { content: "For learning only"; color: #a21caf; }
 .callout.realworld { border-left-color: #7c3aed; background: #f3effd; }
 .callout.realworld::before { content: "In the real world"; color: #7c3aed; }
+/* A point beginners often get wrong, named and cleared up on the spot. */
+.callout.mixup { border-left-color: #0f766e; border-style: dashed; border-left-style: solid; background: #ffffff; }
+.callout.mixup::before { content: "Common mix-up"; color: #0f766e; }
+
+/* ---------- 6b. Lesson opener, key words, quick recap ---------- */
+
+/* "What you will learn": 2-3 lines straight after the banner. */
+.learn {
+  background: #ffffff;
+  border: 1px solid #d5dce6;
+  border-top: 4px solid #1d5fbf;
+  border-radius: 12px;
+  padding: 0.9rem 1.2rem 0.3rem;
+  margin: -0.75rem 0 2.25rem;
+}
+.learn::before {
+  content: "What you will learn";
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #1d5fbf;
+  margin-bottom: 0.35rem;
+}
+.learn ul { margin: 0 0 0.6rem; }
+
+/* Key words: each term with a one-line simple meaning. */
+dl.keywords {
+  display: grid;
+  grid-template-columns: minmax(8rem, 14rem) minmax(0, 1fr);
+  background: #ffffff;
+  border: 1px solid #d5dce6;
+  border-radius: 10px;
+  margin: 0 0 1.4rem;
+  overflow: hidden;
+  font-size: 0.95rem;
+}
+dl.keywords dt {
+  font-weight: 700;
+  color: #163f7d;
+  background: #f3f6fb;
+  padding: 0.5rem 0.8rem;
+  border-bottom: 1px solid #e3e8ef;
+}
+dl.keywords dd { margin: 0; padding: 0.5rem 0.8rem; border-bottom: 1px solid #e3e8ef; }
+dl.keywords dt:last-of-type, dl.keywords dd:last-of-type { border-bottom: 0; }
+
+/* Quick recap: 3-5 ticked one-liners at the very end of a lesson. */
+ul.recap {
+  list-style: none;
+  background: #ebf7f5;
+  border: 1px solid #0f766e;
+  border-radius: 12px;
+  padding: 0.8rem 1.1rem 0.4rem;
+}
+ul.recap > li { position: relative; padding-left: 1.7rem; margin: 0 0 0.5rem; }
+ul.recap > li::before { content: "\2713"; position: absolute; left: 0.1rem; top: 0; color: #0f766e; font-weight: 800; }
 
 /* ---------- 7. Tables, traces, lists ---------- */
 
@@ -700,6 +758,12 @@ dl.catalog-fields dd ul { margin: 0.2rem 0 0.4rem; }
   main section > h2 { font-size: 1.3rem; }
 }
 
+@media (max-width: 600px) {
+  dl.keywords { grid-template-columns: minmax(0, 1fr); }
+  dl.keywords dt { border-bottom: 0; padding-bottom: 0.1rem; }
+  dl.keywords dt:last-of-type { border-bottom: 0; }
+}
+
 /* ---------- 15. Dark mode (all overrides grouped here) ---------- */
 
 @media (prefers-color-scheme: dark) {
@@ -750,6 +814,16 @@ dl.catalog-fields dd ul { margin: 0.2rem 0 0.4rem; }
   .callout.forlearning::before { color: #e57bd6; }
   .callout.realworld { border-left-color: #c4b5fd; background: #1d1830; }
   .callout.realworld::before { color: #c4b5fd; }
+  .callout.mixup { border-left-color: #4fd1c5; background: #161d26; }
+  .callout.mixup::before { color: #4fd1c5; }
+
+  .learn { background: #161d26; border-color: #2a3542; border-top-color: #7fb0ff; }
+  .learn::before { color: #7fb0ff; }
+  dl.keywords { background: #161d26; border-color: #2a3542; }
+  dl.keywords dt { background: #1c2a40; color: #b9d3ff; border-bottom-color: #2a3542; }
+  dl.keywords dd { border-bottom-color: #2a3542; }
+  ul.recap { background: #0f2422; border-color: #4fd1c5; }
+  ul.recap > li::before { color: #4fd1c5; }
 
   .table-wrap { background: #161d26; border-color: #2a3542; }
   .table-wrap th { background: #1c2a40; color: #b9d3ff; }
@@ -877,7 +951,9 @@ dl.catalog-fields dd ul { margin: 0.2rem 0 0.4rem; }
   pre.code::before, pre.terminal::before { display: none; }
   .pred-label { background: #ffffff; color: #000000; border: 1px solid #000000; }
   details.answer, details.check { border: 1px solid #000000; }
-  figure.fig, figure.roadmap, .callout, pre, table, ul.takeaways > li { break-inside: avoid; page-break-inside: avoid; }
+  figure.fig, figure.roadmap, .callout, pre, table, ul.takeaways > li, .learn, dl.keywords, ul.recap { break-inside: avoid; page-break-inside: avoid; }
+  .learn, dl.keywords, ul.recap { border: 1px solid #000000; background: #ffffff; }
+  dl.keywords dt { background: #ffffff; color: #000000; }
   main section > h2 { break-after: avoid; page-break-after: avoid; }
   .term::after { display: none; }
   a { color: #000000; }

@@ -22,6 +22,8 @@
     <li><a href="#s8">8 · Key takeaways</a></li>
     <li><a href="#s9">9 · Challenge</a></li>
     <li><a href="#s10">10 · Catalog update</a></li>
+    <li><a href="#s11">11 · Key words</a></li>
+    <li><a href="#s12">12 · Quick recap</a></li>
   </ol>
   <nav class="toc-nav" aria-label="Course navigation">
     <a class="navcard" href="lesson-09-dependency-inversion.html">
@@ -50,11 +52,22 @@
   </p>
 </header>
 
+<div class="learn">
+  <ul>
+    <li>How to clean up one badly rotted module using all five SOLID principles, one small step at a time.</li>
+    <li>How the five principles help each other, and where they honestly pull against each other.</li>
+    <li>How to tell when such a clean-up is worth it, and when simple code should stay simple.</li>
+  </ul>
+</div>
+
 <!-- ============================== SECTION 1 ============================== -->
 <section id="s1">
   <h2><span class="sec-num">1</span>The pain</h2>
 
   <p class="lead">Real rot never comes one principle at a time. Here is a security module after a year of "quick fixes." It breaks all five at once.</p>
+
+  <h3>1.1 The rotten module</h3>
+  <p>Look for one thing in the code first. The value <code>"email"</code> is a <em>magic string</em>: a piece of text that the code treats as a secret command. The compiler cannot check it, so a typo slips straight through.</p>
 
   <pre class="code" data-title="naive/SecurityModule.java (key lines)"><code><span class="kw">public class</span> <span class="ty">SecurityModule</span> {
     <span class="kw">private final</span> <span class="ty">List</span>&lt;<span class="ty">HomeDevice</span>&gt; devices;            <span class="cmt">// a FAT interface: locks must "detect smoke"</span>
@@ -84,14 +97,21 @@
     }
 }</code></pre>
 
-  <p>By day it seems to work. At night, the "quiet" version refuses to check at all, so <strong>smoke at 3 am goes unreported</strong>. A typo like <code>"emial"</code> compiles fine. It fails only when the first alert fires. Adding a water-leak sensor means editing the ladder and the fat interface. It also means editing every device, because each must now fake "leak detected."</p>
+  <h3>1.2 What goes wrong</h3>
+  <ul>
+    <li>By day, it seems to work.</li>
+    <li>At night, the "quiet" version refuses to check at all. So <strong>smoke at 3 am goes unreported</strong>.</li>
+    <li>A typo like <code>"emial"</code> compiles fine. It fails only when the first alert fires.</li>
+    <li>Adding a water-leak sensor means editing the ladder and the fat interface. It also means editing every device, because each one must now fake "leak detected."</li>
+  </ul>
 
   <p class="pred-label">Predicted symptoms</p>
   <pre class="output"><code>EMAIL to owner@example.com: ALERT: Front Door is UNLOCKED
 EMAIL to owner@example.com: ALERT: SMOKE at Kitchen
 <span class="err">Naive quiet module refused: Quiet hours: checks are switched off at night     &lt;- and the smoke?</span></code></pre>
 
-  <p>The pain is not one smell. It is a <strong>tangle</strong> of them, each making the others worse. Untangling it needs all five principles, in a sensible order.</p>
+  <h3>1.3 Naming the pain</h3>
+  <p>The pain is not one smell. It is a <strong>tangle</strong> of them, each one making the others worse. Like a knot of headphone wires, you must untangle it in a sensible order. Untangling it needs all five principles.</p>
 
   <p class="filepath">Full rotten module: katas/src/main/java/com/katas/solid/naive/ (HomeDevice, DoorLock, SmokeAlarm, SecurityModule, QuietSecurityModule)</p>
 </section>
@@ -100,7 +120,13 @@ EMAIL to owner@example.com: ALERT: SMOKE at Kitchen
 <section id="s2">
   <h2><span class="sec-num">2</span>Real-world analogy</h2>
 
-  <p><strong>Renovating an old house.</strong> Over the years, one room became kitchen, office and laundry at once. Appliances were wired straight into the walls. Every new gadget meant cutting new holes. And a "replacement" boiler was put in that shuts itself off at night, heating included. A good renovation has an order. Each trade fixes one kind of problem, so the next trade can do its work.</p>
+  <p><strong>Fixing up an old house.</strong> Over the years, this house went wrong in several ways at once:</p>
+  <ul>
+    <li>One room became kitchen, office and laundry at once.</li>
+    <li>Machines were wired straight into the walls. Every new gadget meant cutting new holes.</li>
+    <li>Someone fitted a "replacement" hot-water heater that shuts itself off at night, heating included.</li>
+  </ul>
+  <p>A good renovation (a big repair job) has an order. Each kind of worker (electrician, plumber, builder) fixes one kind of problem. That clears the way for the next worker.</p>
 
   <div class="table-wrap">
     <table>
@@ -120,22 +146,41 @@ EMAIL to owner@example.com: ALERT: SMOKE at Kitchen
 <section id="s3">
   <h2><span class="sec-num">3</span>The refactoring, step by step</h2>
 
-  <p>A <span class="term" tabindex="0" data-def="improving code's internal structure while keeping its behaviour exactly the same, with tests as the safety net.">refactoring</span> of this size is safest as small steps. Each step keeps the behaviour the same, unless it fixes a bug on purpose. The order below works well, because each step makes the next one easier. It is not the only possible order.</p>
+  <p>A <span class="term" tabindex="0" data-def="improving code's internal structure while keeping its behaviour exactly the same, with tests as the safety net.">refactoring</span> of this size is safest as small steps. Each step keeps the behaviour the same, unless it fixes a bug on purpose. The order below works well, because each step makes the next one easier. It is not the only possible order. Each step has two parts: what we <strong>spotted</strong> (the problem), and the <strong>move</strong> (the fix).</p>
 
   <h3>Step 1 · S: one reason to change per class</h3>
-  <p><strong>Spotted:</strong> <code>SecurityModule</code> answers to four actors. One decides what counts as a problem. One writes what the owner reads. One runs the delivery channels. One wants a history. <strong>Move:</strong> the wording becomes <code>AlertFormatter</code>. Delivery will become its own classes in step 2. Deciding stays in the check. The history goes away. The check now <em>returns</em> the alerts it sent, and the hub already has an activity log for keeping history. Splitting first gives the later steps small, single-purpose pieces to work on.</p>
+  <p><strong>Spotted:</strong> <code>SecurityModule</code> answers to four actors:</p>
+  <ul>
+    <li>one decides what counts as a problem;</li>
+    <li>one writes what the owner reads;</li>
+    <li>one runs the delivery channels;</li>
+    <li>one wants a history.</li>
+  </ul>
+  <p><strong>Move:</strong></p>
+  <ul>
+    <li>The wording becomes its own class, <code>AlertFormatter</code>.</li>
+    <li>Delivery will become its own classes in step 2.</li>
+    <li>Deciding stays in the check.</li>
+    <li>The history goes away. The check now <em>returns</em> the alerts it sent. (The hub already has an activity log for keeping history.)</li>
+  </ul>
+  <p>Splitting first gives the later steps small, single-purpose pieces to work on.</p>
 
   <h3>Step 2 · O: stop editing the check for every new kind</h3>
-  <p><strong>Spotted:</strong> two ladders on magic strings, one on <code>type()</code> and one on <code>channel</code>. <strong>Move:</strong> each watched thing answers "do you need attention, and what's your problem?" for itself. Each channel is a class that keeps one <code>send</code> contract. A water-leak sensor is now a new class, with no edit to the check. The typo problem goes away too. There is no string left to misspell, and a wrong class name won't compile.</p>
+  <p><strong>Spotted:</strong> two ladders on magic strings: one on <code>type()</code>, and one on <code>channel</code>.</p>
+  <p><strong>Move:</strong> each watched thing answers "do you need attention, and what's your problem?" for itself. Each channel is a class that keeps one <code>send</code> contract. Now a water-leak sensor is a new class, with no edit to the check. The typo problem goes away too. There is no string left to misspell, and a wrong class name won't compile.</p>
 
   <h3>Step 3 · L: no substitute may refuse the job</h3>
-  <p><strong>Spotted:</strong> <code>QuietSecurityModule</code> overrides <code>checkHouse</code> to throw at night. That is a refused bequest. Worse, it hides smoke. <strong>Move:</strong> delete the subclass. "Quiet hours" is a <em>setting</em> (<code>quietAtNight</code>) that holds back only <em>non-urgent</em> problems. Each watched thing says whether it is urgent, and smoke always is. Nothing is left that could be substituted badly, and the night-time smoke bug is fixed. This is the one step that <em>changes</em> behaviour on purpose, because the old behaviour was a bug.</p>
+  <p><strong>Spotted:</strong> <code>QuietSecurityModule</code> overrides <code>checkHouse</code> to throw an exception at night. That is a refused bequest. Worse, it hides smoke.</p>
+  <p><strong>Move:</strong> delete the subclass. "Quiet hours" becomes a <em>setting</em> (<code>quietAtNight</code>) that holds back only <em>non-urgent</em> problems. Each watched thing says whether it is urgent, and smoke always is. Nothing is left that could be substituted badly, and the night-time smoke bug is fixed.</p>
+  <p>This is the one step that <em>changes</em> behaviour on purpose, because the old behaviour was a bug.</p>
 
   <h3>Step 4 · I: depend only on what you use</h3>
-  <p><strong>Spotted:</strong> <code>HomeDevice</code> forces locks to "detect smoke" and alarms to "be locked." It forces both to refuse <code>turnOn</code>. The check uses none of that. <strong>Move:</strong> one small role interface, <code>Monitored</code> (<code>name</code>, <code>needsAttention</code>, <code>isUrgent</code>, <code>problem</code>). Both sign it. Nothing is faked and nothing is refused.</p>
+  <p><strong>Spotted:</strong> <code>HomeDevice</code> forces locks to "detect smoke" and alarms to "be locked." It forces both to refuse <code>turnOn</code>. The check uses none of that.</p>
+  <p><strong>Move:</strong> one small role interface, <code>Monitored</code>, with four methods: <code>name</code>, <code>needsAttention</code>, <code>isUrgent</code>, <code>problem</code>. Both devices sign it. Nothing is faked, and nothing is refused.</p>
 
   <h3>Step 5 · D: the policy owns its abstractions</h3>
-  <p><strong>Spotted:</strong> delivery is hard-coded inside the policy (<code>System.out</code>, addresses, numbers). <strong>Move:</strong> the policy declares <code>AlertChannel</code> in its own package. <code>EmailAlerts</code> and <code>SmsAlerts</code> live in <code>channels</code> and implement it. Everything is injected through the constructor at the composition root. Tests inject a recorder.</p>
+  <p><strong>Spotted:</strong> delivery is fixed inside the policy's code (<code>System.out</code>, addresses, phone numbers).</p>
+  <p><strong>Move:</strong> the policy declares <code>AlertChannel</code> in its own package. <code>EmailAlerts</code> and <code>SmsAlerts</code> live in <code>channels</code> and implement it. Everything is injected through the constructor at the composition root. Tests inject a recorder.</p>
 
   <div class="sim" id="sim1">
     <h4>Step through the refactoring</h4>
@@ -280,18 +325,22 @@ EMAIL to owner@example.com: ALERT: SMOKE at Kitchen
       <thead><tr><th>Tension</th><th>What happens</th><th>How to decide</th></tr></thead>
       <tbody>
         <tr><td>S vs simplicity</td><td>Splitting by actor multiplies classes. One security class became eight files.</td><td>Split along <em>real</em> actors, not imagined ones</td></tr>
-        <tr><td>O vs "you aren't gonna need it"</td><td>Every variation point is a bet on future variants</td><td>Wait for the second real variant (Lesson 06)</td></tr>
-        <tr><td>I vs discoverability</td><td>Many tiny interfaces make it hard to see what a thing <em>is</em></td><td>Group methods that clients always use together</td></tr>
+        <tr><td>O vs "you aren't gonna need it" (Lesson 11)</td><td>Every variation point is a bet on future variants</td><td>Wait for the second real variant (Lesson 06)</td></tr>
+        <tr><td>I vs being easy to find your way around</td><td>Many tiny interfaces make it hard to see what a thing <em>is</em></td><td>Group methods that clients always use together</td></tr>
         <tr><td>D vs readability</td><td>"Which channel runs here?" is answered only in the composition root</td><td>Keep the composition root small and in one obvious place</td></tr>
         <tr><td>L vs reuse by inheritance</td><td>Some convenient <code>extends</code> must be given up</td><td>Prefer a setting or a wrapper (composition) over a refusing subclass</td></tr>
       </tbody>
     </table>
   </div>
-  <p>The principles are tools for one goal: <span class="term" tabindex="0" data-def="how strongly one piece of code depends on another, measured by how many changes in one force changes in the other; loose is good.">loose coupling</span> and high cohesion, so that change stays local. They are not a checklist to score as high as possible on. When two of them disagree, ask one question. Which choice keeps <em>the changes you actually expect</em> local, at the lowest cost?</p>
+  <p>The principles are tools for one goal: <span class="term" tabindex="0" data-def="how strongly one piece of code depends on another, measured by how many changes in one force changes in the other; loose is good.">loose coupling</span> and high cohesion, so that change stays local. They are not a checklist where you try to score as high as possible. When two of them disagree, ask one question: which choice keeps <em>the changes you actually expect</em> local, at the lowest cost?</p>
+
+  <div class="callout mixup">
+    <p><strong>"Follow all five principles everywhere" is a common beginner mistake.</strong> The principles are not laws to obey at all times. They are answers to specific pains. A tiny program with no pain needs none of them. Use each one when its pain appears.</p>
+  </div>
 
   <details class="check">
     <summary>Why is step 3 (L) the only step allowed to change what the module does?</summary>
-    <p>Because the old behaviour was a bug: the quiet subclass silenced smoke at night. Every other step is a pure refactoring, so the same inputs give the same alerts. Keep those two kinds of change separate, and say which is which. That is what lets tests act as a safety net. If a test changes during a "pure" step, you have made a mistake.</p>
+    <p>Because the old behaviour was a bug: the quiet subclass silenced smoke at night. Every other step is a pure refactoring, so the same inputs give the same alerts. Keep those two kinds of change separate, and say which is which. That is what lets tests act as a safety net. If a test result changes during a "pure" step, you have made a mistake.</p>
   </details>
 </section>
 
@@ -299,7 +348,13 @@ EMAIL to owner@example.com: ALERT: SMOKE at Kitchen
 <section id="s4">
   <h2><span class="sec-num">4</span>The kata</h2>
 
-  <p>Package <code>com.katas.solid</code>. <span class="filepath">Saved: Monitored.java</span> is the small role from step 4. <span class="filepath">Saved: DoorLock.java, SmokeAlarm.java</span> sign it (a lock is not urgent, smoke always is). <span class="filepath">Saved: AlertChannel.java</span> is policy-owned (step 5), implemented by <span class="filepath">channels/EmailAlerts.java and channels/SmsAlerts.java</span>. <span class="filepath">Saved: AlertFormatter.java</span> holds the wording from step 1: <code>(nightTime ? "[NIGHT] " : "") + "ALERT: " + problem</code>.</p>
+  <p>The kata lives in package <code>com.katas.solid</code>:</p>
+  <ul>
+    <li><span class="filepath">Saved: Monitored.java</span> is the small role from step 4.</li>
+    <li><span class="filepath">Saved: DoorLock.java, SmokeAlarm.java</span> sign it. A lock is not urgent; smoke always is.</li>
+    <li><span class="filepath">Saved: AlertChannel.java</span> belongs to the policy (step 5). <span class="filepath">channels/EmailAlerts.java and channels/SmsAlerts.java</span> implement it.</li>
+    <li><span class="filepath">Saved: AlertFormatter.java</span> holds the wording from step 1: <code>(nightTime ? "[NIGHT] " : "") + "ALERT: " + problem</code>.</li>
+  </ul>
 
   <p class="filepath">Saved: katas/src/main/java/com/katas/solid/SecurityCheck.java</p>
   <pre class="code" data-title="SecurityCheck.java"><code><span class="cmt">// The refactored policy: all five principles applied.</span>
@@ -398,7 +453,14 @@ EMAIL to owner@example.com: ALERT: Front Door is UNLOCKED
 EMAIL to owner@example.com: ALERT: SMOKE at Kitchen</code></pre>
 
   <h4>The tests: one principle's payoff each</h4>
-  <p><span class="filepath">Saved: katas/src/test/java/com/katas/solid/SecurityCheckTest.java</span> has four tests. <code>reportsEveryProblemByDay</code> (DIP: an injected <span class="filepath">RecordingAlerts</span>). <code>quietNightHoldsBackOnlyNonUrgentProblems</code> (LSP fix: a setting, and smoke still goes out). <code>calmHouseSendsNothing</code>. <code>aNewKindOfProblemPlugsInWithoutEditingTheCheck</code> (OCP: a test-only <span class="filepath">WaterLeakSensor</span> works unchanged). <span class="filepath">Saved: RottenModuleTest.java</span> pins two rotten failures: the quiet subclass throws at night, and a misspelled channel <code>"emial"</code> fails only at run time.</p>
+  <p><span class="filepath">Saved: katas/src/test/java/com/katas/solid/SecurityCheckTest.java</span> has four tests:</p>
+  <ul>
+    <li><code>reportsEveryProblemByDay</code> (DIP: an injected <span class="filepath">RecordingAlerts</span>).</li>
+    <li><code>quietNightHoldsBackOnlyNonUrgentProblems</code> (the LSP fix: a setting, and smoke still goes out).</li>
+    <li><code>calmHouseSendsNothing</code>.</li>
+    <li><code>aNewKindOfProblemPlugsInWithoutEditingTheCheck</code> (OCP: a test-only <span class="filepath">WaterLeakSensor</span> works unchanged).</li>
+  </ul>
+  <p><span class="filepath">Saved: RottenModuleTest.java</span> pins down two rotten failures. The quiet subclass throws at night. And a misspelled channel, <code>"emial"</code>, fails only at run time.</p>
 
   <pre class="terminal" data-title="terminal — from design-patterns-learning/"><code>cd katas
 mvn test
@@ -407,7 +469,7 @@ mvn compile exec:java <span class="str">"-Dexec.mainClass=com.katas.solid.Main"<
   <pre class="output"><code><span class="out">[INFO] Tests run: 49, Failures: 0, Errors: 0, Skipped: 0</span>
 <span class="out">[INFO] BUILD SUCCESS</span></code></pre>
   <div class="callout tryit">
-    <p>Expect <strong>49 tests</strong> (43 earlier + 6 new) and the six demo lines. If anything differs, the machine is right. Tell me what you saw.</p>
+    <p>Expect <strong>49 tests</strong> (43 earlier + 6 new) and the six demo lines. If anything is different, the machine is right. Tell me what you saw.</p>
   </div>
 </section>
 
@@ -415,7 +477,11 @@ mvn compile exec:java <span class="str">"-Dexec.mainClass=com.katas.solid.Main"<
 <section id="s5">
   <h2><span class="sec-num">5</span>Applied to the Smart Home Hub</h2>
 
-  <p>The rotten module lives frozen in the kata, on purpose. We would never knowingly put a rotten module into the hub just to clean it up again. Instead, the hub gets two things. First, an <strong>audit</strong> against all five principles. Second, a new security feature <strong>built SOLID from its first line</strong>.</p>
+  <p>The rotten module lives frozen in the kata, on purpose. We would never knowingly put a rotten module into the hub just to clean it up again. Instead, the hub gets two things:</p>
+  <ol>
+    <li>An <strong>audit</strong> (a careful check) against all five principles.</li>
+    <li>A new security feature, <strong>built SOLID from its first line</strong>.</li>
+  </ol>
 
   <h4>The audit</h4>
   <div class="table-wrap">
@@ -432,7 +498,7 @@ mvn compile exec:java <span class="str">"-Dexec.mainClass=com.katas.solid.Main"<
   </div>
 
   <h4>The new feature: a lock check</h4>
-  <p><strong>The requirement:</strong> when someone leaves the house, warn them about any unlocked door. We build it the SOLID way from the start, so it has the same shape as the finished kata:</p>
+  <p><strong>The request:</strong> when someone leaves the house, warn them about any unlocked door. We build it the SOLID way from the start, so it has the same shape as the finished kata:</p>
   <ul>
     <li><span class="filepath">security/AlertChannel.java</span>: the policy's own delivery abstraction (D).</li>
     <li><span class="filepath">security/LockCheck.java</span>: one job (S). It asks each <code>Lockable</code> about itself (O). Every <code>Lockable</code> is contract-tested (L). It needs only the small <code>Lockable</code> role (I). Everything is injected (D).</li>
@@ -507,9 +573,13 @@ mvn compile exec:java <span class="str">"-Dexec.mainClass=com.katas.solid.Main"<
         lockCheck.<span class="fn">run</span>();</code></pre>
 
   <h4>The tests</h4>
-  <p><span class="filepath">Saved: security/LockCheckTest.java</span> (2 tests, with a test-only <span class="filepath">RecordingAlerts</span>). Three doors with two left open give exactly two alerts, in order. A locked house sends nothing. <span class="filepath">Modified: HubTest.java</span> passes the new lockables group (and checks <code>lockables().size()</code>). <span class="filepath">Modified: HomeSetupTest.java</span> now has 3 tests: the switchables, the lockables (the front door, locked), and the smoke alarm.</p>
+  <ul>
+    <li><span class="filepath">Saved: security/LockCheckTest.java</span> has 2 tests, with a test-only <span class="filepath">RecordingAlerts</span>. Three doors with two left open give exactly two alerts, in order. A locked house sends nothing.</li>
+    <li><span class="filepath">Modified: HubTest.java</span> passes the new lockables group (and checks <code>lockables().size()</code>).</li>
+    <li><span class="filepath">Modified: HomeSetupTest.java</span> now has 3 tests: the switchables, the lockables (the front door, locked), and the smoke alarm.</li>
+  </ul>
 
-  <p><strong>What this adds:</strong> unlocked-door warnings through a pluggable alert channel. The hub now knows its locks as a typed group. All five principles can be seen in one small class.</p>
+  <p><strong>What this adds:</strong> unlocked-door warnings, sent through an alert channel you can swap. The hub now knows its locks as a typed group. And you can see all five principles in one small class.</p>
 
   <ol class="trace">
     <li>The composition root builds three device groups. The hub keeps them. It lists all devices in this order: switchables, then lockables, then the rest.</li>
@@ -540,17 +610,24 @@ mvn compile exec:java</code></pre>
   <pre class="output"><code><span class="out">[INFO] Tests run: 63, Failures: 0, Errors: 0, Skipped: 0</span>
 <span class="out">[INFO] BUILD SUCCESS</span></code></pre>
   <div class="callout tryit">
-    <p>Expect <strong>63 tests</strong> (60 earlier + 3 new) and the fourteen lines above. Note that the front door now comes <em>before</em> the smoke alarm in the report. That is because lockables are listed before the other devices. If what you see differs, your machine is right. Tell me what you saw and we will work out why.</p>
+    <p>Expect <strong>63 tests</strong> (60 earlier + 3 new) and the fourteen lines above. Note that the front door now comes <em>before</em> the smoke alarm in the report. That is because lockables are listed before the other devices. If what you see is different, your machine is right. Tell me what you saw, and we will work out why.</p>
   </div>
 </section>
 
 <!-- ============================== SECTION 6 ============================== -->
 <section id="s6">
   <h2><span class="sec-num">6</span>In the wild</h2>
-  <p><strong>JUnit 5's own extension model</strong> shows several principles at once. To hook into a test's life cycle, you implement small, separate interfaces. Examples are <code>BeforeEachCallback</code>, <code>AfterEachCallback</code> and <code>ParameterResolver</code> (ISP: sign only the roles you need). You register an extension instead of editing JUnit (OCP). JUnit's engine depends on those interfaces, never on your classes (DIP). And every extension must keep its interface's contract, or other tests break (LSP). The very tool that runs this course's tests is built the way this chapter teaches. (The exact interface names are worth checking in the JUnit 5 user guide, "Extension Model.")</p>
+  <p><strong>JUnit 5's own add-on system</strong> (its "extension model") shows several principles at once. An <em>extension</em> is your own code that JUnit runs at certain moments, for example before or after each test. Here is how it follows SOLID:</p>
+  <ul>
+    <li><strong>ISP:</strong> you implement small, separate interfaces, such as <code>BeforeEachCallback</code>, <code>AfterEachCallback</code> and <code>ParameterResolver</code>. You sign only the roles you need.</li>
+    <li><strong>OCP:</strong> you register an extension instead of editing JUnit.</li>
+    <li><strong>DIP:</strong> JUnit's engine depends on those interfaces, never on your classes.</li>
+    <li><strong>LSP:</strong> every extension must keep its interface's contract, or other tests break.</li>
+  </ul>
+  <p>The very tool that runs this course's tests is built the way this chapter teaches. (The exact interface names are worth checking in the JUnit 5 user guide, under "Extension Model.")</p>
 
   <div class="callout realworld">
-    <p>In real teams, a refactoring like this rarely happens in one heroic sitting. It happens in small commits, each reviewed on its own, each keeping the tests green. It usually comes right before a new feature that the rot would make painful. "Make the change easy, then make the easy change" is how experienced engineers put it.</p>
+    <p>In real teams, a refactoring like this rarely happens all at once, in one long session. It happens in small commits. Each one is reviewed on its own, and each one keeps the tests passing. It usually comes right before a new feature that the rot would make painful. Experienced engineers put it this way: "Make the change easy, then make the easy change."</p>
   </div>
 </section>
 
@@ -559,10 +636,18 @@ mvn compile exec:java</code></pre>
   <h2><span class="sec-num">7</span>When NOT to, and tensions</h2>
 
   <h3>When not to refactor towards SOLID</h3>
-  <p>The rotten module deserved this treatment. It had already grown four jobs, two ladders, an interface full of fakes and a dangerous subclass. And more requirements were coming. A 30-line script that sends one email when a disk is full does not deserve it. Using all five principles on it would turn one file into eight for no gain. SOLID is a set of answers to <em>change pain</em>. With no pain and no expected change, the simplest code that works is the right design. These signs justify a refactoring like this one: the class keeps getting edited for unrelated reasons, bugs come back, tests are hard to write, and the next feature looks scary.</p>
+  <p>The rotten module deserved this treatment. It had already grown four jobs, two ladders, an interface full of fakes, and a dangerous subclass. And more requests were coming.</p>
+  <p>Compare a 30-line program that sends one email when a disk is full. It does not deserve this. Using all five principles on it would turn one file into eight, for no gain. SOLID is a set of answers to <em>change pain</em>. With no pain and no expected change, the simplest code that works is the right design.</p>
+  <p>These signs say a refactoring like this one is worth it:</p>
+  <ul>
+    <li>the class keeps getting edited for unrelated reasons;</li>
+    <li>bugs keep coming back;</li>
+    <li>tests are hard to write;</li>
+    <li>the next feature looks scary.</li>
+  </ul>
 
   <h3>The cost, all five at once</h3>
-  <p>Count it honestly. The rotten module was 4 classes plus a fat interface. The refactored one is 6 types, 2 channel classes and 2 test fakes. To see the whole picture, a reader must follow arrows across files and a composition root. That price buys safe night-time alerts, easy new sensors and channels, and real tests. Pay it where those things matter, and not elsewhere.</p>
+  <p>Count it honestly. The rotten module was 4 classes plus a fat interface. The refactored one is 6 types, 2 channel classes and 2 test fakes. To see the whole picture, a reader must follow arrows across files and a composition root. That price buys three things: safe night-time alerts, easy new sensors and channels, and real tests. Pay it where those things matter, and not elsewhere.</p>
 
   <h3>Relatives and look-alikes</h3>
   <ul>
@@ -586,7 +671,13 @@ mvn compile exec:java</code></pre>
 <!-- ============================== SECTION 9 ============================== -->
 <section id="s9">
   <h2><span class="sec-num">9</span>Challenge</h2>
-  <p>Check this module one principle at a time. Choose the order of your refactoring steps, and sketch the result. Then predict what your design prints for a CSV export of the rows <code>["a", "b"]</code>.</p>
+  <p>Check the module below one principle at a time. Then:</p>
+  <ol>
+    <li>Choose the order of your refactoring steps.</li>
+    <li>Sketch the result.</li>
+    <li>Predict what your design prints for a CSV export of the rows <code>["a", "b"]</code>.</li>
+  </ol>
+  <p>(In the answer, a <em>sink</em> means "the place where finished output goes," such as a file or the console. Like a kitchen sink, it is where things end up.)</p>
   <pre class="code" data-title="Exporter.java (as written)"><code><span class="kw">public interface</span> <span class="ty">Document</span> { <span class="ty">List</span>&lt;<span class="ty">String</span>&gt; <span class="fn">rows</span>(); <span class="kw">void</span> <span class="fn">save</span>(); <span class="kw">void</span> <span class="fn">print</span>(); <span class="kw">void</span> <span class="fn">email</span>(<span class="ty">String</span> to); }
 
 <span class="kw">public class</span> <span class="ty">Exporter</span> {
@@ -643,18 +734,54 @@ mvn compile exec:java</code></pre>
         <span class="kw">return</span> <span class="str">"Exported "</span> + doc.<span class="fn">rows</span>().<span class="fn">size</span>() + <span class="str">" rows as "</span> + format.<span class="fn">name</span>();
     }
 }</code></pre>
-    <p>Take three pieces. A small <code>PrintingSink</code> class implements <code>ExportSink</code> by calling <code>System.out.println(text)</code>. A document has the rows <code>["a", "b"]</code>. And we run <code>System.out.println(new Exporter(new PrintingSink()).export(doc, new CsvFormat()))</code>. The result:</p>
+    <p>Now take three pieces:</p>
+    <ul>
+      <li>A small <code>PrintingSink</code> class implements <code>ExportSink</code> by calling <code>System.out.println(text)</code>.</li>
+      <li>A document has the rows <code>["a", "b"]</code>.</li>
+      <li>We run <code>System.out.println(new Exporter(new PrintingSink()).export(doc, new CsvFormat()))</code>.</li>
+    </ul>
+    <p>The result:</p>
     <p class="pred-label">Prediction</p>
     <pre class="output"><code>a,b
 Exported 2 rows as csv</code></pre>
-    <p>The sink prints first, because <code>export</code> writes before it returns its summary. If you build it in a scratch package, run it and compare. The machine is the judge.</p>
+    <p>The sink prints first, because <code>export</code> writes before it returns its summary. If you build it in a throwaway practice package, run it and compare. The machine is the judge.</p>
   </details>
 </section>
 
 <!-- ============================== SECTION 10 ============================== -->
 <section id="s10">
   <h2><span class="sec-num">10</span>Catalog update</h2>
-  <p>No new entry this lesson. Each of the five principles already has its own entry, from <a href="../../pattern-catalog.html#srp">SRP</a> to <a href="../../pattern-catalog.html#dip">DIP</a>. A "SOLID" entry would only repeat them. What this lesson adds is a better reading of the <em>Relatives</em> field in those entries. The "help each other" list and the tensions table in Section 3 show how the five entries link to each other. The next lesson adds the companion principles that act as SOLID's brakes.</p>
+  <p>No new entry this lesson. Each of the five principles already has its own entry, from <a href="../../pattern-catalog.html#srp">SRP</a> to <a href="../../pattern-catalog.html#dip">DIP</a>. A "SOLID" entry would only repeat them.</p>
+  <p>What this lesson adds is a better way to read the <em>Relatives</em> field in those entries. The "help each other" list and the tensions table in Section 3 show how the five entries link to each other. The next lesson adds the companion principles, which act as SOLID's brakes.</p>
+</section>
+
+<!-- ============================== SECTION 11 ============================== -->
+<section id="s11">
+  <h2><span class="sec-num">11</span>Key words</h2>
+  <dl class="keywords">
+    <dt>Tangle (of smells)</dt><dd>Several principles broken at once in one module, each smell making the others worse.</dd>
+    <dt>Magic string</dt><dd>A piece of text the code treats as a command (like <code>"email"</code>); the compiler cannot catch typos in it.</dd>
+    <dt>Small-step refactoring</dt><dd>A big refactoring done as small steps that each keep behaviour the same; a deliberate bug fix gets its own step.</dd>
+    <dt>Setting instead of subclass</dt><dd>Expressing a variation (like quiet hours) as a constructor value, not a subclass that overrides and refuses.</dd>
+    <dt>Principle tensions</dt><dd>Places where principles pull against each other or against simplicity; decide by which option keeps expected changes local most cheaply.</dd>
+    <dt>Audit</dt><dd>A careful, item-by-item check of code against a list of rules.</dd>
+    <dt>Extension (JUnit)</dt><dd>Your own code that JUnit runs at certain moments, plugged in through small interfaces.</dd>
+    <dt>Sink</dt><dd>The place where finished output goes, such as a file or the console.</dd>
+    <dt><code>continue</code></dt><dd>Ends the current pass of a loop early and moves on to the next item.</dd>
+    <dt><code>String.join(sep, list)</code></dt><dd>Glues a list's items together with a separator: <code>["a","b"]</code> becomes <code>"a,b"</code>.</dd>
+  </dl>
+</section>
+
+<!-- ============================== SECTION 12 ============================== -->
+<section id="s12">
+  <h2><span class="sec-num">12</span>Quick recap</h2>
+  <ul class="recap">
+    <li>Real rot is a tangle: several principles broken at once.</li>
+    <li>Untangle it in small steps (S, O, L, I, D), each one keeping behaviour the same.</li>
+    <li>A deliberate bug fix gets its own clearly named step.</li>
+    <li>The principles help each other, but sometimes pull against each other and against simplicity.</li>
+    <li>SOLID answers change pain; leave small, stable code simple.</li>
+  </ul>
 </section>
 
 <div class="nextup">
