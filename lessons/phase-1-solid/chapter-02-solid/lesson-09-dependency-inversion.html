@@ -765,7 +765,7 @@ mvn compile exec:java</code></pre>
   <p>Entry 5 added: <a href="../../pattern-catalog.html#dip">Dependency Inversion Principle, in the pattern catalog</a>. In brief:</p>
   <ul>
     <li><strong>Intent:</strong> policy and details both depend on abstractions owned by the policy; details are injected.</li>
-    <li><strong>Pain:</strong> a valuable rule welded to a replaceable mechanism: can't swap it, can't test it, can't reuse it.</li>
+    <li><strong>Pain:</strong> a valuable rule stuck to a replaceable mechanism: can't swap it, can't test it, can't reuse it.</li>
     <li><strong>Use when:</strong> a boundary really varies (devices, networks, storage, clocks) or needs a test double.</li>
     <li><strong>Do NOT use when:</strong> depending on stable things (<code>String</code>, <code>List</code>, value classes); one implementation and no testing pain.</li>
     <li><strong>Cost:</strong> an interface per boundary, wiring code in the composition root, an extra hop when reading.</li>

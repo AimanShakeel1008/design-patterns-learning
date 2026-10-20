@@ -47,6 +47,13 @@ Terms are grouped by first-appearance lesson so the list reads in learning order
 - **Maven Central** — the free public store of open-source Java libraries, fetched by coordinates. (Lesson 00)
 - **Continuous integration (CI)** — a clean server that runs the same build and tests on every push, so "works on my machine" is not enough. (Lesson 00)
 - **Multi-module build** — one parent POM building several Maven projects at once; deliberately not used in this course. (Lesson 00)
+- **Terminal** — a window where you type commands as text instead of clicking; on Windows, usually PowerShell. (Lesson 00)
+- **Library** — a bundle of ready-made code that someone wrote for others to use (e.g. JUnit). (Lesson 00)
+- **Pin (a version)** — lock a tool to one exact version, so it never changes by itself. (Lesson 00)
+- **Runtime** — "while the program is running"; also the half of the JDK that runs programs (JVM + standard library). (Lesson 00)
+- **XML** — a text format that wraps each piece of data in named tags, like `<version>1.0.0</version>`; the POM is written in it. (Lesson 00)
+- **Framework** — a big library that runs your code for you and hides some of the work (e.g. Spring); not used in this course. (Lesson 00)
+- **Open source** — code that is public and free for anyone to use. (Lesson 00)
 
 ---
 
@@ -77,6 +84,10 @@ Terms are grouped by first-appearance lesson so the list reads in learning order
 - **Lambda (first look)** — a small bundle of code handed to something else to run later, e.g. `() -> account.withdraw(500)`. Full story in the Strategy lesson. (Lesson 01)
 - **`final` (field)** — a field that can be given a value only once, in the constructor. (Lesson 01)
 - **Constant (`static final`)** — one fixed value shared by the whole class, written in CAPITALS (e.g. `MIN_CELSIUS`). (Lesson 01)
+- **Parameter** — a value handed into a method or constructor when it is called. (Lesson 01)
+- **Setter** — a small method that changes one field; it must check the invariant, or it is a public field in disguise. (Lesson 01)
+- **Concrete class** — an ordinary class with real working code, which you can build objects from with `new`. (Lesson 01)
+- **Code review** — teammates reading and checking each other's code before it is accepted. (Lesson 01)
 
 ---
 
@@ -100,6 +111,10 @@ Terms are grouped by first-appearance lesson so the list reads in learning order
 - **Refactoring** — improving code's internal structure while keeping its behaviour exactly the same, with tests as the safety net. (Lesson 02)
 - **Fragile base class (first look)** — a child breaking because its parent changed, even though the child was not touched. Shown in full in Lesson 03. (Lesson 02)
 - **Shotgun surgery** — one change forcing small edits in many places; miss one and the program contradicts itself. (Lesson 02)
+- **Signature** — a method's name plus the types of its parameters. (Lesson 02)
+- **Argument** — the actual value passed in a call; the parameter is the slot that receives it. (Lesson 02)
+- **Duplicated code** — the same code written in more than one place. (Lesson 02)
+- **Base class** — another name for a parent class (superclass). (Lesson 02)
 
 ---
 
@@ -118,6 +133,9 @@ Terms are grouped by first-appearance lesson so the list reads in learning order
 - **`List<String>` / `ArrayList` / `List.of` / `List.copyOf`** — the JDK's ordered-list interface (holding text), its everyday implementation, a one-line fixed list, and an unmodifiable snapshot copy. (Lesson 03)
 - **`UnsupportedOperationException`** — Java's standard exception for "this object does not allow that operation" (e.g. adding to an unmodifiable list). (Lesson 03)
 - **`final` class** — a class that cannot be extended; one way for a class author to rule out fragile subclasses. (Lesson 03)
+- **Principle** — a basic rule that guides design choices. (Lesson 03)
+- **Snapshot** — a copy taken at one moment, which later changes do not affect (e.g. what `List.copyOf` returns). (Lesson 03)
+- **Boilerplate** — dull, repeated code you must write but that adds no new idea, like pure forwarding methods. (Lesson 03)
 
 ---
 
@@ -140,6 +158,11 @@ Terms are grouped by first-appearance lesson so the list reads in learning order
 - **Multiplicity** — numbers at a line's end saying how many objects take part: `1`, `0..1`, `*`, `1..*`. (Lesson 04)
 - **Sequence diagram** — a UML picture of one scenario's calls between objects, in time order from top to bottom. (Lesson 04)
 - **Lifeline / message / return / activation / frame** — an object's dashed timeline; a call (solid, filled head); a returned value (dashed); the bar while a method runs; a labelled box such as `loop` around repeated messages. (Lesson 04)
+- **Console** — the text window where `System.out.println` prints. (Lesson 04)
+- **Decouple** — loosen the link between two pieces of code, usually by putting an interface between them. (Lesson 04)
+- **Members** — the fields and methods of a class, taken together. (Lesson 04)
+- **Scenario** — one particular run of the program, with particular data. (Lesson 04)
+- **Database / JDBC** — a program that stores and finds lots of data; JDBC is the JDK's interface-based way to talk to one. (Lesson 04)
 
 ---
 
@@ -154,6 +177,11 @@ Terms are grouped by first-appearance lesson so the list reads in learning order
 - **Anemic class** — a class with almost no behaviour of its own that holds one sliver of a job; the result of over-splitting. (Lesson 05)
 - **`StringBuilder`** — the JDK's growable piece of text: `append(...)` adds to its end, `toString()` gives the finished `String`. (Lesson 05)
 - **Pattern catalog** — the course's cheat-sheet page (`lessons/pattern-catalog.html`), one entry per principle and pattern, linked from every lesson. (Lesson 05)
+- **Payroll** — the work (or code) of calculating how much each worker is paid. (Lesson 05)
+- **HR (Human Resources)** — the team that looks after a company's staff. (Lesson 05)
+- **CSV (comma-separated values)** — data written as one line of text with commas between the values, e.g. `Asha,45,20`. (Lesson 05)
+- **Wire (objects)** — create objects and connect them to each other, usually in one place like `Main`. (Lesson 05)
+- **Merge conflict** — when Git cannot combine two people's edits to the same lines, and a human must choose. (Lesson 05)
 
 ---
 
@@ -168,6 +196,10 @@ Terms are grouped by first-appearance lesson so the list reads in learning order
 - **Take the first bullet** — write the simple version first; introduce a variation point when the second real variant arrives. (Lesson 06)
 - **`Comparator`** — the JDK interface that says which of two objects comes first; `List.sort` uses it as its variation point. (Lesson 06)
 - **`&&` / `!`** — Java's "and" (both conditions true) and "not" (flips true/false). (Lesson 06)
+- **Variant** — one version among several of the same kind of thing (e.g. Express among shipping methods). (Lesson 06)
+- **Module** — a class, or a group of classes, treated as one unit. (Lesson 06)
+- **Algorithm** — a step-by-step method for solving a problem, like a recipe. (Lesson 06)
+- **`switch`** — Java's way to pick one branch from several fixed values. (Lesson 06)
 
 ---
 
@@ -185,6 +217,9 @@ Terms are grouped by first-appearance lesson so the list reads in learning order
 - **Contract test** — one test suite, written against a contract, that every implementation must pass (an abstract JUnit class with one small subclass per implementation). (Lesson 07)
 - **Design by Contract** — Bertrand Meyer's practice of stating pre- and postconditions as part of the code. (Lesson 07)
 - **`||`** — Java's "or": true if either condition is true. (Lesson 07)
+- **Side effect** — any change a method makes besides returning its answer, such as changing a field or printing. (Lesson 07)
+- **Siblings** — two classes that share the same parent type, without one extending the other. (Lesson 07)
+- **Trade-off** — giving up one good thing to get another. (Lesson 07)
 
 ---
 
@@ -197,6 +232,9 @@ Terms are grouped by first-appearance lesson so the list reads in learning order
 - **Interface inheritance** — `interface Switchable extends Device`: every Switchable is also a Device; drawn in UML as a solid line with a hollow triangle. (Lesson 08)
 - **Capability** — the hub's word for a role interface a device may or may not have: switching, dimming, locking. (Lesson 08)
 - **`AutoCloseable` / try-with-resources** — the JDK's one-method role (`close()`) and the statement that closes such a resource automatically. (Lesson 08)
+- **Implementer side / client side** — the class that implements an interface / the code that calls it. (Lesson 08)
+- **Routing** — code that sends the right objects to the right clients, like the hub's typed device lists. (Lesson 08)
+- **Resource** — something that must be closed after use, like an open file. (Lesson 08)
 
 ---
 
@@ -214,6 +252,12 @@ Terms are grouped by first-appearance lesson so the list reads in learning order
 - **DI container** — a framework (e.g. Spring) that automates the composition root: creates objects and passes constructor arguments. (Lesson 09)
 - **`assertSame`** — JUnit check that two references point at the very same object (not just equal ones). (Lesson 09)
 - **`List<Integer>` / `Integer`** — a list of whole numbers; `Integer` is the object form of `int`, converted automatically. (Lesson 09)
+- **Protocol** — the agreed rules two machines or programs use to talk to each other. (Lesson 09)
+- **Abstraction (as in DIP)** — an interface or abstract class: a contract with the details left out. (Lesson 09)
+- **Test double** — a stand-in object used only in tests in place of a real one (e.g. `RecordingChannel`), like a stunt double. (Lesson 09)
+- **Boundary** — an edge between your program and something outside it: a network, a device, a database, a clock. (Lesson 09)
+- **Logging / facade** — writing notes about what a program does; a facade is an interface layer in front of the real logging engine (e.g. SLF4J). (Lesson 09)
+- **Bean** — Spring's name for an object its DI container creates and wires. (Lesson 09)
 
 ---
 
@@ -225,6 +269,10 @@ Terms are grouped by first-appearance lesson so the list reads in learning order
 - **Principle tensions** — SRP vs simplicity, OCP vs YAGNI, ISP vs discoverability, DIP vs readability, LSP vs reuse by inheritance; resolved by asking which option keeps expected changes local at the lowest cost. (Lesson 10)
 - **`continue`** — ends the current pass of a loop early and moves on to the next item. (Lesson 10)
 - **`String.join(sep, list)`** — glues a list's items together with a separator: `["a","b"]` → `"a,b"`. (Lesson 10)
+- **Magic string** — a piece of text the code treats as a command (like `"email"`); the compiler cannot catch typos in it. (Lesson 10)
+- **Audit** — a careful, item-by-item check of code against a list of rules. (Lesson 10)
+- **Extension (JUnit)** — your own code that JUnit runs at certain moments, plugged in through small interfaces. (Lesson 10)
+- **Sink** — the place where finished output goes, such as a file or the console. (Lesson 10)
 
 ---
 
@@ -244,3 +292,5 @@ Terms are grouped by first-appearance lesson so the list reads in learning order
 - **Tell, Don't Ask** — tell an object what you want done (`customer.pay(2)`) instead of asking for its insides and doing the work yourself. (Lesson 11)
 - **Middle man** — a class whose methods mostly just forward to an object it holds; the smell of following the Law of Demeter mechanically. (Lesson 11)
 - **Generic method / type parameter / bound** — a method with a type placeholder filled in at each call (`<T extends Device> T findNamed(List<T> ...)`); `T` is the type parameter, and `extends Device` is its bound. (Lesson 11)
+- **Flag** — a true/false parameter that switches a method's behaviour; a pile of them signals the wrong abstraction. (Lesson 11)
+- **Public API (Application Programming Interface)** — the classes and methods other people's programs call; costly to change later, so it deserves up-front thought. (Lesson 11)

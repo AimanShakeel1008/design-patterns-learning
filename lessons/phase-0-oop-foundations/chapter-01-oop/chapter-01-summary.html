@@ -20,6 +20,7 @@
     <li><a href="#s6">6 · Ideas that come back</a></li>
     <li><a href="#s7">7 · Self-check</a></li>
     <li><a href="#s8">8 · Boss challenge</a></li>
+    <li><a href="#s9">9 · Quick recap</a></li>
   </ol>
   <nav class="toc-nav" aria-label="Course navigation">
     <a class="navcard" href="lesson-04-coupling-cohesion-uml.html">
@@ -40,18 +41,26 @@
 <header class="banner">
   <p class="kicker">Phase 0 · Chapter 01 · Summary</p>
   <h1>The Object-Oriented Toolbox</h1>
-  <p class="subtitle">Four lessons, four tools: guarded objects, contracts, inheritance, and composition. Plus a yardstick to judge them (coupling and cohesion), and a picture language to show them (UML).</p>
+  <p class="subtitle">Four lessons, four tools: guarded objects, contracts, inheritance, and composition. Plus a way to measure them (coupling and cohesion), and a picture language to show them (UML).</p>
   <p class="meta">
     Lessons: <a href="lesson-01-objects-encapsulation-interfaces.html">01</a> · <a href="lesson-02-inheritance-polymorphism.html">02</a> · <a href="lesson-03-composition-vs-inheritance.html">03</a> · <a href="lesson-04-coupling-cohesion-uml.html">04</a>.
     State after this chapter: katas <strong>23 tests</strong>, hub <strong>13 tests</strong> (predicted).
   </p>
 </header>
 
+<div class="learn">
+  <ul>
+    <li>Everything Lessons 01–04 built, in the katas and in the Smart Home Hub, on one page.</li>
+    <li>How the chapter's ideas connect, and where each one comes back later in the course.</li>
+    <li>A self-check and a bigger "boss" challenge, so you can test what you remember.</li>
+  </ul>
+</div>
+
 <!-- ============================== SECTION 1 ============================== -->
 <section id="s1">
   <h2><span class="sec-num">1</span>What we built</h2>
 
-  <h3>Katas (frozen exhibits)</h3>
+  <h3>Katas (frozen examples)</h3>
   <div class="table-wrap">
     <table>
       <thead><tr><th>Package</th><th>Files</th><th>What it shows</th></tr></thead>
@@ -161,8 +170,8 @@
   <ol class="trace">
     <li><strong>Lesson 00:</strong> the hub was one banner line and a smoke test, proving the workshop works.</li>
     <li><strong>Lesson 01:</strong> it gained a <code>Device</code> contract and two devices. One loop switched everything on without knowing any concrete class, and the thermostat refused bad targets at the door.</li>
-    <li><strong>Lesson 02:</strong> the two devices had copied the same fields and four methods, so that code moved into an abstract parent. We also fixed a trap our own constructor had been hiding. Behaviour was unchanged, and the untouched tests proved it: our first refactoring.</li>
-    <li><strong>Lesson 03:</strong> a new requirement, an activity log for every device. Inheritance would have meant a <code>Logging*</code> subclass per device. Instead, one wrapper logs any device. It is chosen when the hub is put together, and no device class changed.</li>
+    <li><strong>Lesson 02:</strong> the two devices had copied the same fields and four methods. So that code moved into an abstract parent. We also fixed a trap our own constructor had been hiding. Behaviour stayed the same, and the untouched tests proved it. That was our first refactoring.</li>
+    <li><strong>Lesson 03:</strong> a new request arrived: an activity log for every device. Inheritance would have meant a <code>Logging*</code> subclass per device. Instead, one wrapper logs any device. We choose it when the hub is put together, and no device class changed.</li>
     <li><strong>Lesson 04:</strong> no code changed. We drew the hub, traced its main call, and measured it. Every class passed the cohesion test except one: <code>Main</code> keeps piling up jobs. That is where the next phase begins.</li>
   </ol>
 </section>
@@ -210,7 +219,7 @@
       <text x="505" y="179" class="fig-small fig-center">has-a · Lesson 03</text>
       <rect x="150" y="250" width="230" height="56" rx="10" class="fig-infra"/>
       <text x="265" y="274" class="fig-heading fig-center">Coupling &amp; cohesion</text>
-      <text x="265" y="294" class="fig-small fig-center">the yardstick · Lesson 04</text>
+      <text x="265" y="294" class="fig-small fig-center">the measuring stick · Lesson 04</text>
       <rect x="450" y="250" width="230" height="56" rx="10" class="fig-infra"/>
       <text x="565" y="274" class="fig-heading fig-center">UML</text>
       <text x="565" y="294" class="fig-small fig-center">draws all of the above</text>
@@ -263,14 +272,20 @@
   </details>
   <details class="check">
     <summary>The hub kept <code>AbstractDevice</code> even after "favor composition." Why is that not a contradiction?</summary>
-    <p>"Favor" is not "always." <code>AbstractDevice</code> is a true is-a. It has a small, stable core that we own and designed for extension. The <em>optional, combinable</em> feature (logging) is the part that was composed. Replacing working inheritance with forwarding code would cure no pain. That would be needless complexity.</p>
+    <p>"Favor" is not "always." <code>AbstractDevice</code> is a true is-a. It has a small core that rarely changes, which we own and designed to be extended. The <em>optional</em> feature that can be combined with others (logging) is the part we built by composition. Replacing working inheritance with forwarding code would cure no pain. That would be needless complexity.</p>
   </details>
 </section>
 
 <!-- ============================== SECTION 8 ============================== -->
 <section id="s8">
   <h2><span class="sec-num">8</span>Boss challenge</h2>
-  <p>A garden-watering module arrived from another team. It "works." First, find <strong>every</strong> problem, using this chapter's words. Then predict what <code>new Garden().water()</code> prints today. Then redesign it to meet three goals:</p>
+  <p>A garden-watering module arrived from another team. It "works." Do three things:</p>
+  <ol>
+    <li>Find <strong>every</strong> problem, using this chapter's words.</li>
+    <li>Predict what <code>new Garden().water()</code> prints today.</li>
+    <li>Redesign it to meet the three goals below.</li>
+  </ol>
+  <p>The goals:</p>
   <ul>
     <li>The flow rate can never be invalid.</li>
     <li>Logging can be added to any sprinkler without a subclass.</li>
@@ -304,7 +319,12 @@
     <pre class="output"><code>Starting 2 zones
 Sprinkler started
 Sprinkler started</code></pre>
-    <p>The two "Sprinkler started" lines exist only by accident. <code>Sprinkler.startZones</code> happens to call <code>start()</code> (self-use). Dynamic dispatch then sends those calls into the child's override. If the parent author changes that loop, the log changes too.</p>
+    <p>The two "Sprinkler started" lines exist only by accident. Here is why:</p>
+    <ol>
+      <li><code>Sprinkler.startZones</code> happens to call <code>start()</code> (self-use).</li>
+      <li>Dynamic dispatch sends those calls into the child's override.</li>
+      <li>So if the parent's author changes that loop, the log changes too.</li>
+    </ol>
 
     <h4>Every problem, named</h4>
     <div class="table-wrap">
@@ -315,7 +335,7 @@ Sprinkler started</code></pre>
           <tr><td>The log's content depends on <code>startZones</code> calling <code>start</code></td><td>Self-use leaking through inheritance: the fragile base class problem</td></tr>
           <tr><td>Logging is a subclass; adding "metering" would need <code>MeteredSprinkler</code>, <code>LoggingMeteredSprinkler</code>…</td><td>Class explosion; logging fixed at compile time</td></tr>
           <tr><td><code>Garden</code> names and creates <code>LoggingSprinkler</code> itself</td><td>Tight coupling to a concrete class; cannot swap in a test sprinkler</td></tr>
-          <tr><td>Output welded to <code>System.out</code></td><td>Tight coupling to the console; untestable logging</td></tr>
+          <tr><td>Output stuck to <code>System.out</code></td><td>Tight coupling to the console; untestable logging</td></tr>
           <tr><td><code>running</code> is public, so anyone can fake a running state</td><td>Again no encapsulation</td></tr>
         </tbody>
       </table>
@@ -356,7 +376,7 @@ Sprinkler started</code></pre>
     <span class="kw">public void</span> <span class="fn">water</span>() { <span class="kw">for</span> (<span class="ty">Sprinkler</span> zone : zones) { zone.<span class="fn">start</span>(); } }
 }</code></pre>
 
-    <p>Notice that "zones" stopped being a method on the sprinkler. A garden <em>has</em> several sprinklers, one per zone. That is a cohesion fix: the sprinkler sprinkles, and the garden organises. With no <code>startZones</code> calling <code>start</code>, there is no self-use for anything to depend on.</p>
+    <p>Notice that "zones" stopped being a method on the sprinkler. A garden <em>has</em> several sprinklers, one per zone (an area of the garden). That is a cohesion fix: the sprinkler sprinkles, and the garden organises. With no <code>startZones</code> calling <code>start</code>, there is no self-use for anything to depend on.</p>
 
     <pre class="ascii"><code>           «interface» Sprinkler  &lt;- - - - - - - - - - - - - - - - -.
              ^                ^                                   :
@@ -371,12 +391,29 @@ Sprinkler started</code></pre>
     <p class="pred-label">Prediction — the redesigned water()</p>
     <pre class="output"><code>Sprinkler started
 Sprinkler started</code></pre>
-    <p>One line per zone that actually started. That stays true however the classes are refactored inside. A test passes a <code>RecordingLog</code> (like <code>RecordingNotifier</code> in <a href="lesson-04-coupling-cohesion-uml.html">Lesson 04</a>) and asserts the list of lines. <code>new GardenSprinkler(-5)</code> now throws, so the invariant can no longer be broken from outside. If you code this up in a scratch package, run it and compare with the predictions. The machine is the judge.</p>
+    <p>You get one line per zone that actually started. That stays true however the classes are refactored inside. Two more checks:</p>
+    <ul>
+      <li>A test passes a <code>RecordingLog</code> (like <code>RecordingNotifier</code> in <a href="lesson-04-coupling-cohesion-uml.html">Lesson 04</a>) and asserts the list of lines.</li>
+      <li><code>new GardenSprinkler(-5)</code> now throws. So nobody outside can break the invariant any more.</li>
+    </ul>
+    <p>If you code this up in a throwaway practice package, run it and compare with the predictions. The machine is the judge.</p>
   </details>
 </section>
 
+<!-- ============================== SECTION 9 ============================== -->
+<section id="s9">
+  <h2><span class="sec-num">9</span>Quick recap</h2>
+  <ul class="recap">
+    <li>Guard an object's data with <code>private</code> fields and checked methods, so its rules can never break.</li>
+    <li>Write client code against interfaces, so new classes plug in with no client changes.</li>
+    <li>Inheritance shares code but ties a child to its parent's insides; composition reuses objects safely from outside.</li>
+    <li>Aim for loose coupling and high cohesion, and pay for indirection only where change is real.</li>
+    <li>UML class and sequence diagrams show a design's structure and its calls at a glance.</li>
+  </ul>
+</section>
+
 <div class="nextup">
-  <p><a href="../../phase-1-solid/chapter-02-solid/lesson-05-single-responsibility.html">Phase 1 begins: Lesson 05 — S, the Single Responsibility Principle.</a> Cohesion becomes a rule: "one reason to change." We start from the hub's own <code>Main</code>, which our measurement just flagged, and also learn how to recognise the opposite trap of splitting things too far.</p>
+  <p><a href="../../phase-1-solid/chapter-02-solid/lesson-05-single-responsibility.html">Phase 1 begins: Lesson 05 — S, the Single Responsibility Principle.</a> Cohesion becomes a rule: "one reason to change." We start from the hub's own <code>Main</code>, which our measurement just flagged. We also learn to spot the opposite trap: splitting things too far.</p>
 </div>
 <p class="position">Chapter 01 summary · Phase 0 complete (Lessons 00–04)</p>
 

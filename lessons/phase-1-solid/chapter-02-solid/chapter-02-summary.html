@@ -20,6 +20,7 @@
     <li><a href="#s6">6 · Ideas that come back</a></li>
     <li><a href="#s7">7 · Self-check</a></li>
     <li><a href="#s8">8 · Boss challenge</a></li>
+    <li><a href="#s9">9 · Quick recap</a></li>
   </ol>
   <nav class="toc-nav" aria-label="Course navigation">
     <a class="navcard" href="lesson-11-companion-principles.html">
@@ -48,11 +49,19 @@
   </p>
 </header>
 
+<div class="learn">
+  <ul>
+    <li>Everything Lessons 05–11 built, in the katas and in the Smart Home Hub, on one page.</li>
+    <li>How the five SOLID principles and their four companions connect to each other.</li>
+    <li>A self-check and a "boss" challenge that uses every principle at once.</li>
+  </ul>
+</div>
+
 <!-- ============================== SECTION 1 ============================== -->
 <section id="s1">
   <h2><span class="sec-num">1</span>What we built</h2>
 
-  <h3>Katas (frozen exhibits)</h3>
+  <h3>Katas (frozen examples)</h3>
   <div class="table-wrap">
     <table>
       <thead><tr><th>Package</th><th>Files</th><th>What it shows</th></tr></thead>
@@ -252,7 +261,7 @@
     <li><strong>Lesson 05 (S):</strong> <code>Main</code> had become a god class. It split into <code>HomeSetup</code> (which devices), <code>Hub</code> (operating them) and <code>HouseReport</code> (how it looks). Each answers to one actor.</li>
     <li><strong>Lesson 06 (O):</strong> house modes were an if-else on mode names. They became <code>Routine</code> classes, and <code>hub.run(routine)</code> never changes for a new mode.</li>
     <li><strong>Lesson 07 (L):</strong> the <code>Device</code> contract was written down. Contract tests started checking every implementation, the logging wrapper included.</li>
-    <li><strong>Lesson 08 (I):</strong> a smoke alarm and a door lock arrived. They could not honestly "turn off." The fat <code>Device</code> split into <code>Device</code> plus <code>Switchable</code>, <code>Lockable</code> and <code>Dimmable</code>. The hub keeps typed groups, so routines never see the alarm.</li>
+    <li><strong>Lesson 08 (I):</strong> a smoke alarm and a door lock arrived. Neither could truly "turn off." The fat <code>Device</code> split into <code>Device</code> plus <code>Switchable</code>, <code>Lockable</code> and <code>Dimmable</code>. The hub keeps typed groups, so routines never see the alarm.</li>
     <li><strong>Lesson 09 (D):</strong> a climate policy arrived. It owns its <code>TemperatureSensor</code> contract. The simulated thermometer plugs in from outside. <code>Main</code> plus <code>HomeSetup</code> became the composition root.</li>
     <li><strong>Lesson 10 (all five):</strong> a lock check was built SOLID from its first line, with its own <code>AlertChannel</code>. Meanwhile, a rotten module was refactored in the kata.</li>
     <li><strong>Lesson 11 (companions):</strong> the audit found a train wreck in our own <code>Main</code> (<code>lockables().get(0)</code>). It became <code>hub.unlock("Front Door")</code>. Both by-name lookups now share one rule.</li>
@@ -359,7 +368,7 @@
     <li><strong><code>Routine</code>, an object you hand to <code>run</code></strong>, is very close to two patterns ahead. One swaps algorithms (Lesson 25). The other turns a request into an object you can queue and undo (Lesson 28). Lesson 12 explains why the same shape can be two different patterns.</li>
     <li><strong>The wrapper that keeps its contract</strong> (<code>LoggedDevice</code>, now backed by LSP, OCP and composition) becomes three named structural patterns in Lessons 18–22. You tell them apart by their purpose.</li>
     <li><strong>"Only the composition root says <code>new</code>"</strong> raises the next question. What happens when creating the right object gets complicated? That is the whole of Chapter 04, the creational patterns.</li>
-    <li><strong>KISS and YAGNI</strong> become the course's defence against <em>pattern fever</em>: the urge to use a pattern just because you know it. They come back in Lesson 12 and in full in Lesson 41.</li>
+    <li><strong>KISS and YAGNI</strong> become the course's protection against <em>pattern fever</em>: the urge to use a pattern just because you know it. They come back in Lesson 12, and in full in Lesson 41.</li>
   </ul>
 </section>
 
@@ -380,7 +389,7 @@
   </details>
   <details class="check">
     <summary><code>ClimateControl</code> calls <code>sensor.readCelsius()</code>. Which way does the source-code arrow point, and why is that "inverted"?</summary>
-    <p>From <code>SimulatedThermometer</code> <em>up</em> to <code>TemperatureSensor</code>, which lives in the policy's own <code>climate</code> package. At run time, control flows from the policy down to the detail. But the source-code dependency points from the detail up to the policy's abstraction, against that flow (<a href="lesson-09-dependency-inversion.html">Lesson 09</a>).</p>
+    <p>It points from <code>SimulatedThermometer</code> <em>up</em> to <code>TemperatureSensor</code>, which lives in the policy's own <code>climate</code> package. At run time, calls flow from the policy down to the detail. But the source-code dependency points from the detail up to the policy's interface, against that flow (<a href="lesson-09-dependency-inversion.html">Lesson 09</a>).</p>
   </details>
   <details class="check">
     <summary><code>text.append("a").append("b")</code> and <code>hub.lockables().get(0).unlock()</code> both chain calls. Why is only one a Law of Demeter problem?</summary>
@@ -391,7 +400,12 @@
 <!-- ============================== SECTION 8 ============================== -->
 <section id="s8">
   <h2><span class="sec-num">8</span>Boss challenge</h2>
-  <p>A "movie night" feature arrived from another team. Check it against <strong>all ten</strong> catalog entries. Put your refactoring steps in a sensible order, and sketch the result. Then predict what it prints in this case: the living room has one light, one TV and one speaker, and the owner is told by SMS at 555-0100.</p>
+  <p>A "movie night" feature arrived from another team. Do three things:</p>
+  <ol>
+    <li>Check it against <strong>all ten</strong> catalog entries.</li>
+    <li>Put your refactoring steps in a sensible order, and sketch the result.</li>
+    <li>Predict what it prints in this case: the living room has one light, one TV and one speaker, and the owner is told by SMS at 555-0100.</li>
+  </ol>
   <pre class="code" data-title="the feature as delivered"><code><span class="kw">public interface</span> <span class="ty">Appliance</span> {
     <span class="ty">String</span> <span class="fn">name</span>(); <span class="kw">void</span> <span class="fn">powerOn</span>(); <span class="kw">void</span> <span class="fn">powerOff</span>();
     <span class="kw">int</span> <span class="fn">volume</span>(); <span class="kw">void</span> <span class="fn">setVolume</span>(<span class="kw">int</span> percent); <span class="kw">boolean</span> <span class="fn">isRecording</span>();
@@ -427,7 +441,7 @@
           <tr><td>OCP</td><td>A ladder on name prefixes. A projector means editing <code>start</code>. A device named "Lamp" quietly falls into "mute."</td></tr>
           <tr><td>LSP</td><td><code>Camera</code> throws from <code>setVolume</code>. So the day a camera is in the living room, the <code>else</code> branch crashes the whole scene.</td></tr>
           <tr><td>ISP</td><td>The fat <code>Appliance</code> forces volume onto cameras and lights, and recording onto speakers.</td></tr>
-          <tr><td>DIP</td><td><code>new SmsSender()</code> and <code>System.out</code> are welded into the policy. So it cannot be tested without a phone and a console.</td></tr>
+          <tr><td>DIP</td><td><code>new SmsSender()</code> and <code>System.out</code> are fixed inside the policy's code. So it cannot be tested without a phone and a console.</td></tr>
           <tr><td>DRY</td><td>30 is typed twice (the volume and the message). And <code>home.getLivingRoom().getAppliances()</code> is reached for twice.</td></tr>
           <tr><td>KISS</td><td>Device kinds are guessed from name strings instead of being known from their type.</td></tr>
           <tr><td>YAGNI</td><td><code>speakerBrand</code> exists for one ternary. The real need is one volume setting.</td></tr>
@@ -474,15 +488,37 @@
         notifier.<span class="fn">notify</span>(<span class="str">"Movie night started (volume "</span> + volume + <span class="str">")"</span>);
     }
 }</code></pre>
-    <p>Wiring it at a composition root: <code>new MovieNight(List.of(light), List.of(tv), List.of(speaker), 30, new SmsNotifier("555-0100")).start()</code>. Here the demo devices print one line per action: <code>"Light: OFF"</code>, <code>"TV: ON"</code>, <code>"Speaker: ON"</code>, <code>"Speaker: volume 30"</code>. <code>SmsNotifier</code> prints <code>"SMS to " + number + ": " + message</code>.</p>
+    <p>Wire it at a composition root: <code>new MovieNight(List.of(light), List.of(tv), List.of(speaker), 30, new SmsNotifier("555-0100")).start()</code>. Two details about the demo classes:</p>
+    <ul>
+      <li>The demo devices print one line per action: <code>"Light: OFF"</code>, <code>"TV: ON"</code>, <code>"Speaker: ON"</code>, <code>"Speaker: volume 30"</code>.</li>
+      <li><code>SmsNotifier</code> prints <code>"SMS to " + number + ": " + message</code>.</li>
+    </ul>
     <p class="pred-label">Prediction</p>
     <pre class="output"><code>Light: OFF
 TV: ON
 Speaker: ON
 Speaker: volume 30
 SMS to 555-0100: Movie night started (volume 30)</code></pre>
-    <p>The order follows the three loops, then the notification. A test passes a recording notifier and checks one message. A projector is just one more item in <code>screens</code>. The camera is never handed to the scene, so it can no longer crash it. Lesson 20 comes back to "movie night" with a pattern built for exactly this kind of job: many steps behind one call. If you build it in a scratch package, run it and compare. The machine is the judge.</p>
+    <p>The order follows the three loops, then the notification. And notice what the new design gives you:</p>
+    <ul>
+      <li>A test passes a recording notifier and checks one message.</li>
+      <li>A projector is just one more item in <code>screens</code>.</li>
+      <li>The camera is never handed to the scene, so it can no longer crash it.</li>
+    </ul>
+    <p>Lesson 20 comes back to "movie night" with a pattern built for exactly this kind of job: many steps behind one call. If you build it in a throwaway practice package, run it and compare. The machine is the judge.</p>
   </details>
+</section>
+
+<!-- ============================== SECTION 9 ============================== -->
+<section id="s9">
+  <h2><span class="sec-num">9</span>Quick recap</h2>
+  <ul class="recap">
+    <li>S: one reason to change per class. O: add new classes, don't edit working ones.</li>
+    <li>L: a substitute keeps every promise. I: small role interfaces. D: rules own their interfaces, and details are injected.</li>
+    <li>The principles help each other, and sometimes pull against each other and against simplicity.</li>
+    <li>DRY, KISS, YAGNI and the Law of Demeter catch what SOLID misses and stop over-design.</li>
+    <li>The hub's output barely changed; what changed is how cheaply it can change next.</li>
+  </ul>
 </section>
 
 <div class="nextup">
